@@ -1,6 +1,13 @@
 
 //* Default API URL
-export const API_URL = 'http://localhost:5000/api/v1/';
+// export const API_URL = 'http://localhost:5000/api/v1/';
+
+// Choose base URL dynamically
+const DEV_API_URL = "http://localhost:5000/api/v1/";
+const PROD_API_URL = "https://your-production-domain.com/api/v1/";
+
+export const API_URL =
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? DEV_API_URL : PROD_API_URL);;
 
 //^ User related endpoints
 export const REGISTER_URL = `${API_URL}user/register`;
@@ -20,4 +27,17 @@ export const UPDATE_USER_PROFILE_URL = `${API_URL}user/me`;
     import axios from "axios";
 
     await axios.post(LOGIN_URL, { email, password });⁡
+*/
+
+
+/* 
+
+    • 🧠 ⁡⁢⁣⁣𝟯. 𝗛𝗼𝘄 𝗶𝘁 𝗪𝗼𝗿𝗸𝘀⁡
+
+    | Environment                                | Condition                      | Base URL Used      |
+    | ------------------------------------------ | ------------------------------ | ------------------ |
+    | Local Dev (default)                        | `import.meta.env.DEV` is true  | `DEV_API_URL`      |
+    | Production (build on Vercel, Render, etc.) | `import.meta.env.DEV` is false | `PROD_API_URL`     |
+    | Custom `.env` file                         | If `VITE_API_URL` is set       | **Overrides both** |
+
 */
