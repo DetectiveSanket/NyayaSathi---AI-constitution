@@ -3,8 +3,23 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 
+// import { Toaster } from 'sonner';
+
+import { store } from './store/store.js';
+import { Provider } from 'react-redux'
+
+// void the login at every render or reload
+import { persistStore } from 'redux-persist'
+import { PersistGate } from 'redux-persist/integration/react'
+const persistor = persistStore(store);
+
 createRoot(document.getElementById('root')).render(
-    <StrictMode>
-        <App />
-    </StrictMode>
+    <StrictMode >
+        <Provider store={store}>
+            <PersistGate loading={null} persistor={persistor}>
+                <App />
+                {/* <Toaster /> */}
+            </PersistGate>
+        </Provider>
+    </StrictMode>,
 );
