@@ -103,7 +103,7 @@ function OTPVerification() {
                     }}
                 />
     
-                {/* Navbar sits on top of the same background */}
+                {/* Navbar sits on top of the same background */}                                           
                 <Navbar />
     
                 {/* Page content fills available space */}

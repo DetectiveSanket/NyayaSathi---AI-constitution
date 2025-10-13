@@ -28,7 +28,14 @@ function ResetPassword() {
                 <section className="w-full max-w-xl">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4 tracking-tight">Reset your password</h1>
                     <p className="text-sm sm:text-base text-white/70 mb-6 sm:mb-8">Start exploring the platform in seconds.</p>
-                    
+                    <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4 mb-6 sm:mb-8">
+                        <div className="flex items-center text-blue-300 text-sm">
+                            <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 0 100-2v-3a1 1 0 00-1-1H9z"/>
+                            </svg>
+                            <span>💡 <strong>Pro Tip:</strong> Use a strong password with a mix of letters, numbers, and symbols. Never reuse old passwords for better security!</span>
+                        </div>
+                    </div>
                     <form className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl">
 
                             

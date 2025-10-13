@@ -1,3 +1,4 @@
+import { Toaster } from 'sonner';
 
 import ForgetPassword from "./auth/ForgetPassword";
 import OTPVerification from "./auth/OTPVerification";
@@ -6,14 +7,15 @@ import LogIn from "./shared/LogIn";
 import Register from "./shared/Register";
 import WebIntro from "./Web Intro/WebIntro";
 import Doc from "./Documentation/app";
+import Error from "./ProtectionRoutes/Error";
 
 import {
     createBrowserRouter,
     RouterProvider,
 } from "react-router-dom";
-import Error from "./ProtectionRoutes/Error";
 
 const router = createBrowserRouter([
+
     {
       path: "/",
       element: <WebIntro />,
@@ -49,6 +51,7 @@ const router = createBrowserRouter([
         element:<Doc/>
     },
 
+    // Catch-all route for undefined paths and display Error component
     {
         path:"*",
         element:<Error/>
@@ -61,6 +64,8 @@ function App() {
     return (
         <>
             <RouterProvider router={router} />
+            <Toaster /> {/*//* used for showing toast notifications , if you not import here then it will not work because it create a context for the whole app ,  this is install npm i sonner or*/}
+             
         </>
     );
 }

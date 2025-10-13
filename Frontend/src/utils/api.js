@@ -15,7 +15,7 @@ export const GET_USER_PROFILE_URL = `${API_URL}user/me`;
 export const UPDATE_USER_PROFILE_URL = `${API_URL}user/me`;
 
 /* 
-⁡⁢⁣⁣Example usage in a React component:⁡
+⁡⁢⁣⁣𝗘𝘅𝗮𝗺𝗽𝗹𝗲 𝘂𝘀𝗮𝗴𝗲 𝗶𝗻 𝗮 𝗥𝗲𝗮𝗰𝘁 𝗰𝗼𝗺𝗽𝗼𝗻𝗲𝗻𝘁:⁡
     ⁡⁢⁢⁢import { LOGIN_URL } from "../api"; // Adjust the path as necessary
     import axios from "axios";
 
