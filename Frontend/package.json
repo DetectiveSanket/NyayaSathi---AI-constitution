@@ -13,6 +13,7 @@
         "@reduxjs/toolkit": "^2.9.0",
         "@supabase/supabase-js": "^2.75.0",
         "@tailwindcss/typography": "^0.5.19",
+        "axios": "^1.12.2",
         "clsx": "^2.1.1",
         "framer-motion": "^12.23.12",
         "lucide-react": "^0.344.0",

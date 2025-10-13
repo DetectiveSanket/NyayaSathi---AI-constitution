@@ -12,7 +12,7 @@ import {
   updateProfile,
 } from "../features/auth/authThunks.js";
 
-import { setAuthHeader } from "../../services/api.js";
+import { setAuthHeader } from "../services/api.js";
 
 const initialState = {
   user: null,
