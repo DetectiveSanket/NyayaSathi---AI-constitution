@@ -4,10 +4,44 @@ import Footer from '../shared/Footer';
 
 import Email from '../assets/Icon/email (1).png';
 
-import { Link } from 'react-router-dom';
+import {forgotPassword} from '../features/auth/authThunks';
+
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 
 
 function ForgetPassword() {
+
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { loading, error, message } = useSelector((state) => state.auth);
+
+    const [email , setEmail] = React.useState('');
+    const [localError, setLocalError] = React.useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLocalError('');
+        
+        // Basic validation
+        if (!email) {
+            setLocalError('Email is required');
+            return;
+        }
+        
+        try {
+            const result = await dispatch(forgotPassword({ email })).unwrap();
+            console.log('Forgot password result:', result);
+            // Store email for next step
+            localStorage.setItem('pendingResetEmail', email);
+            // On success, navigate to OTP verification page
+            navigate('/reset-password-otp', { state: { email, fromForgotPassword: true } });
+        } catch (error) {
+            console.error('Failed to send reset OTP:', error);
+            setLocalError(error || 'Failed to send reset email');
+        }
+    }
+
     return (
         <>
             <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col">
@@ -36,7 +70,7 @@ function ForgetPassword() {
                                 <span>💡 <strong>Pro Tip:</strong> Check your spam folder if you don't receive the password reset email. Make sure to create a strong password that includes numbers, symbols, and mixed case letters.</span>
                             </div>
                         </div>
-                    <form className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl">
+                    <form onSubmit={handleSubmit} className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl">
 
                            
                             
@@ -46,6 +80,30 @@ function ForgetPassword() {
                             <hr className="w-8 h-px bg-[#4A4C51]"/>
                         </div>                        
                         
+                        {/* Display errors */}
+                        {(error || localError) && (
+                            <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 mb-4">
+                                <div className="flex items-center text-red-300 text-sm">
+                                    <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                                    </svg>
+                                    <span>{localError || error}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Display success message */}
+                        {message && (
+                            <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 mb-4">
+                                <div className="flex items-center text-green-300 text-sm">
+                                    <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                                    </svg>
+                                    <span>{message}</span>
+                                </div>
+                            </div>
+                        )}
+                        
                         <div className="space-y-2">
                             <label className="text-white font-medium text-sm tracking-wide">Email</label>
                             <div className="relative">
@@ -53,8 +111,11 @@ function ForgetPassword() {
                                 <input 
                                     type="email" 
                                     name="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Enter your email" 
                                     className="w-full p-4 pl-12 text-white bg-white/10 border-2 border-white/20 rounded-full placeholder:text-white/60 focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all outline-none" 
+                                    required
                                 />
                             </div>
                         </div>
@@ -66,9 +127,10 @@ function ForgetPassword() {
                         
                         <button 
                             type="submit" 
-                            className="w-full p-4 mt-8 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02]"
+                            disabled={loading}
+                            className="w-full p-4 mt-8 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                            Send Reset OPT
+                            {loading ? 'Sending...' : 'Send Reset OTP'}
                         </button>
 
                         <p className="my-2 text-xs text-center text-white">Do not have an account?  <Link to='/register' className="text-base text-blue-900 hover:underline">Register</Link> </p>

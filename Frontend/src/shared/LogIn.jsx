@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from './Navbar';
 import Footer from './Footer';
 import Password from '../assets/Icon/pass.png';
 import Email from '../assets/Icon/email (1).png';
 import { Eye, EyeOff } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import google from '../assets/Icon/google.png';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../features/auth/authThunks';
@@ -13,6 +13,7 @@ const LogIn = () => {
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Local state for form inputs
     const [formData, setFormData] = useState({
@@ -22,13 +23,29 @@ const LogIn = () => {
 
     // Local state for password visibility
     const [showPassword, setShowPassword] = useState(false);
+    
+    // Local state for success message from navigation
+    const [successMessage, setSuccessMessage] = useState('');
 
     // Redux state
     const { loading, error, message } = useSelector((state) => state.auth);
 
+    // Handle success message from location state (e.g., from password reset)
+    useEffect(() => {
+        if (location.state?.message) {
+            setSuccessMessage(location.state.message);
+            // Clear the message from location state
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
+
     // Handle input changes
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        // Clear success message when user starts typing
+        if (successMessage) {
+            setSuccessMessage('');
+        }
     };
 
     // Handle submit
@@ -166,7 +183,7 @@ const LogIn = () => {
                         </div>
 
                         <div className="flex justify-end mr-5">
-                           <Link to="/forgetpassword" className='text-white hover:underline hover:text-blue-600 text-xs'>Forget Password?</Link>
+                           <Link to="/forgot-password" className='text-white hover:underline hover:text-blue-600 text-xs'>Forget Password?</Link>
                         </div>
                         
                         <button 
@@ -186,6 +203,11 @@ const LogIn = () => {
                         {message && (
                             <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30">
                                 <p className="text-green-300 text-sm text-center">{message}</p>
+                            </div>
+                        )}
+                        {successMessage && (
+                            <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30">
+                                <p className="text-green-300 text-sm text-center">{successMessage}</p>
                             </div>
                         )}
 

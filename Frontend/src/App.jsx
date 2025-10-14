@@ -3,6 +3,7 @@ import { Toaster } from 'sonner';
 import ForgetPassword from "./auth/ForgetPassword";
 import OTPVerification from "./auth/OTPVerification";
 import ResetPassword from "./auth/ResetPassword";
+import ResetPasswordOTP from "./auth/ResetPasswordOTP";
 import LogIn from "./shared/LogIn";
 import Register from "./shared/Register";
 import WebIntro from "./Web Intro/WebIntro";
@@ -39,8 +40,13 @@ const router = createBrowserRouter([
     },
 
     {
-        path:"/forgetpassword",
+        path:"/forgot-password",
         element:<ForgetPassword/>
+    },
+
+    {
+        path:"/reset-password-otp",
+        element:<ResetPasswordOTP/>
     },
 
     {
