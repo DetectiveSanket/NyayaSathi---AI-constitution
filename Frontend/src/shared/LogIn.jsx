@@ -4,12 +4,80 @@ import Footer from './Footer';
 import Password from '../assets/Icon/pass.png';
 import Email from '../assets/Icon/email (1).png';
 import { Eye, EyeOff } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import google from '../assets/Icon/google.png';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../features/auth/authThunks';
 
 const LogIn = () => {
 
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    // Local state for form inputs
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+    });
+
+    // Local state for password visibility
     const [showPassword, setShowPassword] = useState(false);
+
+    // Redux state
+    const { loading, error, message } = useSelector((state) => state.auth);
+
+    // Handle input changes
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    // Handle submit
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        console.log("Login attempt with:", { email: formData.email });
+
+        // Basic validation
+        if (!formData.email || !formData.password) {
+            alert("⚠️ All fields are required!");
+            return;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            alert("⚠️ Please enter a valid email address!");
+            return;
+        }
+
+        // Dispatch login thunk
+        const resultAction = await dispatch(loginUser(formData));
+
+        console.log("Login result:", resultAction);
+
+        if (loginUser.fulfilled.match(resultAction)) {
+            // Success: navigate to chatbot
+            console.log("Login successful, navigating to /chatbot");
+            alert(resultAction.payload.message || "✅ Login successful!");
+            navigate("/chatbot");
+        } else {
+            // Error handling
+            const errorMsg = resultAction.payload || "❌ Login failed!";
+            console.log("Login failed:", errorMsg);
+            alert(errorMsg);
+            
+            // Specific error handling
+            if (errorMsg.toLowerCase().includes("verify your email")) {
+                // If user needs to verify email, store email and redirect to OTP
+                localStorage.setItem('registrationEmail', formData.email);
+                alert("⚠️ Please verify your email first!");
+                navigate("/otpverification");
+            } else if (errorMsg.toLowerCase().includes("register first")) {
+                alert("⚠️ No account found. Please register first!");
+                navigate("/register");
+            }
+        }
+    };
 
     return (
         <>
@@ -38,7 +106,7 @@ const LogIn = () => {
                             <span>💡 <strong>Pro Tip:</strong> Use a password manager to securely store and autofill your login credentials for faster and safer access.</span>
                         </div>
                     </div>
-                    <form className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl">
+                    <form className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl" onSubmit={handleSubmit}>
 
                         <button style={{width: '80%', margin: '10px auto' }} className="flex items-center justify-center w-full px-4 py-2 text-white bg-transparent border-2 border-gray-700 focus:border-teal-500 rounded-full hover:bg-[#1b4f4b81]">
                             <img src={google} className="w-6 h-6 mr-5" alt="google" />
@@ -64,6 +132,8 @@ const LogIn = () => {
                                     type="email" 
                                     name="email"
                                     placeholder="Enter your email" 
+                                    value={formData.email}
+                                    onChange={handleChange}
                                     className="w-full p-4 pl-12 text-white bg-white/10 border-2 border-white/20 rounded-full placeholder:text-white/60 focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all outline-none" 
                                 />
                             </div>
@@ -78,6 +148,8 @@ const LogIn = () => {
                                     type={showPassword ? "text" : "password"}
                                     name="password"
                                     placeholder="Enter your Password" 
+                                    value={formData.password}
+                                    onChange={handleChange}
                                     className="w-full p-4 pl-12 pr-14 text-white bg-white/10 border-2 border-white/20 rounded-full placeholder:text-white/60 focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all outline-none" 
                                 />
                                 <button 
@@ -99,10 +171,23 @@ const LogIn = () => {
                         
                         <button 
                             type="submit" 
-                            className="w-full p-4 mt-8 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02]"
+                            disabled={loading}
+                            className="w-full p-4 mt-8 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                            LogIn
+                            {loading ? "Logging in..." : "LogIn"}
                         </button>
+
+                        {/* Error and Success Messages */}
+                        {error && (
+                            <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30">
+                                <p className="text-red-300 text-sm text-center">{error}</p>
+                            </div>
+                        )}
+                        {message && (
+                            <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30">
+                                <p className="text-green-300 text-sm text-center">{message}</p>
+                            </div>
+                        )}
 
                         <p className="my-2 text-xs text-center text-white">Do not have an account?  <Link to='/register' className="text-base text-blue-900 hover:underline">Register</Link> </p>
                         

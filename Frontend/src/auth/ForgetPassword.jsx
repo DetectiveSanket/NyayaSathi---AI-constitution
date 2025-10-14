@@ -61,7 +61,7 @@ function ForgetPassword() {
 
 
                         <div className="flex justify-end mr-5">
-                           <Link to="/resetpassword" className='text-white hover:underline hover:text-blue-600 text-xs'>back to login</Link>
+                           <Link to="/login" className='text-white hover:underline hover:text-blue-600 text-xs'>back to login</Link>
                         </div>
                         
                         <button 

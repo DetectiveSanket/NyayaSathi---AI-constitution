@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   registerUser,
   verifyOtp,
+  resendOtp,
   loginUser,
   logoutUser,
   refreshAccessToken,
@@ -24,6 +25,8 @@ const initialState = {
   // helpers for flows
   pendingEmail: null, // used for register/forgot OTP flows
   message: null,
+
+
 };
 
 const authSlice = createSlice({
@@ -48,6 +51,7 @@ const authSlice = createSlice({
       state.message = null;
     },
   },
+
   extraReducers: (builder) => {
     // REGISTER
     builder
@@ -64,6 +68,7 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error.message;
+        state.pendingEmail = null; // Clear on registration failure
       });
 
     // VERIFY OTP
@@ -81,6 +86,21 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload || action.error.message;
       });
+
+      // ✅ Resend OTP
+    builder
+      .addCase(resendOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resendOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(resendOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });  
 
     // LOGIN
     builder

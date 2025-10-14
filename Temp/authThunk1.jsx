@@ -2,19 +2,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api, { setAuthHeader } from "../../services/api.js";
 
-import {
-    REGISTER_URL,
-    VERIFY_EMAIL_URL,
-    LOGIN_URL,
-    LOGOUT_URL,
-    REFRESH_TOKEN_URL,
-    FORGOT_PASSWORD_URL,
-    RESET_PASSWORD_URL,
-    GET_USER_PROFILE_URL,
-    RESEND_OTP_URL,
-    UPDATE_USER_PROFILE_URL,
-  } from "../../utils/api.js";
-
 /**
     * Important: backend responses assumed from earlier conversations.
     * Adjust paths or response destructuring if your backend returns different shapes.
@@ -25,7 +12,7 @@ export const registerUser = createAsyncThunk(
     "auth/register",
     async (payload, { rejectWithValue }) => {
         try {
-            const { data } = await api.post(REGISTER_URL, payload);
+            const { data } = await api.post("/user/register", payload);
             return { message: data.message, email: payload.email };
         } catch (err) {
             return rejectWithValue(err.response?.data?.message || err.message);
@@ -39,7 +26,7 @@ export const verifyOtp = createAsyncThunk(
   "auth/verifyOtp",
   async ({ email, otp }, { rejectWithValue }) => {
     try {
-      const { data } = await api.post(VERIFY_EMAIL_URL, { email, otp });
+      const { data } = await api.post("/user/verify-email", { email, otp });
       return data; // { message, token }
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -52,7 +39,7 @@ export const resendOtp = createAsyncThunk(
   "auth/resendOtp",
   async ({ email }, { rejectWithValue }) => {
     try {
-      const { data } = await api.post(RESEND_OTP_URL, { email });
+      const { data } = await api.post("/user/resend-otp", { email });
       return data; // { message }
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -65,8 +52,7 @@ export const loginUser = createAsyncThunk(
     "auth/login",
     async ({ email, password }, { rejectWithValue }) => {
         try {
-            // const { data } = await api.post("/user/login", { email, password });
-            const { data } = await api.post(LOGIN_URL, { email, password });
+            const { data } = await api.post("/user/login", { email, password });
             // backend: { accessToken, refreshToken }
             const { accessToken } = data;
             // set header to fetch profile
@@ -93,7 +79,7 @@ export const logoutUser = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             // attempt to call backend to clear refresh token
-            await api.post(LOGOUT_URL);
+            await api.post("/user/logout");
             // Clear local axios header
             setAuthHeader(null);
             return { message: "Logged out" };
@@ -110,11 +96,11 @@ export const refreshAccessToken = createAsyncThunk(
     "auth/refreshToken",
     async ({ refreshToken }, { rejectWithValue }) => {
         try {
-            const { data } = await api.post(REFRESH_TOKEN_URL, { token: refreshToken });
+            const { data } = await api.post("/user/refresh-token", { token: refreshToken });
             // backend returns { accessToken }
             setAuthHeader(data.accessToken);
             // fetch profile
-            const profileResp = await api.get(GET_USER_PROFILE_URL);
+            const profileResp = await api.get("/user/me");
             return { token: data.accessToken, user: profileResp.data };
         } catch (err) {
         setAuthHeader(null);
@@ -128,7 +114,7 @@ export const forgotPassword = createAsyncThunk(
   "auth/forgotPassword",
   async ({ email }, { rejectWithValue }) => {
     try {
-      const { data } = await api.post(FORGOT_PASSWORD_URL, { email });
+      const { data } = await api.post("/user/forgot-password", { email });
       return { message: data.message, email };
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -141,7 +127,7 @@ export const resetPassword = createAsyncThunk(
   "auth/resetPassword",
   async ({ email, otp, newPassword }, { rejectWithValue }) => {
     try {
-      const { data } = await api.post(RESET_PASSWORD_URL, { email, otp, newPassword });
+      const { data } = await api.post("/user/reset-password", { email, otp, newPassword });
       return data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -154,7 +140,7 @@ export const fetchProfile = createAsyncThunk(
   "auth/fetchProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await api.get(GET_USER_PROFILE_URL);
+      const { data } = await api.get("/user/me");
       return data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);

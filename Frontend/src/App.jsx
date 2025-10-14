@@ -7,7 +7,9 @@ import LogIn from "./shared/LogIn";
 import Register from "./shared/Register";
 import WebIntro from "./Web Intro/WebIntro";
 import Doc from "./Documentation/app";
+import Chatbot from "./RAG Model/chatBot";
 import Error from "./ProtectionRoutes/Error";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import {
     createBrowserRouter,
@@ -49,6 +51,16 @@ const router = createBrowserRouter([
     {
         path:"/doc",
         element:<Doc/>
+    },
+
+    // chatbot - protected route
+    {
+        path:"/chatbot",
+        element: (
+            <ProtectedRoute>
+                <Chatbot />
+            </ProtectedRoute>
+        ),
     },
 
     // Catch-all route for undefined paths and display Error component
