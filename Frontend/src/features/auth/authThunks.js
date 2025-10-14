@@ -266,6 +266,113 @@ export const updateProfile = createAsyncThunk(
         | **setAuthToken.js** | Manage Authorization header       | Keeps all future API requests authenticated |
         | **authThunks.js**   | Perform API calls via Redux       | Centralized async logic                     |
         | **authSlice.js**    | Store user, token, error, loading | Keeps UI in sync with authentication state  |
+
+    ---------------------------------------------------------------------------------------------------    
     
+   ⚙️ ⁡⁢⁣⁣𝗗𝗮𝘁𝗮 𝗙𝗹𝗼𝘄: 𝗨𝗜 → 𝗥𝗲𝗱𝘂𝘅 → 𝗕𝗮𝗰𝗸𝗲𝗻𝗱 → 𝗥𝗲𝗱𝘂𝘅 → 𝗨𝗜⁡
+
+        ┌──────────────────────────────┐
+        │        React UI Layer        │
+        │ (e.g., Login / Register Form)│
+        └──────────────┬───────────────┘
+                       │ dispatch(loginUser(formData))
+                       ▼
+        ┌──────────────────────────┐
+        │   Redux Thunk Layer      │
+        │  (authThunks.js)         │
+        │ - Makes async API calls  │
+        │ - Handles try/catch      │
+        └──────────────┬───────────┘
+                       │ calls
+                       ▼
+            ┌─────────────────────┐
+            │   Axios Service     │
+            │   (api.js)          │
+            │ - Uses BASE_URL     │
+            │ - Sends HTTP req.   │
+            │ - Adds JWT header   │
+            └──────────┬──────────┘
+                       │ hits backend route
+                       ▼
+             ┌────────────────────┐
+             │    Backend API     │
+             │  (Express Server)  │
+             │ - Validates req    │
+             │ - Authenticates    │
+             │ - Responds w/ JSON │
+             └──────────┬─────────┘
+                        │ response (user, token, msg)
+                        ▼
+          ┌──────────────────────────┐
+          │ Redux Slice Layer        │
+          │ (authSlice.js)           │
+          │ - Handles 3 states:      │
+          │   pending → fulfilled →  │
+          │   rejected               │
+          │ - Updates store values   │
+          │   user, token, error,    │
+          │   loading, message       │
+          └───────────┬─────────────┘
+                      │ store updates
+                      ▼
+       ┌────────────────────────────────┐
+       │   Redux Store (Global State)   │
+       │ - Keeps user/token globally    │
+       │ - Persisted via redux-persist  │
+       └─────────────┬──────────────────┘
+                     │ triggers re-render
+                     ▼
+     ┌───────────────────────────────────┐
+     │ React Components Auto-Update UI   │
+     │ - Navbar shows user avatar        │
+     │ - Chatbot unlocks access          │
+     │ - Loader stops                    │
+     │ - Error toast if failed           │
+     └───────────────────────────────────┘
+
+     🔁 Example Cycle (Login)
+
+UI → User enters email/password → dispatch(loginUser(formData))
+
+Thunk (authThunks.js) → sends request to backend via Axios.
+
+api.js → attaches JWT and sends to POST /api/v1/user/login.
+
+Backend → validates credentials, returns { user, accessToken }.
+
+authSlice.js → catches fulfilled state → updates store:
+
+user = data.user
+
+token = data.accessToken
+
+isAuthenticated = true
+
+Redux Store → now has updated state, saved in localStorage via redux-persist.
+
+UI Re-renders automatically:
+
+Navbar changes to show user avatar.
+
+Chatbot UI unlocks.
+
+“Login” page redirects to home/dashboard.
+
+🔒 Example Cycle (Logout)
+
+UI → dispatch(logoutUser())
+
+Thunk → calls POST /logout on backend.
+
+Slice → clears user/token → isAuthenticated = false.
+
+Store → re-renders app, hiding protected routes.
+
+🧠 Why This Structure Works
+
+✅ Centralized logic — API details stay in one place.
+✅ Predictable data flow — everything passes through Redux, not random components.
+✅ Debuggable — you can see every action in Redux DevTools.
+✅ Scalable — you can add more slices (chat, UI theme, settings) without breaking others.
 
 */
