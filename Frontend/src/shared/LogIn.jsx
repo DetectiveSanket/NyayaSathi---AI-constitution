@@ -13,7 +13,7 @@ const LogIn = () => {
 
     return (
         <>
-            <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col">
+            <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col margin-top: 4rem;">
             {/* Cyan Spotlight Background overlay shared by navbar and content */}
             <div
                 className="pointer-events-none absolute inset-0"
@@ -26,7 +26,7 @@ const LogIn = () => {
             <Navbar />
 
             /* Page content fills available space */
-            <main className="relative mx-auto max-w-6xl px-4 flex-1 w-full flex items-center justify-center">
+            <main className="relative mx-auto mt-16 max-w-6xl px-4 flex-1 w-full flex items-center justify-center">
                 <section className="w-full max-w-xl">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4 tracking-tight">Login to your account</h1>
                     <p className="text-sm sm:text-base text-white/70 mb-6 sm:mb-8">Start exploring the platform in seconds.</p>

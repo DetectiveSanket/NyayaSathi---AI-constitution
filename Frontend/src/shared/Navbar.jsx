@@ -5,7 +5,7 @@ function Navbar() {
   const [open, setOpen] = useState(false);
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-transparent backdrop-blur-md">
+        <header className="fixed top-0 left-0 z-50 w-full border-b border-white/10 bg-transparent backdrop-blur-md">
             <nav className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
                 <NavLink to="/" className="text-white text-xl sm:text-2xl font-bold">NyayaSathi</NavLink>
 
