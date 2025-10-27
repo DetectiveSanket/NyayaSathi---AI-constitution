@@ -4,6 +4,8 @@ import Footer from "../shared/Footer";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { verifyOtp, resendOtp } from "../features/auth/authThunks";
+import { clearMessage, clearError } from "../store/authSlice";
+import useAutoDismiss from "../hooks/useAutoDismiss";
 
 function OTPVerification() {
   const dispatch = useDispatch();
@@ -14,6 +16,10 @@ function OTPVerification() {
   
   // ✅ Fallback to localStorage if Redux state is lost (e.g., page refresh)
   const [email, setEmail] = useState(reduxEmail || localStorage.getItem('registrationEmail'));
+
+  // Auto-dismiss messages
+  useAutoDismiss(message, clearMessage, 3000);
+  useAutoDismiss(error, clearError, 4000);
 
   // ✅ Update email if Redux state changes
   useEffect(() => {

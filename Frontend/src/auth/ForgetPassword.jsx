@@ -5,6 +5,9 @@ import Footer from '../shared/Footer';
 import Email from '../assets/Icon/email (1).png';
 
 import {forgotPassword} from '../features/auth/authThunks';
+import { clearMessage, clearError } from '../store/authSlice';
+import useAutoDismiss from '../hooks/useAutoDismiss';
+import AutoDismissNotification from '../components/AutoDismissNotification';
 
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,6 +21,20 @@ function ForgetPassword() {
 
     const [email , setEmail] = React.useState('');
     const [localError, setLocalError] = React.useState('');
+
+    // Auto-dismiss success and error messages after 3 seconds
+    const messageState = useAutoDismiss(message, clearMessage, 3000, true);
+    const errorState = useAutoDismiss(error, clearError, 4000, true);
+
+    // Auto-dismiss local errors after 4 seconds
+    React.useEffect(() => {
+        if (localError) {
+            const timer = setTimeout(() => {
+                setLocalError('');
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [localError]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -80,29 +97,27 @@ function ForgetPassword() {
                             <hr className="w-8 h-px bg-[#4A4C51]"/>
                         </div>                        
                         
-                        {/* Display errors */}
-                        {(error || localError) && (
-                            <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 mb-4">
-                                <div className="flex items-center text-red-300 text-sm">
-                                    <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
-                                    </svg>
-                                    <span>{localError || error}</span>
-                                </div>
-                            </div>
-                        )}
+                        {/* Auto-dismissing notifications */}
+                        <AutoDismissNotification
+                            message={error || localError}
+                            type="error"
+                            isVisible={errorState.isVisible}
+                            progress={errorState.progress}
+                            showProgress={true}
+                            onDismiss={() => {
+                                if (error) dispatch(clearError());
+                                if (localError) setLocalError('');
+                            }}
+                        />
 
-                        {/* Display success message */}
-                        {message && (
-                            <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 mb-4">
-                                <div className="flex items-center text-green-300 text-sm">
-                                    <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                                    </svg>
-                                    <span>{message}</span>
-                                </div>
-                            </div>
-                        )}
+                        <AutoDismissNotification
+                            message={message}
+                            type="success"
+                            isVisible={messageState.isVisible}
+                            progress={messageState.progress}
+                            showProgress={true}
+                            onDismiss={() => dispatch(clearMessage())}
+                        />
                         
                         <div className="space-y-2">
                             <label className="text-white font-medium text-sm tracking-wide">Email</label>

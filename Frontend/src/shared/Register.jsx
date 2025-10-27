@@ -10,6 +10,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../features/auth/authThunks";
+import { clearMessage, clearError } from "../store/authSlice";
+import useAutoDismiss from "../hooks/useAutoDismiss";
 
 function Register() {
 
@@ -28,6 +30,10 @@ function Register() {
 
     // Redux state
     const { loading, error, message } = useSelector((state) => state.auth);
+
+    // Auto-dismiss messages
+    useAutoDismiss(message, clearMessage, 3000);
+    useAutoDismiss(error, clearError, 4000);
 
     // Handle input changes
     const handleChange = (e) => {

@@ -8,6 +8,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import google from '../assets/Icon/google.png';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../features/auth/authThunks';
+import { clearMessage, clearError } from '../store/authSlice';
+import useAutoDismiss from '../hooks/useAutoDismiss';
+import AutoDismissNotification from '../components/AutoDismissNotification';
 
 const LogIn = () => {
 
@@ -29,6 +32,20 @@ const LogIn = () => {
 
     // Redux state
     const { loading, error, message } = useSelector((state) => state.auth);
+
+    // Auto-dismiss messages
+    const messageState = useAutoDismiss(message, clearMessage, 3000, true);
+    const errorState = useAutoDismiss(error, clearError, 4000, true);
+
+    // Auto-dismiss success message from navigation after 4 seconds
+    useEffect(() => {
+        if (successMessage) {
+            const timer = setTimeout(() => {
+                setSuccessMessage('');
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [successMessage]);
 
     // Handle success message from location state (e.g., from password reset)
     useEffect(() => {
@@ -95,6 +112,8 @@ const LogIn = () => {
             }
         }
     };
+
+     
 
     return (
         <>
@@ -194,22 +213,33 @@ const LogIn = () => {
                             {loading ? "Logging in..." : "LogIn"}
                         </button>
 
-                        {/* Error and Success Messages */}
-                        {error && (
-                            <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30">
-                                <p className="text-red-300 text-sm text-center">{error}</p>
-                            </div>
-                        )}
-                        {message && (
-                            <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30">
-                                <p className="text-green-300 text-sm text-center">{message}</p>
-                            </div>
-                        )}
-                        {successMessage && (
-                            <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30">
-                                <p className="text-green-300 text-sm text-center">{successMessage}</p>
-                            </div>
-                        )}
+                        {/* Auto-dismissing notifications */}
+                        <AutoDismissNotification
+                            message={error}
+                            type="error"
+                            isVisible={errorState.isVisible}
+                            progress={errorState.progress}
+                            showProgress={true}
+                            onDismiss={() => dispatch(clearError())}
+                        />
+
+                        <AutoDismissNotification
+                            message={message}
+                            type="success"
+                            isVisible={messageState.isVisible}
+                            progress={messageState.progress}
+                            showProgress={true}
+                            onDismiss={() => dispatch(clearMessage())}
+                        />
+
+                        <AutoDismissNotification
+                            message={successMessage}
+                            type="success"
+                            isVisible={true}
+                            progress={0}
+                            showProgress={false}
+                            onDismiss={() => setSuccessMessage('')}
+                        />
 
                         <p className="my-2 text-xs text-center text-white">Do not have an account?  <Link to='/register' className="text-base text-blue-900 hover:underline">Register</Link> </p>
                         

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { resetPassword, resendOtp } from '../features/auth/authThunks';
+import { clearMessage, clearError } from '../store/authSlice';
+import useAutoDismiss from '../hooks/useAutoDismiss';
 import Navbar from '../shared/Navbar';
 import Footer from '../shared/Footer';
 
@@ -22,6 +24,20 @@ function ResetPasswordOTP() {
     const [localError, setLocalError] = useState('');
     const [email, setEmail] = useState('');
     const [countdown, setCountdown] = useState(0);
+
+    // Auto-dismiss success and error messages
+    useAutoDismiss(message, clearMessage, 3000);
+    useAutoDismiss(error, clearError, 4000);
+
+    // Auto-dismiss local errors after 4 seconds
+    useEffect(() => {
+        if (localError) {
+            const timer = setTimeout(() => {
+                setLocalError('');
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [localError]);
 
     useEffect(() => {
         // Get email from location state or localStorage
