@@ -7,7 +7,7 @@ import Email from '../assets/Icon/email (1).png';
 import {forgotPassword} from '../features/auth/authThunks';
 import { clearMessage, clearError } from '../store/authSlice';
 import useAutoDismiss from '../hooks/useAutoDismiss';
-import AutoDismissNotification from '../components/AutoDismissNotification';
+import AutoDismissNotification from '../ProtectionRoutes/AutoDismissNotification';
 
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';

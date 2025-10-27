@@ -10,7 +10,7 @@ import WebIntro from "./Web Intro/WebIntro";
 import Doc from "./Documentation/app";
 import Chatbot from "./RAG Model/chatBot";
 import Error from "./ProtectionRoutes/Error";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from './ProtectionRoutes/ProtectedRoute';
 
 import {
     createBrowserRouter,

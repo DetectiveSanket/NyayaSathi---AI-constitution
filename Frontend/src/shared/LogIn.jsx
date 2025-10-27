@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../features/auth/authThunks';
 import { clearMessage, clearError } from '../store/authSlice';
 import useAutoDismiss from '../hooks/useAutoDismiss';
-import AutoDismissNotification from '../components/AutoDismissNotification';
+import AutoDismissNotification from '../ProtectionRoutes/AutoDismissNotification';
 
 const LogIn = () => {
 
@@ -87,17 +87,17 @@ const LogIn = () => {
         // Dispatch login thunk
         const resultAction = await dispatch(loginUser(formData));
 
-        console.log("Login result:", resultAction);
+        // console.log("Login result:", resultAction);
 
         if (loginUser.fulfilled.match(resultAction)) {
             // Success: navigate to chatbot
-            console.log("Login successful, navigating to /chatbot");
+            // console.log("Login successful, navigating to /chatbot");
             alert(resultAction.payload.message || "✅ Login successful!");
             navigate("/chatbot");
         } else {
             // Error handling
             const errorMsg = resultAction.payload || "❌ Login failed!";
-            console.log("Login failed:", errorMsg);
+            // console.log("Login failed:", errorMsg);
             alert(errorMsg);
             
             // Specific error handling
