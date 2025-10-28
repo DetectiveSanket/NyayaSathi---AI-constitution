@@ -8,9 +8,11 @@ import LogIn from "./shared/LogIn";
 import Register from "./shared/Register";
 import WebIntro from "./Web Intro/WebIntro";
 import Doc from "./Documentation/app";
-import Chatbot from "./RAG Model/ChatBot";
+import Chatbot from "./RAG Model/chatBot";
 import Error from "./ProtectionRoutes/Error";
 import ProtectedRoute from './ProtectionRoutes/ProtectedRoute';
+import GuestRoute from './ProtectionRoutes/GuestRoute';
+
 
 import {
     createBrowserRouter,
@@ -25,13 +27,21 @@ const router = createBrowserRouter([
     },
 
     {
-        path:"/login",
-        element:<LogIn/>
+        path: "/login",
+        element: (
+          <GuestRoute>
+            <LogIn />
+          </GuestRoute>
+        ),
     },
-
+    
     {
-        path:"/register",
-        element:<Register/>
+        path: "/register",
+        element: (
+            <GuestRoute>
+                <Register />
+            </GuestRoute>
+        ),
     },
 
     {
@@ -40,18 +50,30 @@ const router = createBrowserRouter([
     },
 
     {
-        path:"/forgot-password",
-        element:<ForgetPassword/>
+        path: "/forgot-password",
+        element: (
+          <GuestRoute>
+            <ForgetPassword />
+          </GuestRoute>
+        ),
     },
 
     {
-        path:"/reset-password-otp",
-        element:<ResetPasswordOTP/>
+        path: "/reset-password-otp",
+        element: (
+            <GuestRoute>
+                <ResetPasswordOTP />
+            </GuestRoute>
+        ),
     },
 
     {
-        path:"/resetpassword",
-        element:<ResetPassword/>
+        path: "/resetpassword",
+        element: (
+            <GuestRoute>
+                <ResetPassword />
+            </GuestRoute>
+        ),
     },
 
     {

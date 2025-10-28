@@ -4,19 +4,19 @@ import { useSelector } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
 
 const GuestRoute = ({ children }) => {
-  const { token, loading } = useSelector((s) => s.auth);
-  const location = useLocation();
+    const { token, loading } = useSelector((s) => s.auth);
+    const location = useLocation();
 
-  // While auth is initializing, render nothing to avoid flicker
-  if (loading) return null;
+    // While auth is initializing, render nothing to avoid flicker
+    if (loading) return null;
 
-  // If we have any session (token), keep user on the app (chatbot)
-  if (token) {
-    return <Navigate to="/chatbot" replace state={{ from: location.pathname }} />;
-  }
+    // If we have any session (token), keep user on the app (chatbot)
+    if (token) {
+        return <Navigate to="/chatbot" replace state={{ from: location.pathname }} />;
+    }
 
-  // No session → allow access to guest page (login/register)
-  return children;
+    // No session → allow access to guest page (login/register)
+    return children;
 };
 
 export default GuestRoute;
@@ -43,5 +43,33 @@ export default GuestRoute;
             </GuestRoute> ⁡ 
 
         - inside GuestRoute, children equals <LogIn />. Your guard decides whether to render it or block/redirect.    
+
+        -----------------------------------------------------------------
+        What useLocation is
+
+        A hook from react-router-dom that returns the current URL info.
+        It re-renders your component whenever the URL changes.
+        What it returns
+        
+        location = { pathname, search, hash, state, key }
+        pathname: "/login"
+        search: "?q=otp"
+        hash: "#top"
+        state: arbitrary data you passed during navigation (not persisted on reload)
+        key: unique ID for this entry in history
+        Typical use cases
+        
+        Remember “where user tried to go,” then redirect back after auth.
+        Read query params: new URLSearchParams(location.search).
+        Conditional UI based on current path.
+        Pass transient data between routes via location.state.
+        How it works in your project
+        
+        In GuestRoute and ProtectedRoute:
+        Capture the current path with useLocation().
+        When redirecting, pass it into Navigate’s state as { from: location.pathname }.
+        This lets Login read where to send the user after successful auth.
+        
+        In short: useLocation gives you the current route and any state passed during navigation. You’re using it correctly to implement “return to where you came from” and to block guest-only pages when already logged in.
             
 */
