@@ -1,19 +1,26 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, user, token } = useSelector((state) => state.auth);
+  const { user, token, isAuthenticated, loading } = useSelector((s) => s.auth);
+  const location = useLocation();
 
-  console.log("ProtectedRoute check:", { isAuthenticated, hasUser: !!user, hasToken: !!token });
-
-  // Check if user is authenticated
-  if (!isAuthenticated || !token) {
-    console.log("User not authenticated, redirecting to login");
-    return <Navigate to="/login" replace />;
+  // Wait while auth state initializes (redux-persist, profile fetch, etc.)
+  if (loading) {
+    return (
+      <div className="min-h-screen grid place-items-center text-gray-500 text-sm">
+        Checking session…
+      </div>
+    );
   }
 
-  // If authenticated, render the protected component
+  // Allow only when we have a valid session
+  const authed = Boolean(token && user && (isAuthenticated ?? true));
+  if (!authed) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
   return children;
 };
 

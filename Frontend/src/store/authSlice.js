@@ -16,41 +16,43 @@ import {
 import { setAuthHeader } from "../services/api.js";
 
 const initialState = {
-  user: null,
-  token: null,
-  refreshToken: null,
-  loading: false,
-  error: null,
-  isAuthenticated: false,
-  // helpers for flows
-  pendingEmail: null, // used for register/forgot OTP flows
-  message: null,
-
-
+    user: null,
+    token: null,
+    refreshToken: null,
+    loading: false,
+    error: null,
+    isAuthenticated: false,
+    // helpers for flows
+    pendingEmail: null, // used for register/forgot OTP flows
+    message: null,
 };
 
 const authSlice = createSlice({
+
   name: "auth",
-  initialState,
-  reducers: {
-    // local logout (clear client only)
-    localLogout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.refreshToken = null;
-      state.isAuthenticated = false;
-      state.error = null;
-      state.pendingEmail = null;
-      // also clear axios header
-      setAuthHeader(null);
+
+    initialState,
+    reducers: {
+        // local logout (clear client only)
+        localLogout: (state) => {
+            state.user = null;
+            state.token = null;
+            state.refreshToken = null;
+            state.isAuthenticated = false;
+            state.error = null;
+            state.pendingEmail = null;
+            // also clear axios header
+            setAuthHeader(null);
+        },
+
+        clearError: (state) => {
+            state.error = null;
+        },
+
+        clearMessage: (state) => {
+            state.message = null;
+        },
     },
-    clearError: (state) => {
-      state.error = null;
-    },
-    clearMessage: (state) => {
-      state.message = null;
-    },
-  },
 
   extraReducers: (builder) => {
     // REGISTER

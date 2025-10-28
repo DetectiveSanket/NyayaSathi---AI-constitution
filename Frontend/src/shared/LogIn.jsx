@@ -11,6 +11,7 @@ import { loginUser } from '../features/auth/authThunks';
 import { clearMessage, clearError } from '../store/authSlice';
 import useAutoDismiss from '../hooks/useAutoDismiss';
 import AutoDismissNotification from '../ProtectionRoutes/AutoDismissNotification';
+import { toast } from 'sonner';
 
 const LogIn = () => {
 
@@ -92,7 +93,8 @@ const LogIn = () => {
         if (loginUser.fulfilled.match(resultAction)) {
             // Success: navigate to chatbot
             // console.log("Login successful, navigating to /chatbot");
-            alert(resultAction.payload.message || "✅ Login successful!");
+            // alert(resultAction.payload.message || "✅ Login successful!");
+            toast.success(resultAction.payload.message || "✅ Login successful!");
             navigate("/chatbot");
         } else {
             // Error handling
