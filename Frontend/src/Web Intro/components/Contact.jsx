@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Github, Linkedin, Send, MapPin, Phone, Instagram, Twitter } from 'lucide-react';
+import { Mail, Github, Linkedin, Send, MapPin, Phone, Instagram, Twitter, CheckCircle, AlertCircle } from 'lucide-react';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -8,10 +8,58 @@ const Contact = () => {
     message: ''
   });
 
-  const handleSubmit = (e) => {
+  const [status, setStatus] = useState({
+    loading: false,
+    success: '',
+    error: ''
+  });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
+    setStatus({ loading: true, success: '', error: '' });
+
+    try {
+      const response = await fetch('http://localhost:5000/api/v1/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send message');
+      }
+
+      setStatus({ 
+        loading: false, 
+        success: data.message || 'Message sent successfully! We\'ll get back to you within 24 hours.', 
+        error: '' 
+      });
+      
+      // Clear form
+      setFormData({ name: '', email: '', message: '' });
+
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        setStatus(prev => ({ ...prev, success: '' }));
+      }, 5000);
+
+    } catch (error) {
+      console.error('Contact form error:', error);
+      setStatus({ 
+        loading: false, 
+        success: '', 
+        error: error.message || 'Something went wrong. Please try again later.' 
+      });
+
+      // Auto-hide error message after 6 seconds
+      setTimeout(() => {
+        setStatus(prev => ({ ...prev, error: '' }));
+      }, 6000);
+    }
   };
 
   const handleChange = (e) => {
@@ -19,6 +67,10 @@ const Contact = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (status.error) {
+      setStatus(prev => ({ ...prev, error: '' }));
+    }
   };
 
   return (
@@ -150,12 +202,38 @@ const Contact = () => {
                 ></textarea>
               </div>
 
+              {/* Success Message */}
+              {status.success && (
+                <div className="flex items-start space-x-3 p-4 bg-green-500/20 border border-green-500/30 rounded-lg animate-fadeIn">
+                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-green-300 text-sm">{status.success}</p>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {status.error && (
+                <div className="flex items-start space-x-3 p-4 bg-red-500/20 border border-red-500/30 rounded-lg animate-fadeIn">
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-red-300 text-sm">{status.error}</p>
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 group"
+                disabled={status.loading}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 group"
               >
-                <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                <span>Send Message</span>
+                {status.loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <span>Send Message</span>
+                  </>
+                )}
               </button>
             </form>
           </div>

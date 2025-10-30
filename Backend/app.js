@@ -7,6 +7,7 @@ import connectDB from './DB/db.js';
 import rateLimit from 'express-rate-limit';
 
 import userRoutes from './routes/user-route.js';
+import contactRoutes from './routes/contact-route.js';
 // import companyRoutes from './routes/company.route.js';
 // import productRoutes from './routes/product.route.js';
 // import orderRoutes from './routes/order.route.js';
@@ -54,6 +55,7 @@ app.use((req, res, next) => {
 
 //* Routes
 app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/contact', contactRoutes);
 
 // app.use('/api/v1/notification', notificationRoutes);
 // app.use('/api/v1/cart', cartRoutes);
