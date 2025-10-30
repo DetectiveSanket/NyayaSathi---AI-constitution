@@ -2,8 +2,15 @@ import React from 'react';
 import { ArrowRight, Play, Sparkles } from 'lucide-react';
 import AINetwork3D from './AINetwork3D';
 import AI3DElements from './AI3DElements';
+import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const Hero = () => {
+
+    const {token} = useSelector((state) => state.auth);
+
+
+
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-primary">
       {/* Background gradient */}
@@ -41,10 +48,19 @@ const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <button className="group px-8 py-4 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg font-semibold hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accent/50 flex items-center gap-2">
-              Try Demo
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            {
+                token ? (
+                    <Link to="/chatbot" className="group px-8 py-4 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg font-semibold hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accent/50 flex items-center gap-2">
+                        Try Demo
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                ) : (
+                    <Link to="/login" className="group px-8 py-4 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg font-semibold hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accent/50 flex items-center gap-2">
+                        Get Started
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                )
+            }
             
             <button className="group px-8 py-4 border border-accent/50 text-accent rounded-lg font-semibold hover:bg-accent/10 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/25 flex items-center gap-2">
               <Play className="w-5 h-5" />

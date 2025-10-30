@@ -2,10 +2,18 @@ import React, { useState } from 'react';
 import { Menu, X, Zap } from 'lucide-react';
 import ThemeSelector from './ThemeSelector';
 import { Link , NavLink} from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
+
+  const {token} = useSelector((state) => state.auth);
+ 
+
+//   if(loginUser){
+//     return null; // Don't render header if user is logged in
+//   }
 
   return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-surface-primary/80 backdrop-blur-md border-b border-border transform-gpu">
@@ -20,25 +28,36 @@ const Header = () => {
                 </div>
 
                 <nav className="hidden md:flex items-center space-x-8">
-                    <a href="#home" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Home</a>
-                    <a href="#features" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Features</a>
+
+                    <Link to="/#home" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Home</Link>
+                    <Link to="/#features" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Features</Link>
                     <NavLink to="/doc" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Doc</NavLink>
-                    {/* <a href="#how-it-works" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">How It Works</a> */}
-                    {/* <a href="#technology" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Technology</a> */}
-                    {/* <a href="#impact" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Impact</a> */}
-                    <a href="#about" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">About</a>
-                    <a href="#contact" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Contact</a>
+                    <Link to="/#about" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">About</Link>
+                    <Link to="/#contact" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Contact</Link>
+                
                 </nav>
 
                 <div className="hidden md:flex items-center space-x-4">
                     <ThemeSelector />
-                    <button className="px-4 py-2 text-text-secondary hover:text-text-primary transition-all duration-300 transform hover:scale-105">
+
+                    { token ? (
+                        <button className="px-6 py-2 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/50">
+                            <Link to="/chatbot" className="text-text-secondary"> Go to Chatbot </Link>
+                        </button>
+                        ) : (
+                            <button className="px-6 py-2 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/50">
+                                <Link to="/login" className="text-text-secondary"> SignIn/Up </Link>
+                            </button>
+                        )
+                    }
+
+                    {/* <button className="px-4 py-2 text-text-secondary hover:text-text-primary transition-all duration-300 transform hover:scale-105">
                         Try Demo
                     </button>
 
                     <button className="px-6 py-2 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/50">
                         <Link to="/login" className="text-text-secondary"> SignIn/Up </Link>
-                    </button>
+                    </button> */}
                 </div>
 
                 <button 
@@ -61,12 +80,18 @@ const Header = () => {
                     <a href="#contact" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:translate-x-2">Contact</a>
                     </nav>
                     <div className="flex flex-col space-y-2 mt-4">
-                    <button className="px-4 py-2 text-text-secondary text-left hover:text-text-primary transition-all duration-300 transform hover:translate-x-2">
-                        Try Demo
-                    </button>
-                    <button className="px-6 py-2 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-accent/50">
-                        Sign Up
-                    </button>
+                        {
+                            token ? (
+                                <button className="px-6 py-2 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-accent/50">
+                                    <Link to="/chatbot" className="text-text-secondary"> Go to Chatbot </Link>
+                                </button>
+                            ) : (
+                                <button className="px-6 py-2 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-accent/50">
+                                    <Link to="/login" className="text-text-secondary"> SignIn/Up </Link>
+                                </button>
+                            )
+                        }
+                   
                     
                     </div>
                 </div>
