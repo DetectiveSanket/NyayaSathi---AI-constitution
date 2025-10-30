@@ -18,7 +18,7 @@ const HowItWorks = () => {
     },
     {
       icon: CheckCircle,
-      title: 'Get Clear Answers + References',
+      title: 'Get Clear Answers',
       description: 'Simplified explanations with legal references',
       color: 'from-accent to-accent-secondary'
     }

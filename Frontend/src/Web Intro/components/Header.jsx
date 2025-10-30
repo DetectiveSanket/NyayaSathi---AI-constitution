@@ -29,12 +29,13 @@ const Header = () => {
 
                 <nav className="hidden md:flex items-center space-x-8">
 
-                    <Link to="/#home" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Home</Link>
-                    <Link to="/#features" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Features</Link>
+                    <a href="#home" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:translate-x-2">Home</a>
+                    <a href="#features" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:translate-x-2">Features</a>
+                    
                     <NavLink to="/doc" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Doc</NavLink>
-                    <Link to="/#about" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">About</Link>
-                    <Link to="/#contact" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">Contact</Link>
-                
+                    <a href="#about" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:translate-x-2">About</a>
+                    <a href="#contact" className="text-text-secondary hover:text-accent transition-all duration-300 transform hover:translate-x-2">Contact</a>
+                    
                 </nav>
 
                 <div className="hidden md:flex items-center space-x-4">
@@ -50,14 +51,6 @@ const Header = () => {
                             </button>
                         )
                     }
-
-                    {/* <button className="px-4 py-2 text-text-secondary hover:text-text-primary transition-all duration-300 transform hover:scale-105">
-                        Try Demo
-                    </button>
-
-                    <button className="px-6 py-2 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/50">
-                        <Link to="/login" className="text-text-secondary"> SignIn/Up </Link>
-                    </button> */}
                 </div>
 
                 <button 

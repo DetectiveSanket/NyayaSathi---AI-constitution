@@ -42,7 +42,7 @@ const Footer = () => {
           <div>
             <h3 className="text-white font-semibold mb-4">Product</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Features</a></li>
+              <li><a href="#features" className="text-gray-400 hover:text-purple-400 transition-colors">Features</a></li>
               <li><a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Dashboard</a></li>
               <li><a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Analytics</a></li>
               <li><a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Integrations</a></li>
@@ -54,11 +54,12 @@ const Footer = () => {
           <div>
             <h3 className="text-white font-semibold mb-4">Company</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">About</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Blog</a></li>
+              <li><a href="#about" className="text-gray-400 hover:text-purple-400 transition-colors">About</a></li>
+              <li><a href="#Blog" className="text-gray-400 hover:text-purple-400 transition-colors">Blog</a></li>
               <li><a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Careers</a></li>
               <li><a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Press</a></li>
               <li><a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">Partners</a></li>
+                    
             </ul>
           </div>
         </div>

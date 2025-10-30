@@ -3,8 +3,8 @@ import { ThemeProvider } from './components/ThemeProvider';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Features from './components/Features';
-import HowItWorks from './components/HowItWorks';
 import Technology from './components/Technology';
+import HowItWorks from './components/HowItWorks';
 import Dashboard from './components/Dashboard';
 import Impact from './components/Impact';
 import Stats from './components/Stats';
@@ -24,6 +24,7 @@ function WebIntro() {
                 <Hero />
                 <Dashboard />
                 <Features />
+                <Technology />
                 <HowItWorks />
                 <Impact />
                 <Stats />
