@@ -35,29 +35,49 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchFromSidebar, setSearchFromSidebar] = useState("");
+
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "system",
-      content: "Document loaded: IndianPenalCode_Sections.pdf",
-      timestamp: "12:30 PM"
-    },
-    {
-      id: "2",
-      type: "user",
-      content: "What sections apply if someone is verbally threatened?",
-      timestamp: "12:31 PM"
-    },
-    {
-      id: "3",
-      type: "assistant",
-      content: "मराठी महिने हे हिंदू पंचांगानुसार वर्षाच्या १२ महिन्यांची नावे आहेत: चैत्र, वैशाख, ज्येष्ठ, आषाढ, श्रावण, भाद्रपद, अश्विन, कार्तिक, मार्गशीर्ष, पौष, माघ आणि फाल्गुन. हे महिने वसंत, ग्रीष्म, वर्षा, शरद, हेमंत आणि शिशिर या सहा ऋतूंमध्ये विभागलेले आहेत.",
-      timestamp: "12:31 PM",
-      citations: [
-        { id: "c1", title: "Indian Penal Code", section: "Section 503", url: "#" },
-        { id: "c2", title: "Indian Penal Code", section: "Section 506", url: "#" }
-      ]
-    }
+      {
+        id: "1",
+        type: "system",
+        content: "Document loaded: IndianPenalCode_Sections.pdf",
+        timestamp: "12:30 PM"
+      },
+      {
+        id: "2",
+        type: "user",
+        content: "What sections apply if someone is verbally threatened?",
+        timestamp: "12:31 PM"
+      },
+      {
+        id: "3",
+        type: "assistant",
+        content: "जीवनात पुढे जाण्यासाठी प्रेरणा आणि मोटिवेशन अत्यंत महत्त्वाचे आहेत. विशेषतः जेव्हा आपण कठीण प्रसंगांचा सामना करतो, तेव्हा काही प्रेरणादायक सुविचार आणि स्टेटस आपल्याला नवी ऊर्जा देऊ शकतात. या लेखात, आम्ही मराठीत काही सर्वोत्तम प्रेरणादायक सुविचार आणि मोटिवेशनल स्टेटस संग्रह घेऊन आलो आहोत, जे फक्त आपल्याला प्रेरित करणार नाहीत, तर आपल्या मित्र आणि कुटुंबातील लोकांबरोबर शेअर करण्यासही उपयुक्त असतील. ",
+        timestamp: "12:31 PM",
+        citations: [
+          { id: "c1", title: "Indian Penal Code", section: "Section 503", url: "#" },
+          { id: "c2", title: "Indian Penal Code", section: "Section 506", url: "#" }
+        ]
+      },
+
+      {
+        id: "3",
+        type: "assistant",
+        content: "Verbal threats are addressed under Section 503 and Section 506 of the Indian Penal Code. Section 503 deals with criminal intimidation, which involves threatening someone with injury to their person, reputation, or property. Section 506 prescribes the punishment for criminal intimidation, which can include imprisonment and fines depending on the severity of the threat.",
+        timestamp: "12:31 PM",
+        citations: [
+          { id: "c1", title: "Indian Penal Code", section: "Section 503", url: "#" },
+          { id: "c2", title: "Indian Penal Code", section: "Section 506", url: "#" }
+        ]
+      },
+
+      {
+        id: "4",
+        type: "user",
+        content: "Can you provide more details on Section 503?",
+        timestamp: "12:31 PM"
+      },
+
   ]);
 
   const [isLoading, setIsLoading] = useState(false);
