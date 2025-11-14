@@ -8,7 +8,7 @@ import LogIn from "./shared/LogIn";
 import Register from "./shared/Register";
 import WebIntro from "./Web Intro/WebIntro";
 import Doc from "./Documentation/app";
-import Chatbot from "./RAG Model/chatBot";
+// import Chatbot from "./RAG Model/chatBot";
 import Error from "./ProtectionRoutes/Error";
 import ProtectedRoute from './ProtectionRoutes/ProtectedRoute';
 import GuestRoute from './ProtectionRoutes/GuestRoute';

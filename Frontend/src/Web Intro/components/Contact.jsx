@@ -48,7 +48,7 @@ const Contact = () => {
       }, 5000);
 
     } catch (error) {
-      console.error('Contact form error:', error);
+      // console.error('Contact form error:', error);
       setStatus({ 
         loading: false, 
         success: '', 

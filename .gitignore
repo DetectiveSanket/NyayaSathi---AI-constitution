@@ -47,3 +47,7 @@ out/
 # Ignore OS generated files
 .DS_Store
 Thumbs.db
+
+
+.github/instructions/kluster-code-verify.instructions.md
+.kluster
