@@ -70,7 +70,7 @@ const LogIn = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        console.log("Login attempt with:", { email: formData.email });
+        // console.log("Login attempt with:", { email: formData.email });
 
         // Basic validation
         if (!formData.email || !formData.password) {

@@ -29,7 +29,7 @@ function WebIntro() {
                 <Impact />
                 <Stats />
                 <About />
-                <AdminsDetails />
+                {/* <AdminsDetails /> */}
                 <Contact />
                 <Footer />
             </div>

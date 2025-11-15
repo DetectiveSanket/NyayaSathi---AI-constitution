@@ -31,14 +31,16 @@ function OTPVerification() {
 
   // ✅ Debug logging
   useEffect(() => {
-    console.log("OTPVerification - State:", { 
-      reduxEmail, 
-      localStorageEmail: localStorage.getItem('registrationEmail'),
-      finalEmail: email,
-      loading, 
-      error, 
-      message 
-    });
+
+    // console.log("OTPVerification - State:", { 
+    //   reduxEmail, 
+    //   localStorageEmail: localStorage.getItem('registrationEmail'),
+    //   finalEmail: email,
+    //   loading, 
+    //   error, 
+    //   message 
+    // });
+
   }, [reduxEmail, email, loading, error, message]);
 
   // ✅ Redirect if no email (user didn't come from registration)
@@ -113,7 +115,7 @@ function OTPVerification() {
     if (e) e.preventDefault();
     const finalOtp = otpValue || otp.join("");
 
-    console.log("Submitting OTP:", { email, otp: finalOtp });
+    // console.log("Submitting OTP:", { email, otp: finalOtp });
 
     if (finalOtp.length !== 6) {
       alert("⚠️ Please enter all 6 digits");
@@ -121,7 +123,7 @@ function OTPVerification() {
     }
 
     if (!email) {
-      alert("⚠️ Email not found. Please register again.");
+      // alert("⚠️ Email not found. Please register again.");
       navigate("/register");
       return;
     }
@@ -130,12 +132,12 @@ function OTPVerification() {
       verifyOtp({ email, otp: finalOtp })
     );
 
-    console.log("Verify OTP result:", resultAction);
+    // console.log("Verify OTP result:", resultAction);
 
     if (verifyOtp.fulfilled.match(resultAction)) {
       // Clear stored email on successful verification
       localStorage.removeItem('registrationEmail');
-      alert(resultAction.payload.message || "✅ Email verified successfully!");
+      // alert(resultAction.payload.message || "✅ Email verified successfully!");
       navigate("/login");
     } else {
       const errorMsg = resultAction.payload || "❌ OTP verification failed!";
@@ -153,7 +155,7 @@ function OTPVerification() {
   const handleResendOTP = async () => {
     if (!canResend) return;
     
-    console.log("Resending OTP for email:", email);
+    // console.log("Resending OTP for email:", email);
     
     if (!email) {
       alert("⚠️ Email not found. Please register again.");
@@ -168,7 +170,7 @@ function OTPVerification() {
 
     const result = await dispatch(resendOtp({ email }));
     
-    console.log("Resend OTP result:", result);
+    // console.log("Resend OTP result:", result);
     
     if (resendOtp.fulfilled.match(result)) {
       alert(result.payload.message || "✅ OTP resent successfully!");

@@ -27,6 +27,10 @@ function Register() {
 
     // Local state for password visibility(eye icon)
     const [showPassword, setShowPassword] = useState(false);
+    
+    // Local loading state for smooth transitions
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isTransitioning, setIsTransitioning] = useState(false);
 
     // Redux state
     const { loading, error, message } = useSelector((state) => state.auth);
@@ -67,24 +71,49 @@ function Register() {
             return;
         }
 
-        // Dispatch register thunk
-        const resultAction = await dispatch(registerUser(formData));
+        // Set submitting state
+        setIsSubmitting(true);
 
-        if (registerUser.fulfilled.match(resultAction)) {
-            // Success: store email in localStorage as backup and navigate to verify-email page
-            localStorage.setItem('registrationEmail', formData.email);
-            alert(resultAction.payload.message || "Verification email sent!");
-            navigate("/otpverification");
-        } 
+        try {
+            // Dispatch register thunk
+            const resultAction = await dispatch(registerUser(formData));
 
-        else {
-            // Error
-            alert(resultAction.payload || "Registration failed!");
+            if (registerUser.fulfilled.match(resultAction)) {
+                // Success: store email in localStorage as backup
+                localStorage.setItem('registrationEmail', formData.email);
+                
+                // Set transition state for smooth navigation
+                setIsTransitioning(true);
+                
+                // Optimized delay to ensure smooth transition without being too slow
+                setTimeout(() => {
+                    navigate("/otpverification");
+                }, 200);
+            } else {
+                // Error
+                alert(resultAction.payload || "Registration failed!");
+                setIsSubmitting(false);
+            }
+        } catch (error) {
+            console.error("Registration error:", error);
+            alert("Registration failed! Please try again.");
+            setIsSubmitting(false);
         }
     };
 
-  return (
-        <>   
+    return (
+        <>
+            {(isSubmitting || isTransitioning) && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md transition-opacity duration-200">
+                    <svg className="h-16 w-16 animate-spin text-cyan-400" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className="mt-6 text-base font-semibold text-cyan-100 animate-pulse">
+                        {isTransitioning ? "Redirecting you to OTP verification..." : "Creating your account..."}
+                    </p>
+                </div>
+            )}
             <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col">
                 <div
                     className="pointer-events-none absolute inset-0"
@@ -93,9 +122,7 @@ function Register() {
                             "radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.18) 0%, rgba(6, 182, 212, 0.10) 22%, rgba(0, 0, 0, 0) 60%)",
                     }}
                 />
-
-            <Navbar />
-
+                <Navbar />
                 <main className="relative mx-auto max-w-6xl px-4 flex-1 w-full flex items-center justify-center mt-16">
                     <section className="w-full max-w-xl">
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4 tracking-tight">
@@ -222,10 +249,44 @@ function Register() {
 
                             <button
                                 type="submit"
-                                className="w-full p-4 mt-8 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-full hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 transform hover:scale-[1.02]"
-                                disabled={loading}
+                                disabled={loading || isSubmitting || isTransitioning}
+                                className={`w-full p-4 mt-8 bg-gradient-to-r font-semibold rounded-full transition-all duration-300 shadow-lg transform ${
+                                    isTransitioning
+                                        ? 'from-green-600 to-emerald-600 text-white cursor-not-allowed'
+                                        : isSubmitting
+                                        ? 'from-orange-600 to-yellow-600 text-white cursor-not-allowed'
+                                        : loading
+                                        ? 'from-gray-600 to-gray-700 text-white cursor-not-allowed'
+                                        : 'from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 hover:shadow-purple-500/25 hover:scale-[1.02]'
+                                }`}
                             >
-                                {loading ? "Registering..." : "Register"}
+                                {isTransitioning ? (
+                                    <div className="flex items-center justify-center space-x-2">
+                                        <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>✅ Redirecting to OTP...</span>
+                                    </div>
+                                ) : isSubmitting ? (
+                                    <div className="flex items-center justify-center space-x-2">
+                                        <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>🔄 Creating Account...</span>
+                                    </div>
+                                ) : loading ? (
+                                    <div className="flex items-center justify-center space-x-2">
+                                        <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>⏳ Processing...</span>
+                                    </div>
+                                ) : (
+                                    "Register"
+                                )}
                             </button>
 
                             {error && (

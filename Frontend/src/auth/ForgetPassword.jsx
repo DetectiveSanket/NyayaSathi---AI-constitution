@@ -47,8 +47,8 @@ function ForgetPassword() {
         }
         
         try {
-            const result = await dispatch(forgotPassword({ email })).unwrap();
-            console.log('Forgot password result:', result);
+             await dispatch(forgotPassword({ email })).unwrap();
+            // console.log('Forgot password result:', result);
             // Store email for next step
             localStorage.setItem('pendingResetEmail', email);
             // On success, navigate to OTP verification page

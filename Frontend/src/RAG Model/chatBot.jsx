@@ -44,7 +44,7 @@ function ChatBot() {
             <Sonner />
 
             <div>
-              {/* <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold">NyayaSathi Chat Assistant</h1>
 
                 <button
@@ -53,7 +53,7 @@ function ChatBot() {
                 >
                   Logout
                 </button>
-              </div> */}
+              </div>
 
               {/* ChatBot UI */}
               <Index />

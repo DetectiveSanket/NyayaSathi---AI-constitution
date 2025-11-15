@@ -100,7 +100,7 @@ function ResetPasswordOTP() {
                 newPassword: formData.newPassword
             })).unwrap();
             
-            console.log('Reset password result:', result);
+            // console.log('Reset password result:', result);
             
             // Clear stored email
             localStorage.removeItem('pendingResetEmail');
