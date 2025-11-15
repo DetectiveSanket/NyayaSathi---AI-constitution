@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { useToast } from "../hooks/use-toast";
+import { Button } from "../components/ui/button";
+import { Textarea } from "../components/ui/textarea";
+import { Badge } from "../components/ui/badge";
 import { 
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "../components/ui/tooltip";
 import { 
   Plus, 
   Mic, 
@@ -32,16 +32,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "../components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "../components/ui/popover";
 import TTSControls from "./TTSControls";
 import { FileUploadZone } from "./FileUploadZone";
 import { DocumentLibraryModal } from "./DocumentLibraryModal";
-import { useFileManager } from "@/contexts/FileManagerContext";
+import { useFileManager } from "../contexts/FileManagerContext";
 
 interface ChatComposerProps {
   onSendMessage: (message: string) => void;

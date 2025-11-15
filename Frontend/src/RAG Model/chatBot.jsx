@@ -16,7 +16,7 @@ import { FileManagerProvider } from "./contexts/FileManagerContext";
 // Chatbot main page (Index)
 import Index from "./pages/Index";
 
-// import './chatbot.css';
+import './chatbot.css';
 
 
 const queryClient = new QueryClient();
@@ -36,34 +36,34 @@ function ChatBot() {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <FileManagerProvider>
-        <TTSProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
+    <div className="chatbot-scope">
+      <QueryClientProvider client={queryClient}>
+        <FileManagerProvider>
+          <TTSProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
 
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">NyayaSathi Chat Assistant</h1>
+              <div>
+                {/* <div className="flex justify-between items-center mb-4">
+                  <h1 className="text-2xl font-bold">NyayaSathi Chat Assistant</h1>
 
-                <button
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                  onClick={logoutHandle}
-                >
-                  Logout
-                </button>
+                  <button
+                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                    onClick={logoutHandle}
+                  >
+                    Logout
+                  </button>
+                </div> */}
+
+                {/* ChatBot UI */}
+                <Index />
               </div>
-
-              {/* ChatBot UI */}
-              <Index />
-            </div>
-
-
-          </TooltipProvider>
-        </TTSProvider>
-      </FileManagerProvider>
-    </QueryClientProvider>
+            </TooltipProvider>
+          </TTSProvider>
+        </FileManagerProvider>
+      </QueryClientProvider>
+    </div>
   );
 }
 
