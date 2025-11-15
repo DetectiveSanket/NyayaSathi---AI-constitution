@@ -12,7 +12,7 @@ const Footer = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
                 <Zap className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">NexFlow</span>
+              <span className="text-xl font-bold text-white">Nyayasathi</span>
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
               Transform your workflow with our cutting-edge platform designed for modern teams. 

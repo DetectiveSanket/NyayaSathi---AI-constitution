@@ -92,7 +92,7 @@ const Features = () => {
                     
                     {
                         token ? (
-                            <button className="px-8 py-4 text-orange-600 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg font-semibold hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accent/50">
+                            <button className="px-8 py-4 text-amber-700 bg-gradient-to-r from-accent to-accent-secondary text-surface-primary rounded-lg font-semibold hover:from-accent/80 hover:to-accent-secondary/80 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accent/50">
                                 Try NyayaSathi Now
                                 <ArrowBigRight className="w-5 h-5 inline-block ml-2 -rotate-90" />
                             </button>

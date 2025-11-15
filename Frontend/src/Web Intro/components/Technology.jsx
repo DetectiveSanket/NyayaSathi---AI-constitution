@@ -37,7 +37,7 @@ const Technology = () => {
                 linear-gradient(90deg, var(--accent) 1px, transparent 1px)
             `,
             backgroundSize: '50px 50px',
-            animation: 'grid-move 20s linear infinite'
+            // animation: 'grid-move 20s linear infinite'
             }}></div>
         </div>
 
