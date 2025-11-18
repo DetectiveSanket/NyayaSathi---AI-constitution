@@ -190,9 +190,9 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
         </Tooltip>
       
       {/* New Chat Button */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-rounded-lg">
         <Button 
-          className="w-full bg-gradient-primary hover:opacity-90 focus-ring shadow-md hover-lift"
+          className="w-full bg-blue-500 hover:opacity-90 focus-ring shadow-md hover-lift "
           size="lg"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -241,7 +241,7 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
       {/* Recent Chats */}
       <div className="flex-1 overflow-y-auto scrollbar-custom">
         <div className="p-4">
-          <h3 className="text-sm font-medium text-secondary-muted mb-3">
+          <h3 className="text-sm font-medium text-zinc-400 mb-3">
             Recent Chats {searchQuery && `(${filteredChats.length} found)`}
           </h3>
           <div className="space-y-2">
@@ -253,9 +253,9 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
             ) : (
               filteredChats.map((chat) => (
                 <div
-                  key={chat.id}
-                  className="group p-3 rounded-radius-sm hover:bg-surface-elevated cursor-pointer border border-transparent hover:border-border transition-all sidebar-item-glow"
-                >
+                key={chat.id}
+                className="group p-3 rounded-radius-sm hover:bg-surface-elevated cursor-pointer border border-transparent hover:border-border transition-all sidebar-item-glow hover:rounded-[16px]"
+              >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
@@ -264,10 +264,12 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
                           {chat.title}
                         </h4>
                       </div>
-                      <p className="text-xs text-secondary-muted line-clamp-2 mb-2">
+
+                      <p className="text-xs text-zinc-600 line-clamp-2 mb-2">
                         {chat.preview}
                       </p>
-                      <div className="flex items-center text-xs text-secondary-muted">
+
+                      <div className="flex items-center text-xs text-zinc-500">
                         <Clock className="w-3 h-3 mr-1" />
                         {chat.timestamp}
                       </div>
@@ -330,13 +332,13 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
             >
               <Avatar className="w-8 h-8 mr-3">
                 <AvatarImage src="" alt="User" />
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                <AvatarFallback className="bg-blue-500 text-primary-foreground">
                   U
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left">
                 <div className="text-sm font-medium">Legal User</div>
-                <div className="text-xs text-secondary-muted">user@example.com</div>
+                <div className="text-xs text-zinc-600">user@example.com</div>
               </div>
             </Button>
           </PopoverTrigger>

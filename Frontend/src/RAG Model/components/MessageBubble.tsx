@@ -54,7 +54,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
   if (message.type === "system") {
     return (
       <div className="flex justify-center py-4">
-        <div className="px-4 py-2 bg-surface-elevated rounded-full text-sm text-secondary-muted border border-border">
+        <div className="px-4 py-2 bg-surface-elevated rounded-full text-sm text-zinc-500 border border-border">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
             <span>{message.content}</span>
@@ -75,11 +75,11 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
           <div className="flex-shrink-0">
             <Avatar className="w-7 h-7">
               {isAssistant ? (
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                <AvatarFallback className="bg-blue-700 text-primary-foreground text-xs">
                   AI
                 </AvatarFallback>
               ) : (
-                <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
+                <AvatarFallback className="bg-teal-500 text-secondary-foreground text-xs">
                   U
                 </AvatarFallback>
               )}
@@ -92,7 +92,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
               className={`px-5 py-4 rounded-2xl shadow-sm ${
                 isAssistant
                   ? "bg-surface-elevated text-foreground border border-border/50 hover:border-border/80 transition-colors"
-                  : "bg-gradient-primary text-primary-foreground shadow-md"
+                  : "bg-blue-500 text-primary-foreground shadow-md"
               }`}
             >
               {/* Message text */}
@@ -100,7 +100,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
                 <p className="mb-0 whitespace-pre-wrap font-normal">
                   {message.content}
                   {message.isStreaming && (
-                    <span className="inline-block w-0.5 h-4 bg-current animate-pulse ml-1 align-middle" />
+                    <span className="inline-block w-0.5 h-4 bg-blue-600 animate-pulse ml-1 align-middle" />
                   )}
                 </p>
               </div>
@@ -131,7 +131,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
 
             {/* Metadata */}
             <div className={`flex items-center justify-between mt-2 px-1 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-              <div className="flex items-center text-xs text-secondary-muted">
+              <div className="flex items-center text-xs text-zinc-500">
                 <Clock className="w-3 h-3 mr-1" />
                 {message.timestamp}
               </div>

@@ -42,7 +42,7 @@ export const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => 
             <div className="relative">
               <Avatar className="w-24 h-24">
                 <AvatarImage src="" alt="User" />
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground text-2xl">
+                <AvatarFallback className="bg-blue-600 text-primary-foreground text-2xl">
                   U
                 </AvatarFallback>
               </Avatar>
@@ -53,7 +53,7 @@ export const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => 
                 <Camera className="w-4 h-4" />
               </Button>
             </div>
-            <p className="text-xs text-secondary-muted">Click to upload profile picture</p>
+            <p className="text-xs text-zinc-500">Click to upload profile picture</p>
           </div>
 
           {/* Form Fields */}

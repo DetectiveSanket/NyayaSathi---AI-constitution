@@ -16,7 +16,7 @@ import { FileManagerProvider } from "./contexts/FileManagerContext";
 // Chatbot main page (Index)
 import Index from "./pages/Index";
 
-import './chatbot.css';
+// import './chatbot.css';
 
 
 const queryClient = new QueryClient();

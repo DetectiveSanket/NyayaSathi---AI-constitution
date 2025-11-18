@@ -192,7 +192,7 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
       {/* New Chat Button */}
       <div className="p-4 border-b border-border">
         <Button 
-          className="w-full bg-gradient-primary hover:opacity-90 focus-ring shadow-md hover-lift"
+          className="w-full bg-blue-500 hover:opacity-90 focus-ring shadow-md hover-lift"
           size="lg"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -330,12 +330,12 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
             >
               <Avatar className="w-8 h-8 mr-3">
                 <AvatarImage src="" alt="User" />
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                <AvatarFallback className="bg-blue-500 text-primary-foreground">
                   U
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left">
-                <div className="text-sm font-medium">Legal User</div>
+                <div className="text-sm font-medium ">Legal User</div>
                 <div className="text-xs text-secondary-muted">user@example.com</div>
               </div>
             </Button>

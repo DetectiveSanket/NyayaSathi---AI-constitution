@@ -58,7 +58,7 @@ const ChatHeader = ({ onExportChat }: ChatHeaderProps = {}) => {
         >
           <div className="flex items-center justify-between w-full gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-sm text-secondary-muted whitespace-nowrap">Model:</span>
+              <span className="text-sm text-zinc-600 whitespace-nowrap">Model:</span>
               <span className="text-sm font-medium text-foreground truncate">{getModelDisplayName(selectedModel)}</span>
               {selectedModel === "legal-ai-v1" && (
                 <Badge className="bg-accent text-accent-foreground border-0 text-xs px-2 py-0 whitespace-nowrap flex-shrink-0">

@@ -510,7 +510,7 @@ const ChatComposer = ({ onSendMessage, isLoading = false }: ChatComposerProps) =
                 <Button
                   onClick={handleSend}
                   disabled={!message.trim() || isLoading}
-                  className="bg-gradient-primary hover:opacity-90 shadow-sm w-9 h-9 p-0 rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-40 transition-all duration-200"
+                  className="bg-gradient-to-br from-blue-500 to-indigo-600 hover:opacity-90 shadow-sm w-9 h-9 p-0 rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-40 transition-all duration-200"
                   title="Send message"
                 >
                   {isLoading ? (
