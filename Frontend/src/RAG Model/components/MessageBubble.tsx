@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "../hooks/use-toast";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Copy, ExternalLink, User, Bot, Clock, Volume2, Pause, Square } from "lucide-react";
-import { useTextToSpeech } from "@/contexts/TTSContext";
+import { useTextToSpeech } from "../contexts/TTSContext";
 
 interface MessageBubbleProps {
   message: {
@@ -54,7 +54,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
   if (message.type === "system") {
     return (
       <div className="flex justify-center py-4">
-        <div className="px-4 py-2 bg-surface-elevated rounded-full text-sm text-zinc-500 border border-border">
+        <div className="px-4 py-2 bg-surface-elevated rounded-full text-sm text-secondary-muted border border-border">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
             <span>{message.content}</span>
@@ -131,7 +131,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
 
             {/* Metadata */}
             <div className={`flex items-center justify-between mt-2 px-1 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-              <div className="flex items-center text-xs text-zinc-500">
+              <div className="flex items-center text-xs text-zi">
                 <Clock className="w-3 h-3 mr-1" />
                 {message.timestamp}
               </div>

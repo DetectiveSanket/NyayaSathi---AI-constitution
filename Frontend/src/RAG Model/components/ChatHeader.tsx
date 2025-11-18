@@ -1,22 +1,22 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
 import { 
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "../components/ui/tooltip";
 import { Home, Share, Download, Settings, ChevronDown, FileDown, FileText } from "lucide-react";
 import ModelSelectionModal from "./ModelSelectionModal";
 import { SettingsModal } from "./SettingsModal";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "../components/ui/dropdown-menu";
 
 interface ChatHeaderProps {
   onExportChat?: (format: 'txt' | 'pdf') => void;

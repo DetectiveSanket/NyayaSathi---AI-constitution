@@ -1,7 +1,7 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Button } from "../components/ui/button";
 import { Download, X } from "lucide-react";
-import { UploadedFile } from "@/contexts/FileManagerContext";
+import { UploadedFile } from "../contexts/FileManagerContext";
 
 interface FilePreviewModalProps {
   file: UploadedFile | null;

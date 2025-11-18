@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "../components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "../components/ui/sheet";
 import { Menu, X } from "lucide-react";
 import ChatHeader from "./ChatHeader";
 import ChatSidebar from "./ChatSidebar";
 import MessageBubble from "./MessageBubble";
 import ChatComposer from "./ChatComposer";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "../components/ui/scroll-area";
+import { Badge } from "../components/ui/badge";
 
 interface Message {
   id: string;

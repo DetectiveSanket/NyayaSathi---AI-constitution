@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import { useFileManager } from "@/contexts/FileManagerContext";
+import { useFileManager } from "../contexts/FileManagerContext";
 import { Upload, File, X } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "../components/ui/progress";
 import { cn } from "@/lib/utils";
 
 interface FileUploadZoneProps {
