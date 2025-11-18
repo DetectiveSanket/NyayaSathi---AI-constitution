@@ -325,7 +325,7 @@ const ChatComposer = ({ onSendMessage, isLoading = false }: ChatComposerProps) =
                       className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                         selectedLanguage === lang.value
                           ? "bg-primary/20 text-primary font-medium"
-                          : "hover:bg-surface-chat text-foreground/80"
+                          : "hover:bg-[#19222e] hover:text-white text-foreground/80"
                       }`}
                     >
                       {lang.label}
