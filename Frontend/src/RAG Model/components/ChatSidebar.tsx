@@ -218,7 +218,7 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
       {/* Search */}
       <div className="px-4 py-3 border-b border-border">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-secondary-muted" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
           <Input
             placeholder="Search messages..."
             value={searchQuery}
@@ -259,7 +259,7 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
-                        <FileText className="w-3 h-3 text-secondary-muted flex-shrink-0" />
+                        <FileText className="w-3 h-3 text-blue-500 flex-shrink-0" />
                         <h4 className="text-sm font-medium text-foreground truncate">
                           {chat.title}
                         </h4>
