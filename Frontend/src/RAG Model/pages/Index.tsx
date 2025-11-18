@@ -336,13 +336,13 @@ const Index = () => {
                   {isLoading && (
                     <div className="flex justify-start">
                       <div className="flex space-x-3 max-w-[85%]">
-                        <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center text-xs font-medium text-primary-foreground">AI</div>
+                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-xs font-medium text-primary-foreground">AI</div>
                           <div className="bg-surface-elevated border border-border px-4 py-3 rounded-2xl">
                             <div className="flex items-center space-x-2">
                               <div className="flex space-x-1">
-                                <div className="w-2 h-2 bg-secondary-muted rounded-full animate-bounce animate-bounce-delay-0" />
-                                <div className="w-2 h-2 bg-secondary-muted rounded-full animate-bounce animate-bounce-delay-150" />
-                                <div className="w-2 h-2 bg-secondary-muted rounded-full animate-bounce animate-bounce-delay-300" />
+                                <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce animate-bounce-delay-0" />
+                                <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce animate-bounce-delay-150" />
+                                <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce animate-bounce-delay-300" />
                               </div>
                               <span className="text-sm text-muted-foreground ml-2">Thinking...</span>
                             </div>
