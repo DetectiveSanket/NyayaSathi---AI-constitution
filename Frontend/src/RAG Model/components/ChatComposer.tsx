@@ -281,292 +281,292 @@ const ChatComposer = ({ onSendMessage, isLoading = false }: ChatComposerProps) =
   ];
 
   return (
-    <TooltipProvider>
-      <div className="bg-background border-t border-border/30">
-      {/* Context Chips - Compact */}
-      <div className="px-6 py-2 border-b border-border/20">
-        <div className="flex items-center gap-2 flex-wrap justify-between">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className="bg-surface-chat/60 backdrop-blur-sm border-border/30 text-xs font-medium px-2 py-0.5">
-              <FileText className="w-3 h-3 mr-1.5 text-primary" />
-              <span className="text-foreground/90">Document: IndianPenalCode_Sections.pdf</span>
-            </Badge>
-          </div>
-          
-          {/* Language and Voice Controls */}
-          <div className="flex items-center gap-2">
-            <TTSControls />
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:bg-surface-chat/60 rounded-md h-7 px-2 flex items-center gap-1.5 transition-all"
-                  disabled={isLoading}
-                  title="Select language"
-                >
-                  <Languages className="w-4 h-4 text-foreground/70" />
-                  <span className="text-xs text-foreground/90">{languages.find(l => l.value === selectedLanguage)?.label}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-2 bg-surface-elevated border-border/50 shadow-xl" side="top">
-                <div className="space-y-1">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.value}
-                      onClick={() => {
-                        setSelectedLanguage(lang.value);
-                        toast({
-                          description: `Language changed to ${lang.label}`,
-                          duration: 2000,
-                        });
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                        selectedLanguage === lang.value
-                          ? "bg-primary/20 text-primary font-medium"
-                          : "hover:bg-[#19222e] hover:text-white text-foreground/80"
-                      }`}
-                    >
-                      {lang.label}
-                    </button>
-                  ))}
+        <TooltipProvider>
+            <div className="bg-background border-t border-border/30">
+            {/* Context Chips - Compact */}
+            <div className="px-6 py-2 border-b border-border/20">
+                <div className="flex items-center gap-2 flex-wrap justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="secondary" className="bg-surface-chat/60 backdrop-blur-sm border-border/30 text-xs font-medium px-2 py-0.5">
+                    <FileText className="w-3 h-3 mr-1.5 text-primary" />
+                    <span className="text-foreground/90">Document: IndianPenalCode_Sections.pdf</span>
+                    </Badge>
                 </div>
-              </PopoverContent>
-            </Popover>
+                
+                {/* Language and Voice Controls */}
+                <div className="flex items-center gap-2">
+                    <TTSControls />
+                    
+                    <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-surface-chat/60 rounded-md h-7 px-2 flex items-center gap-1.5 transition-all"
+                        disabled={isLoading}
+                        title="Select language"
+                        >
+                        <Languages className="w-4 h-4 text-foreground/70" />
+                        <span className="text-xs text-foreground/90">{languages.find(l => l.value === selectedLanguage)?.label}</span>
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2 bg-surface-elevated border-border/50 shadow-xl" side="top">
+                        <div className="space-y-1">
+                        {languages.map((lang) => (
+                            <button
+                            key={lang.value}
+                            onClick={() => {
+                                setSelectedLanguage(lang.value);
+                                toast({
+                                description: `Language changed to ${lang.label}`,
+                                duration: 2000,
+                                });
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                                selectedLanguage === lang.value
+                                ? "bg-primary/20 text-primary font-medium"
+                                : "hover:bg-[#19222e] hover:text-white text-foreground/80"
+                            }`}
+                            >
+                            {lang.label}
+                            </button>
+                        ))}
+                        </div>
+                    </PopoverContent>
+                    </Popover>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`hover:bg-surface-chat/60 rounded-md h-7 px-2 flex items-center gap-1.5 transition-all ${
-                voiceEnabled ? "bg-accent/20" : ""
-              }`}
-              onClick={() => {
-                const newState = !voiceEnabled;
-                setVoiceEnabled(newState);
-                toast({
-                  description: newState ? "Voice output enabled" : "Voice output disabled",
-                  duration: 2000,
-                });
-              }}
-              disabled={isLoading}
-              title={voiceEnabled ? "Voice output enabled" : "Voice output disabled"}
-            >
-              <Volume2 className={`w-4 h-4 transition-colors ${voiceEnabled ? "text-accent" : "text-foreground/70"}`} />
-              <span className="text-xs text-foreground/90">{voiceEnabled ? "On" : "Off"}</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Composer - Compact Single Line */}
-      <div className="px-6 py-3">
-        <div className="max-w-5xl mx-auto">
-          {/* Attached Files Display */}
-          {attachedFiles.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {attachedFiles.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 bg-surface-elevated/80 backdrop-blur-sm border border-border/50 rounded-lg px-3 py-2 shadow-sm"
-                >
-                  <FileText className="w-4 h-4 text-primary flex-shrink-0" />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
-                      {file.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatFileSize(file.size)}
-                    </span>
-                  </div>
-                  <Button
+                    <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeAttachedFile(index)}
-                    className="h-5 w-5 p-0 hover:bg-destructive/20 rounded-full flex-shrink-0"
-                  >
-                    <span className="text-muted-foreground hover:text-destructive text-lg leading-none">×</span>
-                  </Button>
+                    className={`hover:bg-surface-chat/60 rounded-md h-7 px-2 flex items-center gap-1.5 transition-all ${
+                        voiceEnabled ? "bg-accent/20" : ""
+                    }`}
+                    onClick={() => {
+                        const newState = !voiceEnabled;
+                        setVoiceEnabled(newState);
+                        toast({
+                        description: newState ? "Voice output enabled" : "Voice output disabled",
+                        duration: 2000,
+                        });
+                    }}
+                    disabled={isLoading}
+                    title={voiceEnabled ? "Voice output enabled" : "Voice output disabled"}
+                    >
+                    <Volume2 className={`w-4 h-4 transition-colors ${voiceEnabled ? "text-accent" : "text-foreground/70"}`} />
+                    <span className="text-xs text-foreground/90">{voiceEnabled ? "On" : "Off"}</span>
+                    </Button>
                 </div>
-              ))}
+                </div>
             </div>
-          )}
 
-          {/* Compact Input with integrated controls */}
-          <div className="flex items-center gap-2 bg-surface-elevated/70 backdrop-blur-sm border border-border/50 rounded-3xl px-2 py-1.5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300">
-            {/* Upload Button */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:bg-surface-chat/60 rounded-full w-9 h-9 p-0 flex items-center justify-center flex-shrink-0 transition-all"
-                  disabled={isLoading}
-                  title="Add content"
-                >
-                  <Plus className="w-5 h-5 text-foreground/70 hover:text-primary transition-colors" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-surface-elevated border-border/50 shadow-xl z-[100]" side="top">
-                <DropdownMenuItem 
-                  className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
-                  onClick={() => handleFileUpload(".pdf,.doc,.docx,.txt,.xlsx,.xls", "document")}
-                >
-                  <Upload className="w-4 h-4 mr-2 text-primary" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">Upload Document</span>
-                    <span className="text-xs text-muted-foreground">PDF, Word, Excel, TXT</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
-                  onClick={() => handleFileUpload("image/*", "image")}
-                >
-                  <Image className="w-4 h-4 mr-2 text-accent" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">Upload Image</span>
-                    <span className="text-xs text-muted-foreground">JPG, PNG, GIF, WebP</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
-                  onClick={() => handleQuickFileSelect("image/*")}
-                >
-                  <Camera className="w-4 h-4 mr-2 text-secondary" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">Take Photo</span>
-                    <span className="text-xs text-muted-foreground">Use device camera</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
-                  onClick={() => handleFileUpload("audio/*", "audio")}
-                >
-                  <AudioLines className="w-4 h-4 mr-2 text-accent" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">Upload Audio</span>
-                    <span className="text-xs text-muted-foreground">MP3, WAV, M4A</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
-                  onClick={() => handleFileUpload("video/*", "video")}
-                >
-                  <Video className="w-4 h-4 mr-2 text-secondary" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">Upload Video</span>
-                    <span className="text-xs text-muted-foreground">MP4, MOV, AVI</span>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
-                  onClick={() => setShowLibrary(true)}
-                >
-                  <Library className="w-4 h-4 mr-2 text-secondary" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">File Library</span>
-                    <span className="text-xs text-muted-foreground">View all uploaded files</span>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Main Composer - Compact Single Line */}
+            <div className="px-6 py-3">
+                <div className="max-w-5xl mx-auto">
+                {/* Attached Files Display */}
+                {attachedFiles.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                    {attachedFiles.map((file, index) => (
+                        <div
+                        key={index}
+                        className="flex items-center gap-2 bg-surface-elevated/80 backdrop-blur-sm border border-border/50 rounded-lg px-3 py-2 shadow-sm"
+                        >
+                        <FileText className="w-4 h-4 text-primary flex-shrink-0" />
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
+                            {file.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                            {formatFileSize(file.size)}
+                            </span>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAttachedFile(index)}
+                            className="h-5 w-5 p-0 hover:bg-destructive/20 rounded-full flex-shrink-0"
+                        >
+                            <span className="text-muted-foreground hover:text-destructive text-lg leading-none">×</span>
+                        </Button>
+                        </div>
+                    ))}
+                    </div>
+                )}
 
-            {/* Text Input - Single Line */}
-            <Textarea
-              ref={textareaRef}
-              value={message}
-              onChange={handleTextareaChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask about this document or type a question. Press Enter to send, Shift+Enter for new line."
-              className="flex-1 min-h-[36px] max-h-[120px] resize-none bg-transparent border-0 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-2 text-foreground placeholder:text-muted-foreground/60 text-sm leading-tight scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent hover:scrollbar-thumb-border/60"
-              disabled={isLoading}
-              rows={1}
+                {/* Compact Input with integrated controls */}
+                <div className="flex items-center gap-2 bg-surface-elevated/70 backdrop-blur-sm border border-border/50 rounded-3xl px-2 py-1.5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300">
+                    {/* Upload Button */}
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-surface-chat/60 rounded-full w-9 h-9 p-0 flex items-center justify-center flex-shrink-0 transition-all"
+                        disabled={isLoading}
+                        title="Add content"
+                        >
+                        <Plus className="w-5 h-5 text-foreground/70 hover:text-primary transition-colors" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-surface-elevated border-border/50 shadow-xl z-[100]" side="top">
+                        <DropdownMenuItem 
+                        className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
+                        onClick={() => handleFileUpload(".pdf,.doc,.docx,.txt,.xlsx,.xls", "document")}
+                        >
+                        <Upload className="w-4 h-4 mr-2 text-primary" />
+                        <div className="flex flex-col">
+                            <span className="font-medium">Upload Document</span>
+                            <span className="text-xs text-muted-foreground">PDF, Word, Excel, TXT</span>
+                        </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                        className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
+                        onClick={() => handleFileUpload("image/*", "image")}
+                        >
+                        <Image className="w-4 h-4 mr-2 text-accent" />
+                        <div className="flex flex-col">
+                            <span className="font-medium">Upload Image</span>
+                            <span className="text-xs text-muted-foreground">JPG, PNG, GIF, WebP</span>
+                        </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                        className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
+                        onClick={() => handleQuickFileSelect("image/*")}
+                        >
+                        <Camera className="w-4 h-4 mr-2 text-secondary" />
+                        <div className="flex flex-col">
+                            <span className="font-medium">Take Photo</span>
+                            <span className="text-xs text-muted-foreground">Use device camera</span>
+                        </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                        className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
+                        onClick={() => handleFileUpload("audio/*", "audio")}
+                        >
+                        <AudioLines className="w-4 h-4 mr-2 text-accent" />
+                        <div className="flex flex-col">
+                            <span className="font-medium">Upload Audio</span>
+                            <span className="text-xs text-muted-foreground">MP3, WAV, M4A</span>
+                        </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                        className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
+                        onClick={() => handleFileUpload("video/*", "video")}
+                        >
+                        <Video className="w-4 h-4 mr-2 text-secondary" />
+                        <div className="flex flex-col">
+                            <span className="font-medium">Upload Video</span>
+                            <span className="text-xs text-muted-foreground">MP4, MOV, AVI</span>
+                        </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                        className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
+                        onClick={() => setShowLibrary(true)}
+                        >
+                        <Library className="w-4 h-4 mr-2 text-secondary" />
+                        <div className="flex flex-col">
+                            <span className="font-medium">File Library</span>
+                            <span className="text-xs text-muted-foreground">View all uploaded files</span>
+                        </div>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Text Input - Single Line */}
+                    <Textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={handleTextareaChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask about this document or type a question. Press Enter to send, Shift+Enter for new line."
+                    className="flex-1 min-h-[36px] max-h-[120px] resize-none bg-transparent border-0 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-2 text-foreground placeholder:text-muted-foreground/60 text-sm leading-tight scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent hover:scrollbar-thumb-border/60"
+                    disabled={isLoading}
+                    rows={1}
+                    />
+
+                    {/* Voice Recording */}
+                    <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`hover:bg-surface-chat/60 rounded-full w-9 h-9 p-0 flex items-center justify-center flex-shrink-0 transition-all ${
+                            isRecording ? "bg-destructive/20 text-destructive" : ""
+                        }`}
+                        onClick={handleMicClick}
+                        disabled={isLoading}
+                        title={isRecording ? "Stop recording" : "Start voice input"}
+                        >
+                        <Mic className={`w-4.5 h-4.5 transition-colors ${isRecording ? "animate-pulse text-destructive" : "text-foreground/70 hover:text-accent"}`} />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{isRecording ? "Stop recording" : "Start voice input"}</p>
+                    </TooltipContent>
+                    </Tooltip>
+
+                    {/* Send Button */}
+                    <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                        onClick={handleSend}
+                        disabled={!message.trim() || isLoading}
+                        className="bg-gradient-to-br from-blue-500 to-indigo-600 hover:opacity-90 shadow-sm w-9 h-9 p-0 rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-40 transition-all duration-200"
+                        title="Send message"
+                        >
+                        {isLoading ? (
+                            <Loader2 className="w-4.5 h-4.5 animate-spin text-white" />
+                        ) : (
+                            <Send className="w-4.5 h-4.5 text-white" />
+                        )}
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Send message</p>
+                    </TooltipContent>
+                    </Tooltip>
+                </div>
+                
+                {/* Listening Indicator */}
+                {isListening && (
+                    <div className="flex items-center justify-center gap-2 mt-2 text-accent animate-fade-in">
+                    <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                    <span className="text-xs font-medium">Listening...</span>
+                    </div>
+                )}
+                </div>
+            </div>
+
+            {/* Hidden File Input */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleFileChange}
+                aria-label="File upload input"
+                title="File upload input"
             />
 
-            {/* Voice Recording */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`hover:bg-surface-chat/60 rounded-full w-9 h-9 p-0 flex items-center justify-center flex-shrink-0 transition-all ${
-                    isRecording ? "bg-destructive/20 text-destructive" : ""
-                  }`}
-                  onClick={handleMicClick}
-                  disabled={isLoading}
-                  title={isRecording ? "Stop recording" : "Start voice input"}
-                >
-                  <Mic className={`w-4.5 h-4.5 transition-colors ${isRecording ? "animate-pulse text-destructive" : "text-foreground/70 hover:text-accent"}`} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isRecording ? "Stop recording" : "Start voice input"}</p>
-              </TooltipContent>
-            </Tooltip>
+            {/* File Upload Zone Modal */}
+            {showUploadZone && (
+                <FileUploadZone
+                accept={uploadType === "document" ? ".pdf,.doc,.docx,.txt,.xlsx,.xls" 
+                    : uploadType === "image" ? "image/*"
+                    : uploadType === "audio" ? "audio/*"
+                    : uploadType === "video" ? "video/*"
+                    : "*"}
+                onClose={() => setShowUploadZone(false)}
+                />
+            )}
 
-            {/* Send Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={handleSend}
-                  disabled={!message.trim() || isLoading}
-                  className="bg-gradient-to-br from-blue-500 to-indigo-600 hover:opacity-90 shadow-sm w-9 h-9 p-0 rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-40 transition-all duration-200"
-                  title="Send message"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4.5 h-4.5 animate-spin text-white" />
-                  ) : (
-                    <Send className="w-4.5 h-4.5 text-white" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Send message</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          
-          {/* Listening Indicator */}
-          {isListening && (
-            <div className="flex items-center justify-center gap-2 mt-2 text-accent animate-fade-in">
-              <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-              <span className="text-xs font-medium">Listening...</span>
+            {/* Document Library Modal */}
+            <DocumentLibraryModal
+                isOpen={showLibrary}
+                onClose={() => setShowLibrary(false)}
+            />
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Hidden File Input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        className="hidden"
-        onChange={handleFileChange}
-        aria-label="File upload input"
-        title="File upload input"
-      />
-
-      {/* File Upload Zone Modal */}
-      {showUploadZone && (
-        <FileUploadZone
-          accept={uploadType === "document" ? ".pdf,.doc,.docx,.txt,.xlsx,.xls" 
-            : uploadType === "image" ? "image/*"
-            : uploadType === "audio" ? "audio/*"
-            : uploadType === "video" ? "video/*"
-            : "*"}
-          onClose={() => setShowUploadZone(false)}
-        />
-      )}
-
-      {/* Document Library Modal */}
-      <DocumentLibraryModal
-        isOpen={showLibrary}
-        onClose={() => setShowLibrary(false)}
-      />
-      </div>
-    </TooltipProvider>
-  );
+        </TooltipProvider>
+    );
 };
 
 export default ChatComposer;
