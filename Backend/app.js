@@ -9,6 +9,7 @@ import rateLimit from 'express-rate-limit';
 import userRoutes from './routes/user-route.js';
 import contactRoutes from './routes/contact-route.js';
 import chatRoutes from "./routes/chat-route.js";
+import docsRoutes from "./routes/docs-routes.js";
 
 const app = express();
 
@@ -48,6 +49,8 @@ app.use((req, res, next) => {
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/contact', contactRoutes);
 app.use("/api/v1/chat", chatRoutes);
+app.use("/api/v1/docs", docsRoutes);
+
 
 
 app.listen(PORT, () => {
