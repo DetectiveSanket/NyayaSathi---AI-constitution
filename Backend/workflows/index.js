@@ -1,24 +1,22 @@
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
-import dot from "dotenv"
+import { PineconeClient } from "@pinecone-database/pinecone";
 
-dot.config()
+const client = new PineconeClient();
+await client.init({
+  apiKey: process.env.PINECONE_API_KEY,
+  environment: process.env.PINECONE_ENV
+});
+const index = client.Index(process.env.PINECONE_INDEX);
 
-
-const llm = new ChatGoogleGenerativeAI({
-    model: "gemini-2.5-pro",
-    temperature: 0,
-    maxRetries: 2,
-    apiKey: process.env.GOOGLE_API_KEY,
-    // other params...
-})
-
-const aiMsg = await llm.invoke([
-    [
-        "system",
-        "You are a helpful assistant that translates English to French. Translate the user sentence.",
+// sample vector (replace with real embedding)
+await index.upsert({
+  upsertRequest: {
+    vectors: [
+      {
+        id: "doc1_chunk1",
+        metadata: { documentId: "doc1", chunkIndex: 0, text: "..." },
+        values: [/* numeric vector array of length = dimension */]
+      }
     ],
-    ["human", "I love programming."],
-])
-
-
-console.log({ aiMsg })
+  },
+});
+console.log("upserted");
