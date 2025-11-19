@@ -8,16 +8,7 @@ import rateLimit from 'express-rate-limit';
 
 import userRoutes from './routes/user-route.js';
 import contactRoutes from './routes/contact-route.js';
-// import companyRoutes from './routes/company.route.js';
-// import productRoutes from './routes/product.route.js';
-// import orderRoutes from './routes/order.route.js';
-// import paymentRoutes from './routes/payment.route.js';
-// import notificationRoutes from './routes/notification.route.js';
-// import cartRoutes from './routes/cart.route.js';
-// import reviewRoutes from './routes/review.route.js';
-// import wishlistRoutes from './routes/wishlist.route.js';
-// import ratingRoutes from './routes/rating.route.js';
-// import likeRoutes from './routes/like.route.js';
+import chatRoutes from "./routes/chat-route.js";
 
 const app = express();
 
@@ -56,13 +47,8 @@ app.use((req, res, next) => {
 //* Routes
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/contact', contactRoutes);
+app.use("/api/v1/chat", chatRoutes);
 
-// app.use('/api/v1/notification', notificationRoutes);
-// app.use('/api/v1/cart', cartRoutes);
-// app.use('/api/v1/reviews', reviewRoutes);
-// app.use('/api/v1/wishlist', wishlistRoutes);
-// app.use('/api/v1/rating', ratingRoutes);
-// app.use('/api/v1/like', likeRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
