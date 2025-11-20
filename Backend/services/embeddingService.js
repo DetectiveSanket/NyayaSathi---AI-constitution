@@ -1,22 +1,25 @@
 // services/embeddingService.js
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { Pinecone } from "@pinecone-database/pinecone";
-
 import dotenv from "dotenv";
+
 dotenv.config();
 
-// 1. Initialize Google Embedding Model
 const embeddings = new GoogleGenerativeAIEmbeddings({
   apiKey: process.env.GOOGLE_API_KEY,
   modelName: "text-embedding-004",
 });
 
-// 2. Initialize Pinecone
 const pc = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY,
 });
 
-const index = pc.index(process.env.PINECONE_INDEX);
+const indexName = process.env.PINECONE_INDEX;
+if (!indexName) {
+  throw new Error("PINECONE_INDEX env var is required.");
+}
+
+const index = pc.index(indexName);
 
 export const pineconeIndex = index;
 
@@ -39,6 +42,7 @@ export async function embedDocumentChunks(chunks = []) {
             documentId: chunk.documentId,
             text: chunk.text,
             page: chunk.page,
+            order: typeof chunk.order === "number" ? chunk.order : 0,
           },
         };
       })
@@ -73,6 +77,25 @@ export async function querySimilarChunks({ vector, topK = 5, filter } = {}) {
     topK,
     includeMetadata: true,
     filter,
+  });
+
+  return response.matches || [];
+}
+
+export async function fetchDocumentChunksFromPinecone({ documentId, maxChunks = 200 }) {
+  if (!documentId) {
+    throw new Error("documentId is required to fetch Pinecone chunks.");
+  }
+
+  const queryVector = await embeddings.embedQuery(
+    `Summarize the legal document with id ${documentId}`
+  );
+
+  const response = await index.query({
+    vector: queryVector,
+    topK: maxChunks,
+    includeMetadata: true,
+    filter: { documentId: documentId.toString() },
   });
 
   return response.matches || [];

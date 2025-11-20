@@ -22,10 +22,18 @@ import { googleGenerate } from "../services/llm/llmAdapter.js";
 
 const CHUNK_SIZE_TOKENS = 500;
 const CHUNK_OVERLAP_TOKENS = 100;
-const DEFAULT_TOP_K = 5;
+const DEFAULT_TOP_K = 4;
 const MAX_CONTEXT_CHARS = 15000;
+const SIMPLE_QUERY_MAX_WORDS = 12;
+const SIMPLE_QUERY_MAX_CHARS = 80;
+
+const contextualKeywords =
+  /\b(document|file|section|article|clause|paragraph|page|context|upload|case|petition|act|statute|reference|above|chunk)\b/i;
+const simplePrefixes =
+  /^(what|who|when|where|why|how|define|explain|tell me about|give me|summarize)\b/i;
 
 const DEFAULT_RAG_MODEL = process.env.RAG_MODEL || "gemini-2.0-flash";
+const TRANSLATE_MODEL = "gemini-2.0-flash";
 
 const ragModel = new ChatGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
@@ -47,7 +55,33 @@ const normalizeMatches = (matches = []) =>
     text: match.metadata?.text || "",
     documentId: match.metadata?.documentId,
     page: match.metadata?.page || 1,
+    order: typeof match.metadata?.order === "number" ? match.metadata.order : 0,
   }));
+
+const isContextualQuery = (text = "") => contextualKeywords.test(text);
+
+const isSimpleQuery = (text = "") => {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  if (isContextualQuery(trimmed)) return false;
+
+  const wordCount = trimmed.split(/\s+/).length;
+  if (wordCount <= SIMPLE_QUERY_MAX_WORDS || trimmed.length <= SIMPLE_QUERY_MAX_CHARS) {
+    return true;
+  }
+
+  return simplePrefixes.test(trimmed);
+};
+
+const buildSimpleAnswerPrompt = ({ query, languageLabel, languageInstruction }) =>
+  [
+    "You are NyayaSathi, an AI legal assistant.",
+    "Provide a concise answer using general legal knowledge. Do NOT reference uploaded documents.",
+    `Respond in ${languageLabel}.`,
+    languageInstruction,
+    "",
+    `Question: ${query}`,
+  ].join("\n");
 
 export const processDocument = async (req, res) => {
   try {
@@ -118,11 +152,12 @@ export const processDocument = async (req, res) => {
 
     // 6. Generate embeddings + store in Pinecone
     const embeddingResult = await embedDocumentChunks(
-      chunkDocs.map(({ chunkId, documentId, text, page }) => ({
+      chunkDocs.map(({ chunkId, documentId, text, page, order }) => ({
         chunkId,
         documentId: documentId.toString(),
         text,
         page,
+        order,
       }))
     );
 
@@ -161,11 +196,24 @@ export const queryRag = async (req, res) => {
     const languageInstruction = getLanguageInstruction(langKey);
     const languageLabel = getLanguageLabel(langKey);
 
+    if (isSimpleQuery(query)) {
+      const simplePrompt = buildSimpleAnswerPrompt({ query, languageInstruction, languageLabel });
+      const simpleAnswer = await googleGenerate(DEFAULT_RAG_MODEL, simplePrompt);
+
+      return res.status(200).json({
+        answer: simpleAnswer,
+        chunks: [],
+        language: langKey,
+        supportedLanguages,
+        mode: "auto",
+      });
+    }
+
     const userEmbedding = await embedQueryText(query);
 
     const matches = await querySimilarChunks({
       vector: userEmbedding,
-      topK: Math.min(Number(topK) || DEFAULT_TOP_K, 20),
+      topK: Math.min(Math.max(Number(topK) || DEFAULT_TOP_K, 1), 20),
       filter: documentId ? { documentId: documentId.toString() } : undefined,
     });
 
@@ -217,6 +265,7 @@ export const queryRag = async (req, res) => {
       chunks: normalized,
       language: langKey,
       supportedLanguages,
+      mode: "context",
     });
   } catch (err) {
     console.error("❌ RAG query error:", err);
@@ -245,7 +294,7 @@ export const translateResponse = async (req, res) => {
       text,
     ].join("\n");
 
-    const translation = await googleGenerate(DEFAULT_RAG_MODEL, prompt);
+    const translation = await googleGenerate(TRANSLATE_MODEL, prompt);
 
     return res.status(200).json({
       translation,

@@ -142,20 +142,3 @@ export function cleanText(text) {
     .trim();
 }
 
-/* -----------------------------
-   6. CHUNK TEXT
------------------------------- */
-export function chunkText(text, chunkSize = 500, overlap = 100) {
-  if (!text) return [];
-  
-  let chunks = [];
-  let start = 0;
-
-  while (start < text.length) {
-    const end = Math.min(start + chunkSize, text.length);
-    chunks.push(text.slice(start, end));
-    start += chunkSize - overlap;
-  }
-
-  return chunks;
-}

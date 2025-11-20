@@ -9,8 +9,8 @@ const router = express.Router();
 router.post("/process/:documentId", protect, processDocument);
 router.post("/query", protect, queryRag);
 
-router.post("/summarize", protect, summarizeDocument);
-router.post("/translate", protect, translateResponse);
+router.post("/summarize", summarizeDocument);
+router.post("/translate", translateResponse);
 
 
 export default router;
