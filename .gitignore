@@ -34,8 +34,8 @@ out/
 *.swo
 .DS_Store
 
-# Frontend utils folder
-Frontend/src/utils/
+#  utils folder
+**/utils/
 
 
 
