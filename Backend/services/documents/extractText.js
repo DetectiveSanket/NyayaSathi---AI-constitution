@@ -1,107 +1,159 @@
-import AWS from "aws-sdk";
-import pdf from "pdf-parse";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import mammoth from "mammoth";
-import Tesseract from "tesseract.js";
-import { createWorker } from "tesseract.js";
-import { PDFDocument } from "pdf-lib";
-import { TextEncoder } from "util";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+/* -----------------------------
+   AWS S3 CLIENT (v3)
+------------------------------ */
+const s3Client = new S3Client({
   region: process.env.S3_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
-/* --------------------- DOWNLOAD FILE FROM S3 --------------------- */
+/* -----------------------------
+   HELPER: STREAM TO BUFFER
+------------------------------ */
+const streamToBuffer = async (stream) => {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on("data", (chunk) => chunks.push(chunk));
+    stream.on("error", reject);
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+  });
+};
+
+/* -----------------------------
+   1. DOWNLOAD FILE AS BUFFER
+------------------------------ */
 export async function downloadFromS3(s3Key) {
   const params = {
     Bucket: process.env.S3_BUCKET,
-    Key: s3Key
+    Key: s3Key,
   };
 
-  const file = await s3.getObject(params).promise();
-  return file.Body;   // Buffer
-}
-
-/* --------------------- PDF TEXT EXTRACTION ------------------------ */
-async function extractPdfText(buffer) {
   try {
-    const data = await pdf(buffer);
-    if (data.text.trim().length > 20) return data.text;
-  } catch (err) {
-    console.log("pdf-parse failed, trying fallback extractor…");
+    const command = new GetObjectCommand(params);
+    const response = await s3Client.send(command);
+    return await streamToBuffer(response.Body);
+  } catch (error) {
+    console.error("❌ S3 Download Error:", error.message);
+    throw new Error(`Failed to download file from S3: ${error.message}`);
   }
-
-  // Fallback OCR
-  return await extractPdfWithOCR(buffer);
 }
 
-/* --------------------- PDF OCR EXTRACTION ------------------------- */
-async function extractPdfWithOCR(buffer) {
-  const pdfDoc = await PDFDocument.load(buffer);
-  const pages = pdfDoc.getPages();
-  let fullText = "";
+/* -----------------------------
+   2. PDF TEXT EXTRACTION
+------------------------------ */
+async function extractPdf(buffer) {
+  console.log("📄 Extracting PDF text...");
+  console.log("Buffer size:", buffer.length, "bytes");
 
-  console.log("OCR: starting scanning… this may take time.");
-
-  for (let i = 0; i < pages.length; i++) {
-    const img = await pages[i].render({}); // render page as image buffer
-
-    const result = await Tesseract.recognize(img, "eng", {
-      logger: (m) => console.log(m),
+  try {
+    // Convert Buffer to Uint8Array for pdfjs-dist
+    const data = new Uint8Array(buffer);
+    
+    // Load the document
+    const loadingTask = pdfjsLib.getDocument({ 
+      data,
+      useSystemFonts: true,
+      disableFontFace: true 
     });
-
-    fullText += result.data.text + "\n";
+    
+    const doc = await loadingTask.promise;
+    console.log("📖 PDF loaded. Total pages:", doc.numPages);
+    
+    let fullText = "";
+    
+    // Iterate over all pages
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i);
+      const textContent = await page.getTextContent();
+      
+      console.log(`Page ${i}: Found ${textContent.items.length} text items`);
+      
+      // Extract text items and join them
+      const pageText = textContent.items.map(item => item.str).join(" ");
+      console.log(`Page ${i} text preview:`, pageText.substring(0, 200));
+      
+      fullText += pageText + "\n";
+    }
+    
+    console.log("Total extracted text length:", fullText.length);
+    console.log("First 500 chars:", fullText.substring(0, 500));
+    
+    if (fullText && fullText.trim().length > 0) {
+      console.log("✅ PDF text extracted successfully");
+      return fullText;
+    }
+    
+    // If no text extracted, return a fallback message
+    console.log("⚠️ No text found in PDF");
+    return "No readable text found in this PDF document.";
+    
+  } catch (err) {
+    console.error("❌ PDF extract error:", err.message);
+    console.error(err.stack);
+    // Return fallback text instead of throwing error
+    return "Unable to extract text from this PDF document.";
   }
-
-  return fullText;
 }
 
-/* --------------------- DOCX EXTRACTION ---------------------------- */
-async function extractDocxText(buffer) {
+/* -----------------------------
+   3. DOCX EXTRACTION
+------------------------------ */
+async function extractDocx(buffer) {
   const result = await mammoth.extractRawText({ buffer });
   return result.value;
 }
 
-/* --------------------- MAIN EXTRACTOR ---------------------------- */
-export async function extractTextFromFile(s3Key) {
-  const buffer = await downloadFromS3(s3Key);
+/* -----------------------------
+   4. MAIN EXTRACTOR
+------------------------------ */
+export async function extractTextFromBuffer(buffer, mimeType) {
+  try {
+    mimeType = mimeType?.toLowerCase() || "";
 
-  const extension = s3Key.split(".").pop().toLowerCase();
+    if (mimeType.includes("pdf")) {
+      return await extractPdf(buffer);
+    }
 
-  if (extension === "pdf") {
-    return await extractPdfText(buffer);
+    if (mimeType.includes("docx") || mimeType.includes("word")) {
+      return await extractDocx(buffer);
+    }
+
+    throw new Error("Unsupported file type: " + mimeType);
+  } catch (error) {
+    console.error("Error in extractTextFromBuffer:", error.message);
+    throw error;
   }
-
-  if (extension === "docx") {
-    return await extractDocxText(buffer);
-  }
-
-  throw new Error("Unsupported file type: " + extension);
 }
 
-/* --------------------- CLEAN TEXT ---------------------------- */
+/* -----------------------------
+   5. CLEAN TEXT
+------------------------------ */
 export function cleanText(text) {
+  if (!text) return "";
   return text
-    .replace(/\s+/g, " ")     // remove extra whitespace
-    .replace(/\n\s*\n/g, "\n") // remove empty lines
+    .replace(/\s+/g, " ")
+    .replace(/\n\s*\n/g, "\n")
     .trim();
 }
 
-/* --------------------- CHUNKING WITH OVERLAP -------------------- */
+/* -----------------------------
+   6. CHUNK TEXT
+------------------------------ */
 export function chunkText(text, chunkSize = 500, overlap = 100) {
-  const encoder = new TextEncoder();
-  const tokens = encoder.encode(text); 
-
+  if (!text) return [];
+  
   let chunks = [];
   let start = 0;
 
-  while (start < tokens.length) {
-    const end = Math.min(start + chunkSize, tokens.length);
-
-    const chunk = text.slice(start, end);
-    chunks.push(chunk);
-
+  while (start < text.length) {
+    const end = Math.min(start + chunkSize, text.length);
+    chunks.push(text.slice(start, end));
     start += chunkSize - overlap;
   }
 
