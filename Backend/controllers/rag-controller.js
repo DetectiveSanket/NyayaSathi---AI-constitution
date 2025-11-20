@@ -12,6 +12,13 @@ import {
   querySimilarChunks,
 } from "../services/embeddingService.js";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import {
+  getLanguageInstruction,
+  getLanguageLabel,
+  normalizeLanguage,
+  supportedLanguages,
+} from "../utils/language.js";
+import { googleGenerate } from "../services/llm/llmAdapter.js";
 
 const CHUNK_SIZE_TOKENS = 500;
 const CHUNK_OVERLAP_TOKENS = 100;
@@ -144,11 +151,15 @@ export const processDocument = async (req, res) => {
 
 export const queryRag = async (req, res) => {
   try {
-    const { query, topK = DEFAULT_TOP_K, documentId } = req.body || {};
+    const { query, topK = DEFAULT_TOP_K, documentId, language = "english" } = req.body || {};
 
     if (!query || typeof query !== "string") {
       return res.status(400).json({ message: "Query text is required." });
     }
+
+    const langKey = normalizeLanguage(language);
+    const languageInstruction = getLanguageInstruction(langKey);
+    const languageLabel = getLanguageLabel(langKey);
 
     const userEmbedding = await embedQueryText(query);
 
@@ -176,8 +187,9 @@ export const queryRag = async (req, res) => {
 
     const prompt = [
       "You are NyayaSathi, an AI legal assistant.",
-      "Answer the user's question strictly using the provided context chunks.",
+      `Answer the user's question strictly using the provided context chunks. Respond in ${languageLabel}.`,
       "If the context does not contain the answer, say you do not have enough information.",
+      languageInstruction,
       "",
       `Context:\n${contextString}`,
       "",
@@ -203,9 +215,45 @@ export const queryRag = async (req, res) => {
     return res.status(200).json({
       answer,
       chunks: normalized,
+      language: langKey,
+      supportedLanguages,
     });
   } catch (err) {
     console.error("❌ RAG query error:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+export const translateResponse = async (req, res) => {
+  try {
+    const { text, language = "english" } = req.body || {};
+
+    if (!text || typeof text !== "string") {
+      return res.status(400).json({ message: "Text is required for translation." });
+    }
+
+    const langKey = normalizeLanguage(language);
+    const label = getLanguageLabel(langKey);
+    const instruction = getLanguageInstruction(langKey);
+
+    const prompt = [
+      "Translate the following response for the NyayaSathi assistant.",
+      instruction,
+      "",
+      `Target language: ${label}`,
+      "Text:",
+      text,
+    ].join("\n");
+
+    const translation = await googleGenerate(DEFAULT_RAG_MODEL, prompt);
+
+    return res.status(200).json({
+      translation,
+      language: langKey,
+      label,
+    });
+  } catch (err) {
+    console.error("❌ Translation error:", err);
     return res.status(500).json({ message: err.message });
   }
 };
