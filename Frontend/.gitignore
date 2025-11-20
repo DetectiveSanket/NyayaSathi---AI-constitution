@@ -16,6 +16,20 @@ dist-ssr
 **/utils/
 src/utils/
 
+# Edit your .gitignore and remove or comment out these lines:
+# **/utils/
+# src/utils/
+
+# To stop ignoring the utils folder in the future, simply remove or comment out these lines from your .gitignore:
+# **/utils/
+# src/utils/
+
+# After editing .gitignore, if you want Git to start tracking the folder again, run:
+# git add src/utils
+# git commit -m "Track utils folder again"
+# git push
+
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
