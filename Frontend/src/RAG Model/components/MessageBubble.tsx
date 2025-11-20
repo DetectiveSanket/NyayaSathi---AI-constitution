@@ -3,8 +3,18 @@ import { useToast } from "../hooks/use-toast";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Copy, ExternalLink, User, Bot, Clock, Volume2, Pause, Square } from "lucide-react";
+import { Copy, ExternalLink, User, Bot, Clock, Volume2, Pause, Square, Languages } from "lucide-react";
 import { useTextToSpeech } from "../contexts/TTSContext";
+import { useTranslate } from "../../hooks/useTranslate.js";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { useSelector } from "react-redux";
 
 interface MessageBubbleProps {
   message: {
@@ -19,15 +29,45 @@ interface MessageBubbleProps {
       url?: string;
     }>;
     isStreaming?: boolean;
+    mode?: "auto" | "contextual";
+    chunks?: Array<{
+      chunkId: string;
+      text: string;
+      page: number;
+      score?: number;
+    }>;
   };
 }
 
 const MessageBubble = ({ message }: MessageBubbleProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isTranslateOpen, setIsTranslateOpen] = useState(false);
+  const [translateLanguage, setTranslateLanguage] = useState("hindi");
+  const [translatedText, setTranslatedText] = useState<string | null>(null);
   const { toast } = useToast();
   const { speak, pause, resume, stop, isSpeaking, isPaused, currentMessageId } = useTextToSpeech();
+  const ragState = useSelector((state: any) => state.rag);
   
   const isThisMessageSpeaking = currentMessageId === message.id;
+
+  const { translate, loading: translateLoading } = useTranslate({
+    onSuccess: (result) => {
+      setTranslatedText(result.translation);
+    },
+    onError: (error) => {
+      toast({
+        title: "Translation failed",
+        description: error.message || "Failed to translate message",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleTranslate = () => {
+    if (message.content) {
+      translate(message.content, translateLanguage);
+    }
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -105,6 +145,20 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
                 </p>
               </div>
 
+              {/* Mode indicator */}
+              {message.mode && (
+                <div className="mt-2">
+                  <Badge variant={message.mode === "auto" ? "secondary" : "default"} className="text-xs">
+                    {message.mode === "auto" ? "⚡ Auto Mode" : "🔍 Contextual Mode"}
+                  </Badge>
+                  {message.mode === "auto" && (
+                    <p className="text-xs text-muted-foreground mt-1 italic">
+                      Answer was generated without retrieval.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Citations */}
               {message.citations && message.citations.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-border/30">
@@ -138,6 +192,46 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
               <div className="flex items-center gap-1">
                 {isAssistant && (
                   <>
+                    <Dialog open={isTranslateOpen} onOpenChange={setIsTranslateOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-70 hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-surface-elevated rounded-md"
+                          title="Translate"
+                        >
+                          <Languages className="w-3.5 h-3.5" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-surface-elevated border-border">
+                        <DialogHeader>
+                          <DialogTitle>Translate Message</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Target Language</label>
+                            <Select value={translateLanguage} onValueChange={setTranslateLanguage}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="english">English</SelectItem>
+                                <SelectItem value="hindi">Hindi</SelectItem>
+                                <SelectItem value="marathi">Marathi</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button onClick={handleTranslate} disabled={translateLoading} className="w-full">
+                            {translateLoading ? "Translating..." : "Translate"}
+                          </Button>
+                          {translatedText && (
+                            <div className="mt-4 p-3 bg-surface-chat rounded-md">
+                              <p className="text-sm text-foreground whitespace-pre-wrap">{translatedText}</p>
+                            </div>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                     <Button
                       variant="ghost"
                       size="sm"

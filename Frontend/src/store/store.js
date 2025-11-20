@@ -3,6 +3,7 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import storage from 'redux-persist/lib/storage';
 import authSlice from "./authSlice"; // ✅ Make sure this matches slice name
+import ragSlice from "./ragSlice"; // RAG state management
 
 import {
     persistReducer,
@@ -22,6 +23,7 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
     auth: authSlice, // ✅ Make sure this matches slice name
+    rag: ragSlice, // RAG state
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

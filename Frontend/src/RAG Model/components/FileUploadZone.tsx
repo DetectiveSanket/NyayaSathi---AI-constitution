@@ -3,6 +3,10 @@ import { useFileManager } from "../contexts/FileManagerContext";
 import { Upload, File, X } from "lucide-react";
 import { Progress } from "../components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useDocumentUpload } from "../../hooks/useDocumentUpload.js";
+import { useDispatch } from "react-redux";
+import { addDocument } from "../../store/ragSlice.js";
+import { useToast } from "../hooks/use-toast";
 
 interface FileUploadZoneProps {
   accept?: string;
@@ -13,6 +17,31 @@ interface FileUploadZoneProps {
 export const FileUploadZone = ({ accept, maxFiles = 10, onClose }: FileUploadZoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const { uploadFiles, uploadProgress } = useFileManager();
+  const dispatch = useDispatch();
+  const { toast } = useToast();
+  
+  const { uploadAndProcess, loading: processing, progress: uploadProgressValue } = useDocumentUpload({
+    onSuccess: (result) => {
+      toast({
+        title: "Document processed",
+        description: `Document uploaded and processed successfully (${result.chunksCount} chunks)`,
+      });
+      // Add to documents list
+      dispatch(addDocument({
+        _id: result.documentId,
+        filename: "Uploaded Document",
+        processed: true,
+      }));
+      if (onClose) onClose();
+    },
+    onError: (error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload and process document",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -34,15 +63,47 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose }: FileUploadZon
       return;
     }
     
-    await uploadFiles(files);
-  }, [uploadFiles, maxFiles]);
+    // For document files (PDF, DOCX), use RAG upload flow
+    const documentFiles = files.filter(f => 
+      f.type === "application/pdf" || 
+      f.type.includes("wordprocessingml") || 
+      f.type.includes("msword")
+    );
+    
+    if (documentFiles.length > 0) {
+      // Use RAG document upload for PDF/DOCX
+      for (const file of documentFiles) {
+        await uploadAndProcess(file);
+      }
+    } else {
+      // Use regular file manager for other files
+      await uploadFiles(files);
+    }
+  }, [uploadFiles, maxFiles, uploadAndProcess]);
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      await uploadFiles(files);
+      const filesArray = Array.from(files);
+      
+      // For document files (PDF, DOCX), use RAG upload flow
+      const documentFiles = filesArray.filter(f => 
+        f.type === "application/pdf" || 
+        f.type.includes("wordprocessingml") || 
+        f.type.includes("msword")
+      );
+      
+      if (documentFiles.length > 0) {
+        // Use RAG document upload for PDF/DOCX
+        for (const file of documentFiles) {
+          await uploadAndProcess(file);
+        }
+      } else {
+        // Use regular file manager for other files
+        await uploadFiles(files);
+      }
     }
-  }, [uploadFiles]);
+  }, [uploadFiles, uploadAndProcess]);
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -103,8 +164,22 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose }: FileUploadZon
         </div>
 
         {/* Upload Progress */}
-        {uploadProgress.length > 0 && (
+        {(uploadProgress.length > 0 || processing) && (
           <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-custom">
+            {processing && (
+              <div className="flex items-center gap-3 p-3 bg-surface-chat rounded-md">
+                <File className="w-5 h-5 text-primary flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground truncate">
+                    Processing document...
+                  </p>
+                  <Progress value={uploadProgressValue} className="h-1.5 mt-1" />
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {uploadProgressValue}%
+                </span>
+              </div>
+            )}
             {uploadProgress.map((progress) => (
               <div
                 key={progress.fileId}

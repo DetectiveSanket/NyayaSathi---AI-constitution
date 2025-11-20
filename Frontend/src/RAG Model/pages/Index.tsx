@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useResponsive } from "../hooks/useResponsive";
 import ChatHeader from "../components/ChatHeader";
 import ChatSidebar from "../components/ChatSidebar";
@@ -12,6 +13,8 @@ import { Input } from "../components/ui/input";
 import { Search, X, Eye, EyeOff } from "lucide-react";
 import { Button } from "../components/ui/button";
 import jsPDF from "jspdf";
+import { useRagQuery } from "../../hooks/useRagQuery.js";
+import { addMessage, setChunks, setMode, setSelectedDocument } from "../../store/ragSlice.js";
 
 interface Message {
   id: string;
@@ -25,80 +28,91 @@ interface Message {
     url?: string;
   }>;
   isStreaming?: boolean;
+  mode?: "auto" | "contextual";
+  chunks?: Array<{
+    chunkId: string;
+    text: string;
+    page: number;
+    score?: number;
+    documentId?: string;
+  }>;
 }
 
 const Index = () => {
   const { isMobile } = useResponsive();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const dispatch = useDispatch();
+  const ragState = useSelector((state: any) => state.rag);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchFromSidebar, setSearchFromSidebar] = useState("");
 
-  const [messages, setMessages] = useState<Message[]>([
+  // Use Redux messages or fallback to local state
+  const [localMessages, setLocalMessages] = useState<Message[]>([
       {
         id: "1",
         type: "system",
-        content: "Document loaded: IndianPenalCode_Sections.pdf",
-        timestamp: "12:30 PM"
+        content: "Welcome to NyayaSathi. Upload a document to get started.",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       },
-      {
-        id: "2",
-        type: "user",
-        content: "What sections apply if someone is verbally threatened?",
-        timestamp: "12:31 PM"
-      },
-      
-
-      {
-        id: "3",
-        type: "assistant",
-        content: "Verbal threats are addressed under Section 503 and Section 506 of the Indian Penal Code. Section 503 deals with criminal intimidation, which involves threatening someone with injury to their person, reputation, or property. Section 506 prescribes the punishment for criminal intimidation, which can include imprisonment and fines depending on the severity of the threat.",
-        timestamp: "12:31 PM",
-        citations: [
-          { id: "c1", title: "Indian Penal Code", section: "Section 503", url: "#" },
-          { id: "c2", title: "Indian Penal Code", section: "Section 506", url: "#" }
-        ]
-      },
-
-      {
-        id: "4",
-        type: "user",
-        content: "Can you provide more details on Section 503?",
-        timestamp: "12:31 PM"
-      },
-
   ]);
-
+  
+  const messages = ragState.messages.length > 0 ? ragState.messages : localMessages;
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const { sendQuery, loading: queryLoading } = useRagQuery({
+    onSuccess: (result) => {
+      // Add assistant message with answer
+      const assistantMessage: Message = {
+        id: Date.now().toString(),
+        type: "assistant",
+        content: result.answer,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        mode: result.mode,
+        chunks: result.chunks || [],
+      };
+      dispatch(addMessage(assistantMessage));
+      dispatch(setChunks(result.chunks || []));
+      dispatch(setMode(result.mode || null));
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Query failed",
+        description: error.message || "Failed to get response",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    },
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, language?: string, documentId?: string) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       type: "user",
       content,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    setMessages(prev => [...prev, newMessage]);
+    dispatch(addMessage(newMessage));
     setIsLoading(true);
 
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "assistant",
-        content: "I understand your question. Based on the legal documents, here are the relevant sections...",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        citations: [{ id: "c3", title: "Indian Penal Code", section: "Section 504", url: "#" }]
-      };
-      setMessages(prev => [...prev, aiResponse]);
+    try {
+      await sendQuery(content, {
+        language: language || ragState.currentLanguage || "english",
+        documentId: documentId || ragState.selectedDocumentId || undefined,
+        topK: 4,
+      });
+    } catch (error) {
+      // Error handled in hook's onError
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleExportChat = (format: 'txt' | 'pdf') => {
@@ -232,11 +246,19 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-inter">
-      <ChatHeader onExportChat={handleExportChat} />
+      <ChatHeader 
+        onExportChat={handleExportChat}
+        lastMode={ragState.lastMode}
+        selectedDocumentId={ragState.selectedDocumentId}
+      />
       <div className="flex h-[calc(100vh-4rem)]">
         <ChatSidebar 
           isCollapsed={sidebarCollapsed} 
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onSearch={handleSidebarSearch}
+          retrievedChunks={ragState.retrievedChunks}
+          selectedDocumentId={ragState.selectedDocumentId}
+          onSelectDocument={(docId) => dispatch(setSelectedDocument(docId))}
         />
         <div className="flex-1 flex flex-col relative">
           <div className="px-6 py-5 border-b border-border/50 bg-gradient-surface backdrop-blur-sm">
@@ -324,7 +346,7 @@ const Index = () => {
                       <div key={message.id} className="group"><MessageBubble message={message} /></div>
                     ))
                   )}
-                  {isLoading && (
+                  {(isLoading || queryLoading) && (
                     <div className="flex justify-start">
                       <div className="flex space-x-3 max-w-[85%]">
                         <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-xs font-medium text-primary-foreground">AI</div>
@@ -348,7 +370,11 @@ const Index = () => {
           </div>
           <div className="absolute bottom-0 left-0 right-0 bg-background border-t border-border">
             <div className="max-w-4xl mx-auto w-full">
-              <ChatComposer onSendMessage={handleSendMessage} isLoading={isLoading} />
+              <ChatComposer 
+                onSendMessage={handleSendMessage} 
+                isLoading={isLoading || queryLoading}
+                selectedDocumentId={ragState.selectedDocumentId}
+              />
             </div>
           </div>
         </div>

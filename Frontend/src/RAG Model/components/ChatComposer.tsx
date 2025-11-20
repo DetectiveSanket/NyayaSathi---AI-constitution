@@ -44,11 +44,12 @@ import { DocumentLibraryModal } from "./DocumentLibraryModal";
 import { useFileManager } from "../contexts/FileManagerContext";
 
 interface ChatComposerProps {
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string, language?: string, documentId?: string) => void;
   isLoading?: boolean;
+  selectedDocumentId?: string | null;
 }
 
-const ChatComposer = ({ onSendMessage, isLoading = false }: ChatComposerProps) => {
+const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId }: ChatComposerProps) => {
   const [message, setMessage] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   const [voiceEnabled, setVoiceEnabled] = useState(false);
@@ -170,7 +171,7 @@ const ChatComposer = ({ onSendMessage, isLoading = false }: ChatComposerProps) =
 
   const handleSend = () => {
     if (message.trim() && !isLoading) {
-      onSendMessage(message.trim());
+      onSendMessage(message.trim(), selectedLanguage, selectedDocumentId || undefined);
       setMessage("");
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";

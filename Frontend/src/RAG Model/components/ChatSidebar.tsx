@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -35,11 +35,17 @@ import {
   Play,
   Share,
   Settings,
-  X
+  X,
+  FileCheck,
+  ScrollText
 } from "lucide-react";
 import { DocumentLibraryModal } from "./DocumentLibraryModal";
 import { EditProfileModal } from "./EditProfileModal";
 import { SettingsModal } from "./SettingsModal";
+import { useSelector, useDispatch } from "react-redux";
+import { listDocuments } from "../../services/ragService.js";
+import { setDocuments, addDocument } from "../../store/ragSlice.js";
+import { useToast } from "../hooks/use-toast";
 
 interface ChatItem {
   id: string;
@@ -48,16 +54,52 @@ interface ChatItem {
   preview: string;
 }
 
-const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: { 
-  isCollapsed?: boolean; 
+interface ChatSidebarProps {
+  isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   onSearch?: (query: string) => void;
-}) => {
+  retrievedChunks?: Array<{
+    chunkId: string;
+    text: string;
+    page: number;
+    score?: number;
+    documentId?: string;
+  }>;
+  selectedDocumentId?: string | null;
+  onSelectDocument?: (documentId: string | null) => void;
+}
+
+const ChatSidebar = ({ 
+  isCollapsed = false, 
+  onToggleCollapse, 
+  onSearch,
+  retrievedChunks = [],
+  selectedDocumentId,
+  onSelectDocument,
+}: ChatSidebarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showChunks, setShowChunks] = useState(false);
+  const dispatch = useDispatch();
+  const ragState = useSelector((state: any) => state.rag);
+  const { toast } = useToast();
+
+  // Load documents on mount
+  useEffect(() => {
+    const loadDocuments = async () => {
+      try {
+        const docs = await listDocuments();
+        dispatch(setDocuments(docs));
+      } catch (error) {
+        // Endpoint might not exist, that's ok
+        console.log("Documents endpoint not available");
+      }
+    };
+    loadDocuments();
+  }, [dispatch]);
 
   // Handle search with debounce effect
   const handleSearchChange = (value: string) => {
@@ -201,7 +243,7 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
       </div>
 
       {/* Library Section */}
-      <div className="px-4 py-3 border-b border-border">
+      <div className="px-4 py-3 border-b border-border space-y-2">
         <Button 
           variant="ghost" 
           className="w-full justify-start hover:bg-surface-elevated sidebar-item-glow"
@@ -210,10 +252,89 @@ const ChatSidebar = ({ isCollapsed = false, onToggleCollapse, onSearch }: {
           <Library className="w-4 h-4 mr-3" />
           <span>Library</span>
           <Badge variant="secondary" className="ml-auto bg-accent text-accent-foreground">
-            12
+            {ragState.documents.length}
           </Badge>
         </Button>
+        {retrievedChunks.length > 0 && (
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start hover:bg-surface-elevated sidebar-item-glow"
+            onClick={() => setShowChunks(!showChunks)}
+          >
+            <ScrollText className="w-4 h-4 mr-3" />
+            <span>Retrieved Chunks</span>
+            <Badge variant="secondary" className="ml-auto">
+              {retrievedChunks.length}
+            </Badge>
+          </Button>
+        )}
       </div>
+
+      {/* Documents List */}
+      {ragState.documents.length > 0 && (
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-medium text-zinc-400 mb-2">Documents</h3>
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {ragState.documents.map((doc: any) => (
+              <button
+                key={doc._id || doc.id}
+                onClick={() => onSelectDocument && onSelectDocument(doc._id || doc.id)}
+                className={`w-full text-left p-2 rounded-md text-sm transition-colors ${
+                  selectedDocumentId === (doc._id || doc.id)
+                    ? "bg-primary/20 text-primary font-medium"
+                    : "hover:bg-surface-elevated text-foreground/80"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FileCheck className="w-3 h-3" />
+                  <span className="truncate">{doc.filename || doc.name}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Retrieved Chunks */}
+      {showChunks && retrievedChunks.length > 0 && (
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-medium text-zinc-400 mb-2">Retrieved Chunks</h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {retrievedChunks.map((chunk, index) => (
+              <div
+                key={chunk.chunkId || index}
+                className="p-2 rounded-md bg-surface-elevated border border-border/50 hover:border-primary/50 transition-colors cursor-pointer"
+                onClick={() => {
+                  // Scroll to chunk in main area or highlight
+                  toast({
+                    description: `Chunk ${index + 1} selected`,
+                    duration: 2000,
+                  });
+                }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <Badge variant="outline" className="text-xs">
+                    Chunk {index + 1}
+                  </Badge>
+                  {chunk.score !== undefined && (
+                    <span className="text-xs text-muted-foreground">
+                      {(chunk.score * 100).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-foreground/70 line-clamp-3">
+                  {chunk.text}
+                </p>
+                {chunk.page && (
+                  <span className="text-xs text-muted-foreground mt-1 block">
+                    Page {chunk.page}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="px-4 py-3 border-b border-border">

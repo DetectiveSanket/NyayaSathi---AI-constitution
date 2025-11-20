@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../components/ui/tooltip";
-import { Home, Share, Download, Settings, ChevronDown, FileDown, FileText } from "lucide-react";
+import { Home, Share, Download, Settings, ChevronDown, FileDown, FileText, FileSearch, Languages } from "lucide-react";
 import ModelSelectionModal from "./ModelSelectionModal";
 import { SettingsModal } from "./SettingsModal";
 import { useToast } from "../hooks/use-toast";
@@ -17,16 +17,61 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import { useSummarize } from "../../hooks/useSummarize.js";
+import { useSelector } from "react-redux";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 
 interface ChatHeaderProps {
   onExportChat?: (format: 'txt' | 'pdf') => void;
+  lastMode?: "auto" | "contextual" | null;
+  selectedDocumentId?: string | null;
 }
 
-const ChatHeader = ({ onExportChat }: ChatHeaderProps = {}) => {
+const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId }: ChatHeaderProps = {}) => {
   const [selectedModel, setSelectedModel] = useState("legal-ai-v1");
   const [isModelModalOpen, setIsModelModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSummarizeOpen, setIsSummarizeOpen] = useState(false);
+  const [summaryLength, setSummaryLength] = useState<"short" | "medium" | "detailed">("short");
+  const [summaryLanguage, setSummaryLanguage] = useState("english");
   const { toast } = useToast();
+  const ragState = useSelector((state: any) => state.rag);
+
+  const { summarize, loading: summarizeLoading } = useSummarize({
+    onSuccess: (result) => {
+      toast({
+        title: "Summary generated",
+        description: `Document summarized successfully (${result.chunksUsed} chunks used)`,
+      });
+      setIsSummarizeOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Summarization failed",
+        description: error.message || "Failed to generate summary",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSummarize = () => {
+    if (!selectedDocumentId) {
+      toast({
+        title: "No document selected",
+        description: "Please select a document first",
+        variant: "destructive",
+      });
+      return;
+    }
+    summarize(selectedDocumentId, summaryLength, summaryLanguage);
+  };
 
   const getModelDisplayName = (modelId: string) => {
     const modelNames: Record<string, string> = {
@@ -49,8 +94,16 @@ const ChatHeader = ({ onExportChat }: ChatHeaderProps = {}) => {
           </Button>
         </div>
 
-      {/* Center-right - Model selector */}
-      <div className="flex items-center flex-1 justify-center">
+      {/* Center-right - Model selector and Mode indicator */}
+      <div className="flex items-center flex-1 justify-center gap-3">
+        {lastMode && (
+          <Badge 
+            variant={lastMode === "auto" ? "secondary" : "default"}
+            className="text-xs"
+          >
+            {lastMode === "auto" ? "⚡ Auto Mode" : "🔍 Contextual Mode"}
+          </Badge>
+        )}
         <Button
           onClick={() => setIsModelModalOpen(true)}
           variant="outline"
@@ -80,6 +133,67 @@ const ChatHeader = ({ onExportChat }: ChatHeaderProps = {}) => {
 
       {/* Right side - Action buttons */}
       <div className="flex items-center space-x-2">
+        <Dialog open={isSummarizeOpen} onOpenChange={setIsSummarizeOpen}>
+          <DialogTrigger asChild>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="hover:bg-surface-elevated focus-ring"
+                  aria-label="Summarize document"
+                  disabled={!selectedDocumentId}
+                >
+                  <FileSearch className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Summarize document</p>
+              </TooltipContent>
+            </Tooltip>
+          </DialogTrigger>
+          <DialogContent className="bg-surface-elevated border-border">
+            <DialogHeader>
+              <DialogTitle>Summarize Document</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Summary Length</label>
+                <Select value={summaryLength} onValueChange={(v: any) => setSummaryLength(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="short">Short</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="detailed">Detailed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Language</label>
+                <Select value={summaryLanguage} onValueChange={setSummaryLanguage}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="english">English</SelectItem>
+                    <SelectItem value="hindi">Hindi</SelectItem>
+                    <SelectItem value="marathi">Marathi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button 
+                onClick={handleSummarize} 
+                disabled={summarizeLoading || !selectedDocumentId}
+                className="w-full"
+              >
+                {summarizeLoading ? "Generating..." : "Generate Summary"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button 
