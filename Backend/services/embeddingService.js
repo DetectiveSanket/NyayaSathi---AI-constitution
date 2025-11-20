@@ -18,6 +18,8 @@ const pc = new Pinecone({
 
 const index = pc.index(process.env.PINECONE_INDEX);
 
+export const pineconeIndex = index;
+
 /**
  * Takes text chunks → converts to embeddings → upserts to Pinecone
  * @param {Array} chunks - [{ chunkId, documentId, text, page }]
@@ -52,4 +54,26 @@ export async function embedDocumentChunks(chunks = []) {
     console.error("❌ Embedding Error:", err);
     return { success: false, error: err.message };
   }
+}
+
+export async function embedQueryText(text) {
+  if (!text || typeof text !== "string") {
+    throw new Error("Text is required for embedding.");
+  }
+  return embeddings.embedQuery(text);
+}
+
+export async function querySimilarChunks({ vector, topK = 5, filter } = {}) {
+  if (!Array.isArray(vector) || vector.length === 0) {
+    throw new Error("Vector embedding is required for Pinecone query.");
+  }
+
+  const response = await index.query({
+    vector,
+    topK,
+    includeMetadata: true,
+    filter,
+  });
+
+  return response.matches || [];
 }
