@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectDB from './DB/db.js';
 import rateLimit from 'express-rate-limit';
+import { getRedisClient } from './services/redisClient.js';
 
 import userRoutes from './routes/user-route.js';
 import contactRoutes from './routes/contact-route.js';
@@ -16,6 +17,9 @@ const app = express();
 
 dotenv.config(); // Load environment variables
 connectDB(); // Connect to the database
+
+// Initialize Redis connection (non-blocking, will connect on first use)
+getRedisClient();
 
 //* Middleware
 app.use(express.json());

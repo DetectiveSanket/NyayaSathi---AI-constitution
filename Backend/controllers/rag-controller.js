@@ -19,6 +19,7 @@ import {
   supportedLanguages,
 } from "../utils/language.js";
 import { googleGenerate } from "../services/llm/llmAdapter.js";
+import { saveMessage, getMemory, clearMemory as clearUserMemory } from "../services/memoryService.js";
 
 const CHUNK_SIZE_TOKENS = 500;
 const CHUNK_OVERLAP_TOKENS = 100;
@@ -73,14 +74,17 @@ const isSimpleQuery = (text = "") => {
   return simplePrefixes.test(trimmed);
 };
 
-const buildSimpleAnswerPrompt = ({ query, languageLabel, languageInstruction }) =>
+const buildSimpleAnswerPrompt = ({ query, languageLabel, languageInstruction, memoryContext = "" }) =>
   [
     "You are NyayaSathi, an AI legal assistant.",
     "Provide a concise answer using general legal knowledge. Do NOT reference uploaded documents.",
+    "If the user asks about a specific law, explain it in simple terms and provide relevant references.",
+    
+
+    memoryContext, // Include conversation memory if available
+    `User now asks: ${query}`,
     `Respond in ${languageLabel}.`,
     languageInstruction,
-    "",
-    `Question: ${query}`,
   ].join("\n");
 
 export const processDocument = async (req, res) => {
@@ -192,13 +196,37 @@ export const queryRag = async (req, res) => {
       return res.status(400).json({ message: "Query text is required." });
     }
 
+    // Get user ID from auth middleware
+    const userId = req.user?._id?.toString() || req.user?.userId?.toString() || "anonymous";
+
     const langKey = normalizeLanguage(language);
     const languageInstruction = getLanguageInstruction(langKey);
     const languageLabel = getLanguageLabel(langKey);
 
     if (isSimpleQuery(query)) {
-      const simplePrompt = buildSimpleAnswerPrompt({ query, languageInstruction, languageLabel });
+      // AUTO MODE: Use memory
+      const memory = await getMemory(userId);
+      
+      // Format memory for prompt
+      let memoryContext = "";
+      if (memory.length > 0) {
+        const memoryText = memory
+          .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+          .join("\n");
+        memoryContext = `\n\nHere is the conversation memory (last ${memory.length} turns):\n${memoryText}\n`;
+      }
+
+      const simplePrompt = buildSimpleAnswerPrompt({ 
+        query, 
+        languageInstruction, 
+        languageLabel,
+        memoryContext,
+      });
       const simpleAnswer = await googleGenerate(DEFAULT_RAG_MODEL, simplePrompt);
+
+      // Save messages to memory
+      await saveMessage(userId, "user", query);
+      await saveMessage(userId, "assistant", simpleAnswer);
 
       return res.status(200).json({
         answer: simpleAnswer,
@@ -206,8 +234,11 @@ export const queryRag = async (req, res) => {
         language: langKey,
         supportedLanguages,
         mode: "auto",
+        memoryUsed: true,
       });
     }
+
+    // CONTEXTUAL MODE: NO memory used
 
     const userEmbedding = await embedQueryText(query);
 
@@ -221,6 +252,10 @@ export const queryRag = async (req, res) => {
       return res.status(200).json({
         answer: "I could not find relevant information for that question.",
         chunks: [],
+        language: langKey,
+        supportedLanguages,
+        mode: "context",
+        memoryUsed: false,
       });
     }
 
@@ -233,6 +268,8 @@ export const queryRag = async (req, res) => {
       .join("\n\n")
       .slice(0, MAX_CONTEXT_CHARS);
 
+    // Build prompt with conversation history
+    // CONTEXTUAL MODE: NO memory - only use document chunks
     const prompt = [
       "You are NyayaSathi, an AI legal assistant.",
       `Answer the user's question strictly using the provided context chunks. Respond in ${languageLabel}.`,
@@ -260,12 +297,15 @@ export const queryRag = async (req, res) => {
 
     const answer = buildAnswer(completion);
 
+    // DO NOT save to memory in contextual mode
+
     return res.status(200).json({
       answer,
       chunks: normalized,
       language: langKey,
       supportedLanguages,
       mode: "context",
+      memoryUsed: false,
     });
   } catch (err) {
     console.error("❌ RAG query error:", err);
@@ -303,6 +343,28 @@ export const translateResponse = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Translation error:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+/**
+ * Clear conversation memory for the authenticated user
+ */
+export const clearMemory = async (req, res) => {
+  try {
+    const userId = req.user?._id?.toString() || req.user?.userId?.toString();
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    await clearUserMemory(userId);
+
+    return res.status(200).json({
+      message: "Conversation memory cleared successfully",
+    });
+  } catch (err) {
+    console.error("❌ Clear memory error:", err);
     return res.status(500).json({ message: err.message });
   }
 };
