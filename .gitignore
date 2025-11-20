@@ -36,6 +36,9 @@ out/
 
 #  utils folder
 **/utils/
+src/utils/
+
+.src/utils/
 
 
 
