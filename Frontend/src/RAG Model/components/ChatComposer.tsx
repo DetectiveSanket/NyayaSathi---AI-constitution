@@ -58,6 +58,7 @@ const ChatComposer = ({ onSendMessage, isLoading = false }: ChatComposerProps) =
   const [showLibrary, setShowLibrary] = useState(false);
   const [uploadType, setUploadType] = useState<string>("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [isSummarizeOn, setIsSummarizeOn] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -356,8 +357,20 @@ const ChatComposer = ({ onSendMessage, isLoading = false }: ChatComposerProps) =
                     <span className="text-xs text-foreground/90">{voiceEnabled ? "On" : "Off"}</span>
                     </Button>
                 </div>
+
+                <div>
+                  <button
+                    onClick={() => setIsSummarizeOn((prev) => !prev)}
+                    className={`px-4 py-2 rounded-md font-semibold transition-all duration-200 shadow-sm border border-border/30 focus:outline-none focus:ring-2 focus:ring-primary/40
+                      ${isSummarizeOn ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-surface-chat/60 text-foreground/90 hover:bg-primary/10'}`}
+                  >
+                    {isSummarizeOn ? 'Summarizing (ON)' : 'Summarize this document'}
+                  </button>
+                </div>
+
                 </div>
             </div>
+
 
             {/* Main Composer - Compact Single Line */}
             <div className="px-6 py-3">
@@ -391,6 +404,8 @@ const ChatComposer = ({ onSendMessage, isLoading = false }: ChatComposerProps) =
                     ))}
                     </div>
                 )}
+
+              
 
                 {/* Compact Input with integrated controls */}
                 <div className="flex items-center gap-2 bg-surface-elevated/70 backdrop-blur-sm border border-border/50 rounded-3xl px-2 py-1.5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300">
