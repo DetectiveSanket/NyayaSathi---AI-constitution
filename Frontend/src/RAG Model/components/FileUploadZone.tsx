@@ -77,7 +77,7 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose }: FileUploadZon
       }
     } else {
       // Use regular file manager for other files
-      await uploadFiles(files);
+    await uploadFiles(files);
     }
   }, [uploadFiles, maxFiles, uploadAndProcess]);
 
@@ -100,7 +100,7 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose }: FileUploadZon
         }
       } else {
         // Use regular file manager for other files
-        await uploadFiles(files);
+      await uploadFiles(files);
       }
     }
   }, [uploadFiles, uploadAndProcess]);

@@ -36,7 +36,7 @@ const SIMPLE_QUERY_MAX_WORDS = 12;
 const SIMPLE_QUERY_MAX_CHARS = 80;
 
 const contextualKeywords =
-  /\b(document|file|section|article|clause|paragraph|page|context|upload|case|petition|act|statute|reference|above|chunk)\b/i;
+  /\b(document|file|section|article|clause|paragraph|page|context|upload|case|petition|act|statute|reference|above|chunk|resume|cv|project|uploaded|pdf|docx|text|content|data|information|details|mention|describe|about|in|from)\b/i;
 const simplePrefixes =
   /^(what|who|when|where|why|how|define|explain|tell me about|give me|summarize)\b/i;
 
@@ -68,10 +68,42 @@ const normalizeMatches = (matches = []) =>
 
 const isContextualQuery = (text = "") => contextualKeywords.test(text);
 
-const isSimpleQuery = (text = "") => {
+const isSimpleQuery = (text = "", documentId = null) => {
   const trimmed = text.trim();
   if (!trimmed) return false;
-  if (isContextualQuery(trimmed)) return false;
+  
+  // If documentId is provided, ALWAYS use contextual mode
+  if (documentId) {
+    console.log("🔍 Document ID provided, forcing contextual mode");
+    return false;
+  }
+  
+  // Check for contextual keywords
+  if (isContextualQuery(trimmed)) {
+    console.log("🔍 Contextual keywords detected, using contextual mode");
+    return false;
+  }
+
+  // Check for phrases that indicate document queries (e.g., "tell me about X in resume")
+  const documentPhrases = /\b(in|from|about|tell me about|what is in|what does|show me|find|search|look for|extract|get|retrieve|mention|describe|explain).*\b(resume|cv|document|file|pdf|uploaded|project|data|information|text|content)\b/i;
+  if (documentPhrases.test(trimmed)) {
+    console.log("🔍 Document-related phrase detected, using contextual mode");
+    return false;
+  }
+  
+  // Check for reverse pattern: "resume/document mentions X" or "X in resume"
+  const reverseDocumentPattern = /\b(resume|cv|document|file|pdf|uploaded|project).*\b(about|mentions|contains|has|includes|shows|describes|explains|says|states)\b/i;
+  if (reverseDocumentPattern.test(trimmed)) {
+    console.log("🔍 Reverse document pattern detected, using contextual mode");
+    return false;
+  }
+
+  // If query contains "in resume", "in document", "in file", etc., use contextual mode
+  const inDocumentPattern = /\b(in|from|of|within)\s+(resume|cv|document|file|pdf|uploaded|project|the\s+(resume|document|file))\b/i;
+  if (inDocumentPattern.test(trimmed)) {
+    console.log("🔍 'In document' pattern detected, using contextual mode");
+    return false;
+  }
 
   const wordCount = trimmed.split(/\s+/).length;
   if (wordCount <= SIMPLE_QUERY_MAX_WORDS || trimmed.length <= SIMPLE_QUERY_MAX_CHARS) {
@@ -239,7 +271,16 @@ export const queryRag = async (req, res) => {
     const languageInstruction = getLanguageInstruction(langKey);
     const languageLabel = getLanguageLabel(langKey);
 
-    if (isSimpleQuery(query)) {
+    // Check if query should use simple mode (only if no documentId and no contextual keywords)
+    const shouldUseSimpleMode = isSimpleQuery(query, documentId);
+    
+    console.log("🔍 Query analysis:", {
+      query,
+      documentId: documentId || "none",
+      mode: shouldUseSimpleMode ? "auto" : "contextual",
+    });
+
+    if (shouldUseSimpleMode) {
       // AUTO MODE: Use memory
       const memory = await getMemory(userId);
       
@@ -304,7 +345,7 @@ export const queryRag = async (req, res) => {
         chunks: [],
         language: langKey,
         supportedLanguages,
-        mode: "context",
+        mode: "contextual",
         memoryUsed: false,
       });
     }
@@ -353,12 +394,12 @@ export const queryRag = async (req, res) => {
     await saveConversationMessage(currentConversationId, userId, {
       role: "user",
       content: query,
-      metadata: { mode: "context", language: langKey, chunks: normalized, memoryUsed: false },
+      metadata: { mode: "contextual", language: langKey, chunks: normalized, memoryUsed: false },
     });
     await saveConversationMessage(currentConversationId, userId, {
       role: "assistant",
       content: answer,
-      metadata: { mode: "context", language: langKey, chunks: normalized, memoryUsed: false },
+      metadata: { mode: "contextual", language: langKey, chunks: normalized, memoryUsed: false },
     });
 
     return res.status(200).json({
@@ -366,7 +407,7 @@ export const queryRag = async (req, res) => {
       chunks: normalized,
       language: langKey,
       supportedLanguages,
-      mode: "context",
+      mode: "contextual",
       memoryUsed: false,
       conversationId: currentConversationId,
       isNewConversation,
