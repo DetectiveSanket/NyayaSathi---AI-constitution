@@ -14,7 +14,23 @@ import { Search, X, Eye, EyeOff } from "lucide-react";
 import { Button } from "../components/ui/button";
 import jsPDF from "jspdf";
 import { useRagQuery } from "../../hooks/useRagQuery.js";
-import { addMessage, setChunks, setMode, setSelectedDocument } from "../../store/ragSlice.js";
+import { useRagSession } from "../../hooks/useRagSession.js";
+import {
+  addMessage,
+  setChunks,
+  setMode,
+  setSelectedDocument,
+  clearMessages,
+  setCurrentConversationId,
+  setConversations,
+  setConversationsLoading,
+  setUserName,
+} from "../../store/ragSlice.js";
+import {
+  listConversations,
+  getConversationMessages,
+  createNewConversation,
+} from "../../services/ragService.js";
 
 interface Message {
   id: string;
@@ -44,17 +60,23 @@ const Index = () => {
   const { toast } = useToast();
   const dispatch = useDispatch();
   const ragState = useSelector((state: any) => state.rag);
+  const authState = useSelector((state: any) => state.auth);
+  const { init: initRagSession, isLoading: isSessionLoading } = useRagSession();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchFromSidebar, setSearchFromSidebar] = useState("");
+  const [conversationId, setConversationId] = useState<string | null>(
+    ragState.currentConversationId || null
+  );
+  const [isRestoringConversation, setIsRestoringConversation] = useState(false);
 
   // Use Redux messages or fallback to local state
   const [localMessages, setLocalMessages] = useState<Message[]>([
       {
         id: "1",
         type: "system",
-        content: "Welcome to NyayaSathi. Upload a document to get started.",
+        content: "Welcome to NyayaSathi. Ask me anything about legal matters!",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       },
   ]);
@@ -63,8 +85,118 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // Load conversations from backend
+  const loadConversations = async () => {
+    try {
+      dispatch(setConversationsLoading(true));
+      const conversations = await listConversations();
+      dispatch(setConversations(conversations));
+    } catch (error) {
+      console.error("Failed to load conversations:", error);
+      // Continue without conversations
+    } finally {
+      dispatch(setConversationsLoading(false));
+    }
+  };
+
+  // Restore conversation from backend
+  const restoreConversation = async (convId: string) => {
+    try {
+      setIsRestoringConversation(true);
+      const messages = await getConversationMessages(convId);
+      
+      // Convert backend messages to frontend format
+      const restoredMessages: Message[] = messages.map((msg: any) => ({
+        id: msg.id || Date.now().toString(),
+        type: msg.role === "assistant" ? "assistant" : msg.role === "user" ? "user" : "system",
+        content: msg.content,
+        timestamp: msg.timestamp
+          ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        mode: msg.metadata?.mode,
+        chunks: msg.metadata?.chunks || [],
+      }));
+
+      // Clear current messages and set restored ones
+      dispatch(clearMessages());
+      restoredMessages.forEach((msg) => dispatch(addMessage(msg)));
+
+      // Set conversation ID
+      setConversationId(convId);
+      dispatch(setCurrentConversationId(convId));
+      localStorage.setItem("rag_current_conversation_id", convId);
+
+      toast({
+        description: "Conversation restored",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error("Failed to restore conversation:", error);
+      toast({
+        title: "Failed to restore conversation",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRestoringConversation(false);
+    }
+  };
+
+  // Initialize RAG session and load conversations on mount
+  useEffect(() => {
+    const initialize = async () => {
+      await initRagSession();
+      
+      // Set user name from auth state if available
+      if (authState?.user?.name) {
+        dispatch(setUserName(authState.user.name));
+      } else if (authState?.user?.email) {
+        dispatch(setUserName(authState.user.email.split("@")[0]));
+      } else {
+        dispatch(setUserName("Guest"));
+      }
+
+      // Load conversations
+      await loadConversations();
+
+      // Try to restore conversation from localStorage or URL
+      const savedConversationId = localStorage.getItem("rag_current_conversation_id");
+      if (savedConversationId && ragState.currentConversationId !== savedConversationId) {
+        await restoreConversation(savedConversationId);
+      }
+    };
+    
+    // Call async function
+    initialize().catch((error) => {
+      console.error("Failed to initialize:", error);
+    });
+  }, []);
+
+  // Update user name when auth state changes
+  useEffect(() => {
+    if (authState?.user?.name) {
+      dispatch(setUserName(authState.user.name));
+    } else if (authState?.user?.email) {
+      dispatch(setUserName(authState.user.email.split("@")[0]));
+    } else if (!authState?.isAuthenticated) {
+      dispatch(setUserName("Guest"));
+    }
+  }, [authState?.user, authState?.isAuthenticated, dispatch]);
+
   const { sendQuery, loading: queryLoading } = useRagQuery({
     onSuccess: (result) => {
+      // Update conversationId if returned
+      if (result.conversationId) {
+        setConversationId(result.conversationId);
+        dispatch(setCurrentConversationId(result.conversationId));
+        localStorage.setItem("rag_current_conversation_id", result.conversationId);
+        
+        // If new conversation, refresh conversation list
+        if (result.isNewConversation) {
+          loadConversations();
+        }
+      }
+      
       // Add assistant message with answer
       const assistantMessage: Message = {
         id: Date.now().toString(),
@@ -93,7 +225,21 @@ const Index = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Listen for new chat event from sidebar
+  useEffect(() => {
+    const handleNewChatEvent = () => {
+      handleNewChat();
+    };
+    window.addEventListener("newChat", handleNewChatEvent);
+    return () => window.removeEventListener("newChat", handleNewChatEvent);
+  }, []);
+
   const handleSendMessage = async (content: string, language?: string, documentId?: string) => {
+    // Ensure session is initialized
+    if (isSessionLoading) {
+      await initRagSession();
+    }
+
     const newMessage: Message = {
       id: Date.now().toString(),
       type: "user",
@@ -107,11 +253,55 @@ const Index = () => {
       await sendQuery(content, {
         language: language || ragState.currentLanguage || "english",
         documentId: documentId || ragState.selectedDocumentId || undefined,
+        conversationId: conversationId || undefined,
         topK: 4,
       });
     } catch (error) {
       // Error handled in hook's onError
       setIsLoading(false);
+    }
+  };
+
+  const handleNewChat = async () => {
+    try {
+      // Clear current conversation
+      dispatch(clearMessages());
+      setConversationId(null);
+      dispatch(setCurrentConversationId(null));
+      localStorage.removeItem("rag_current_conversation_id");
+      
+      // Create new conversation
+      const newConversation = await createNewConversation();
+      if (newConversation.conversationId) {
+        setConversationId(newConversation.conversationId);
+        dispatch(setCurrentConversationId(newConversation.conversationId));
+        localStorage.setItem("rag_current_conversation_id", newConversation.conversationId);
+      }
+
+      // Reset to welcome message
+      setLocalMessages([
+        {
+          id: Date.now().toString(),
+          type: "system",
+          content: "New conversation started. How can I help you?",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        },
+      ]);
+
+      // Refresh conversation list
+      await loadConversations();
+
+      toast({
+        description: "New chat started",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error("Failed to create new chat:", error);
+      toast({
+        title: "Failed to create new chat",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
     }
   };
 
@@ -259,6 +449,8 @@ const Index = () => {
           retrievedChunks={ragState.retrievedChunks}
           selectedDocumentId={ragState.selectedDocumentId}
           onSelectDocument={(docId) => dispatch(setSelectedDocument(docId))}
+          onNewChat={handleNewChat}
+          onSelectConversation={restoreConversation}
         />
         <div className="flex-1 flex flex-col relative">
           <div className="px-6 py-5 border-b border-border/50 bg-gradient-surface backdrop-blur-sm">

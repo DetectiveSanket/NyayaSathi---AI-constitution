@@ -28,15 +28,34 @@ export function useDocumentUpload(options = {}) {
       try {
         // Step 1: Get presigned URL
         setProgress(10);
-        const { presignedUrl, s3Key, documentId } = await getPresignedUrl(
-          file.name,
-          file.type
-        );
+        let documentId;
+        let presignedUrl;
+        
+        try {
+          const presignResult = await getPresignedUrl(file.name, file.type);
+          presignedUrl = presignResult.presignedUrl;
+          documentId = presignResult.documentId;
+        } catch (presignError) {
+          throw new Error(`Failed to get upload URL: ${presignError.message}`);
+        }
 
         // Step 2: Upload to S3
         setProgress(30);
-        await uploadToS3(presignedUrl, file);
-        setProgress(60);
+        try {
+          await uploadToS3(presignedUrl, file);
+          setProgress(60);
+        } catch (uploadError) {
+          // If direct S3 upload fails, it's likely a CORS issue
+          // Provide helpful error message
+          if (uploadError.message.includes("Network error") || uploadError.message.includes("CORS")) {
+            throw new Error(
+              `S3 upload failed due to CORS configuration. ` +
+              `Please ensure your S3 bucket has CORS configured to allow PUT requests from your frontend domain. ` +
+              `Error: ${uploadError.message}`
+            );
+          }
+          throw uploadError;
+        }
 
         // Step 3: Process document (extract, chunk, embed)
         setProgress(70);

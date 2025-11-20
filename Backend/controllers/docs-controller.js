@@ -1,5 +1,6 @@
 // src/controllers/docsController.js
 import { randomUUID } from "crypto";
+import mongoose from "mongoose";
 import { getPresignedPutUrl } from "../services/s3Presign.js";
 import Document from "../models/document.js";
 import s3Client from "../services/s3Client.js";
@@ -16,24 +17,76 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 
 export async function presignUpload(req, res, next) {
   try {
     const { filename, contentType } = req.query;
-    if (!filename || !contentType) return res.status(400).json({ message: "filename & contentType required" });
+    
+    console.log("📄 Presign request:", { filename, contentType, user: req.user?.userId || "anonymous" });
+    
+    if (!filename || !contentType) {
+      return res.status(400).json({ message: "filename & contentType required" });
+    }
 
     const ext = filename.split(".").pop();
     const key = `documents/${Date.now()}-${randomUUID()}.${ext}`;
 
-    const url = await getPresignedPutUrl({ Key: key, ContentType: contentType });
+    console.log("🔑 Generating presigned URL for key:", key);
 
-    // store metadata record now with not-yet-processed state (optional)
-    const doc = await Document.create({
+    // Generate presigned URL with proper expiration (10 minutes)
+    let url;
+    try {
+      url = await getPresignedPutUrl({ 
+        Key: key, 
+        ContentType: contentType,
+        expiresIn: 60 * 10, // 10 minutes
+      });
+      console.log("✅ Presigned URL generated successfully");
+    } catch (s3Error) {
+      console.error("❌ S3 presign error:", s3Error);
+      return res.status(500).json({ 
+        message: "Failed to generate presigned URL",
+        error: s3Error.message || "S3 configuration error"
+      });
+    }
+
+    // Get user ID (supports both regular auth and RAG sessions)
+    const userId = req.user?.userId?.toString() || req.user?._id?.toString() || null;
+
+    // Store metadata record now with not-yet-processed state
+    const docData = {
       filename,
       s3Key: key,
       contentType,
       processed: false,
-    });
+    };
 
-    return res.json({ presignedUrl: url, s3Key: key, documentId: doc._id });
+    // Only set user if authenticated (not anonymous)
+    if (userId && userId !== "anonymous" && req.user?._id && mongoose.Types.ObjectId.isValid(req.user._id)) {
+      docData.user = req.user._id; // Use ObjectId, not string
+    }
+
+    console.log("💾 Creating document record...");
+    let doc;
+    try {
+      doc = await Document.create(docData);
+      console.log("✅ Document created:", doc._id.toString());
+    } catch (dbError) {
+      console.error("❌ Database error:", dbError);
+      return res.status(500).json({ 
+        message: "Failed to create document record",
+        error: dbError.message || "Database error"
+      });
+    }
+
+    return res.json({ 
+      presignedUrl: url, 
+      s3Key: key, 
+      documentId: doc._id.toString() 
+    });
   } catch (err) {
-    next(err);
+    console.error("❌ Presign upload error:", err);
+    console.error("❌ Error stack:", err.stack);
+    return res.status(500).json({ 
+      message: "Internal server error",
+      error: err.message || "Unknown error"
+    });
   }
 }
 

@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from "react";
+import { useToast } from "../hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import { Switch } from "../components/ui/switch";
+import { Button } from "../components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Separator } from "../components/ui/separator";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -20,14 +20,53 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     language: "english",
     voiceInput: false,
   });
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    if (isOpen) {
+      const savedSettings = localStorage.getItem("rag_settings");
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          setSettings({ ...settings, ...parsed });
+        } catch (error) {
+          console.error("Failed to parse saved settings:", error);
+        }
+      }
+    }
+  }, [isOpen]);
+
   const handleSave = () => {
-    toast({
-      description: "Settings saved successfully",
-      duration: 3000,
-    });
-    onClose();
+    setIsLoading(true);
+    try {
+      // Save to localStorage
+      localStorage.setItem("rag_settings", JSON.stringify(settings));
+      
+      // Apply theme if changed
+      if (settings.darkMode) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+
+      toast({
+        title: "Settings saved",
+        description: "Your settings have been saved successfully",
+        duration: 3000,
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Failed to save settings",
+        description: "An error occurred while saving your settings",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -121,11 +160,11 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+            <Button variant="outline" onClick={onClose} className="flex-1" disabled={isLoading}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="flex-1 bg-gradient-primary">
-              Save Settings
+            <Button onClick={handleSave} className="flex-1 bg-gradient-primary" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Settings"}
             </Button>
           </div>
         </div>

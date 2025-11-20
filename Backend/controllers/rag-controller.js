@@ -20,6 +20,13 @@ import {
 } from "../utils/language.js";
 import { googleGenerate } from "../services/llm/llmAdapter.js";
 import { saveMessage, getMemory, clearMemory as clearUserMemory } from "../services/memoryService.js";
+import {
+  createConversation,
+  getConversation,
+  saveConversationMessage,
+  generateConversationTitle,
+  updateConversation,
+} from "../services/conversationService.js";
 
 const CHUNK_SIZE_TOKENS = 500;
 const CHUNK_OVERLAP_TOKENS = 100;
@@ -190,14 +197,43 @@ export const processDocument = async (req, res) => {
 
 export const queryRag = async (req, res) => {
   try {
-    const { query, topK = DEFAULT_TOP_K, documentId, language = "english" } = req.body || {};
+    const { query, topK = DEFAULT_TOP_K, documentId, language = "english", conversationId } = req.body || {};
 
     if (!query || typeof query !== "string") {
       return res.status(400).json({ message: "Query text is required." });
     }
 
-    // Get user ID from auth middleware
-    const userId = req.user?._id?.toString() || req.user?.userId?.toString() || "anonymous";
+    // Get user ID from auth middleware (supports both regular auth and public RAG tokens)
+    const userId = req.user?.userId?.toString() || req.user?._id?.toString() || "anonymous";
+
+    // Handle conversation ID - create new if not provided
+    let currentConversationId = conversationId;
+    let isNewConversation = false;
+
+    if (!currentConversationId) {
+      // Create new conversation
+      const newConversation = await createConversation(userId, {
+        firstMessage: query,
+      });
+      currentConversationId = newConversation.conversationId;
+      isNewConversation = true;
+
+      // Auto-generate title from first message
+      const title = await generateConversationTitle(query);
+      await updateConversation(currentConversationId, userId, { title });
+    } else {
+      // Verify conversation exists and belongs to user
+      const existing = await getConversation(currentConversationId, userId);
+      if (!existing) {
+        // Create new if not found
+        const newConversation = await createConversation(userId, {
+          conversationId: currentConversationId,
+          firstMessage: query,
+        });
+        currentConversationId = newConversation.conversationId;
+        isNewConversation = true;
+      }
+    }
 
     const langKey = normalizeLanguage(language);
     const languageInstruction = getLanguageInstruction(langKey);
@@ -228,6 +264,18 @@ export const queryRag = async (req, res) => {
       await saveMessage(userId, "user", query);
       await saveMessage(userId, "assistant", simpleAnswer);
 
+      // Save to conversation
+      await saveConversationMessage(currentConversationId, userId, {
+        role: "user",
+        content: query,
+        metadata: { mode: "auto", language: langKey, memoryUsed: true },
+      });
+      await saveConversationMessage(currentConversationId, userId, {
+        role: "assistant",
+        content: simpleAnswer,
+        metadata: { mode: "auto", language: langKey, memoryUsed: true },
+      });
+
       return res.status(200).json({
         answer: simpleAnswer,
         chunks: [],
@@ -235,6 +283,8 @@ export const queryRag = async (req, res) => {
         supportedLanguages,
         mode: "auto",
         memoryUsed: true,
+        conversationId: currentConversationId,
+        isNewConversation,
       });
     }
 
@@ -299,6 +349,18 @@ export const queryRag = async (req, res) => {
 
     // DO NOT save to memory in contextual mode
 
+    // Save to conversation
+    await saveConversationMessage(currentConversationId, userId, {
+      role: "user",
+      content: query,
+      metadata: { mode: "context", language: langKey, chunks: normalized, memoryUsed: false },
+    });
+    await saveConversationMessage(currentConversationId, userId, {
+      role: "assistant",
+      content: answer,
+      metadata: { mode: "context", language: langKey, chunks: normalized, memoryUsed: false },
+    });
+
     return res.status(200).json({
       answer,
       chunks: normalized,
@@ -306,6 +368,8 @@ export const queryRag = async (req, res) => {
       supportedLanguages,
       mode: "context",
       memoryUsed: false,
+      conversationId: currentConversationId,
+      isNewConversation,
     });
   } catch (err) {
     console.error("❌ RAG query error:", err);
@@ -352,11 +416,7 @@ export const translateResponse = async (req, res) => {
  */
 export const clearMemory = async (req, res) => {
   try {
-    const userId = req.user?._id?.toString() || req.user?.userId?.toString();
-
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required." });
-    }
+    const userId = req.user?._id?.toString() || req.user?.userId?.toString() || "anonymous";
 
     await clearUserMemory(userId);
 
@@ -365,6 +425,37 @@ export const clearMemory = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Clear memory error:", err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+/**
+ * Create a public RAG session token for anonymous chatbot access
+ */
+export const createRagSession = async (req, res) => {
+  try {
+    const jwt = await import('jsonwebtoken');
+    const sessionId = `rag_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    
+    const token = jwt.default.sign(
+      {
+        sessionId,
+        type: "rag_public",
+        iat: Math.floor(Date.now() / 1000),
+      },
+      process.env.JWT_SECRET || "fallback-secret",
+      {
+        expiresIn: "30d", // 30 days expiration
+      }
+    );
+
+    return res.status(200).json({
+      token,
+      sessionId,
+      expiresIn: "30d",
+    });
+  } catch (err) {
+    console.error("❌ Create RAG session error:", err);
     return res.status(500).json({ message: err.message });
   }
 };

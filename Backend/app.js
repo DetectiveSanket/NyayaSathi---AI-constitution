@@ -57,8 +57,15 @@ app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/docs", docsRoutes);
 app.use("/api/v1/rag", ragRoutes);
 
-
-
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error("❌ Global error handler:", err);
+    console.error("❌ Error stack:", err.stack);
+    res.status(err.status || 500).json({
+        message: err.message || "Internal server error",
+        ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    });
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

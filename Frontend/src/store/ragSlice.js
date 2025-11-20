@@ -10,6 +10,11 @@ const initialState = {
   summary: null,
   documents: [], // List of uploaded documents
   currentLanguage: "english",
+  // Conversation management
+  currentConversationId: null,
+  conversations: [], // List of recent conversations
+  conversationsLoading: false,
+  userName: null, // User name (if logged in)
 };
 
 const ragSlice = createSlice({
@@ -52,6 +57,33 @@ const ragSlice = createSlice({
     clearChunks: (state) => {
       state.retrievedChunks = [];
     },
+    setCurrentConversationId: (state, action) => {
+      state.currentConversationId = action.payload;
+    },
+    setConversations: (state, action) => {
+      state.conversations = action.payload;
+    },
+    addConversation: (state, action) => {
+      state.conversations.unshift(action.payload);
+    },
+    updateConversationInList: (state, action) => {
+      const { conversationId, updates } = action.payload;
+      const index = state.conversations.findIndex((c) => c.conversationId === conversationId);
+      if (index !== -1) {
+        state.conversations[index] = { ...state.conversations[index], ...updates };
+      }
+    },
+    removeConversation: (state, action) => {
+      state.conversations = state.conversations.filter(
+        (c) => c.conversationId !== action.payload
+      );
+    },
+    setConversationsLoading: (state, action) => {
+      state.conversationsLoading = action.payload;
+    },
+    setUserName: (state, action) => {
+      state.userName = action.payload;
+    },
   },
 });
 
@@ -67,6 +99,13 @@ export const {
   setCurrentLanguage,
   clearMessages,
   clearChunks,
+  setCurrentConversationId,
+  setConversations,
+  addConversation,
+  updateConversationInList,
+  removeConversation,
+  setConversationsLoading,
+  setUserName,
 } = ragSlice.actions;
 
 export default ragSlice.reducer;

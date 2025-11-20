@@ -24,4 +24,42 @@ export const setAuthHeader = (token) => {
   }
 };
 
+/**
+ * Get RAG public session token from localStorage
+ */
+export function getRagToken() {
+  return localStorage.getItem("rag_public_session_token");
+}
+
+/**
+ * Set RAG public session token
+ */
+export function setRagToken(token) {
+  if (token) {
+    localStorage.setItem("rag_public_session_token", token);
+  } else {
+    localStorage.removeItem("rag_public_session_token");
+  }
+}
+
+/**
+ * Create a RAG API request with automatic token handling
+ * Uses RAG token if available, otherwise falls back to regular auth token
+ */
+export function createRagRequest(config) {
+  const ragToken = getRagToken();
+  const authToken = api.defaults.headers.common["Authorization"]?.replace("Bearer ", "");
+
+  // Use RAG token if available, otherwise use regular auth token
+  const token = ragToken || authToken;
+
+  return {
+    ...config,
+    headers: {
+      ...config.headers,
+      Authorization: token ? `Bearer ${token}` : undefined,
+    },
+  };
+}
+
 export default api;

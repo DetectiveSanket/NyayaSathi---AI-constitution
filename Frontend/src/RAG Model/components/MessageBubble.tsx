@@ -14,7 +14,6 @@ import {
   DialogTrigger,
 } from "../components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { useSelector } from "react-redux";
 
 interface MessageBubbleProps {
   message: {
@@ -46,7 +45,6 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
   const [translatedText, setTranslatedText] = useState<string | null>(null);
   const { toast } = useToast();
   const { speak, pause, resume, stop, isSpeaking, isPaused, currentMessageId } = useTextToSpeech();
-  const ragState = useSelector((state: any) => state.rag);
   
   const isThisMessageSpeaking = currentMessageId === message.id;
 

@@ -43,9 +43,19 @@ import { DocumentLibraryModal } from "./DocumentLibraryModal";
 import { EditProfileModal } from "./EditProfileModal";
 import { SettingsModal } from "./SettingsModal";
 import { useSelector, useDispatch } from "react-redux";
-import { listDocuments } from "../../services/ragService.js";
-import { setDocuments, addDocument } from "../../store/ragSlice.js";
+import { useNavigate } from "react-router-dom";
+import { listDocuments, deleteConversation } from "../../services/ragService.js";
+import {
+  setDocuments,
+  addDocument,
+  setCurrentConversationId,
+  removeConversation,
+  setUserName,
+} from "../../store/ragSlice.js";
+import { logoutUser } from "../../features/auth/authThunks.js";
+import { localLogout } from "../../store/authSlice.js";
 import { useToast } from "../hooks/use-toast";
+import { getRagToken } from "../../services/api.js";
 
 interface ChatItem {
   id: string;
@@ -67,6 +77,8 @@ interface ChatSidebarProps {
   }>;
   selectedDocumentId?: string | null;
   onSelectDocument?: (documentId: string | null) => void;
+  onNewChat?: () => void;
+  onSelectConversation?: (conversationId: string) => void;
 }
 
 const ChatSidebar = ({ 
@@ -76,6 +88,8 @@ const ChatSidebar = ({
   retrievedChunks = [],
   selectedDocumentId,
   onSelectDocument,
+  onNewChat,
+  onSelectConversation,
 }: ChatSidebarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -83,23 +97,30 @@ const ChatSidebar = ({
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showChunks, setShowChunks] = useState(false);
+  const [documents, setDocumentsLocal] = useState([]);
   const dispatch = useDispatch();
-  const ragState = useSelector((state: any) => state.rag);
+  const navigate = useNavigate();
+  const ragState = useSelector((state: any) => state.rag) || {};
+  const authState = useSelector((state: any) => state.auth) || {};
   const { toast } = useToast();
 
-  // Load documents on mount
+  // Load documents on mount (only if user is authenticated)
   useEffect(() => {
     const loadDocuments = async () => {
       try {
-        const docs = await listDocuments();
-        dispatch(setDocuments(docs));
+        // Only load if we have a regular auth token, not just RAG token
+        const ragToken = getRagToken();
+        // For now, skip document loading for public RAG sessions
+        // Documents require authentication
+        // const docs = await listDocuments();
+        // setDocumentsLocal(docs);
       } catch (error) {
         // Endpoint might not exist, that's ok
         console.log("Documents endpoint not available");
       }
     };
     loadDocuments();
-  }, [dispatch]);
+  }, []);
 
   // Handle search with debounce effect
   const handleSearchChange = (value: string) => {
@@ -109,32 +130,33 @@ const ChatSidebar = ({
     }
   };
 
-  const recentChats: ChatItem[] = [
-    {
-      id: "1",
-      title: "Verbal Threat Sections",
-      timestamp: "2 hours ago",
-      preview: "What sections apply if someone is verbally threatened?"
-    },
-    {
-      id: "2", 
-      title: "Property Dispute Laws",
-      timestamp: "Yesterday",
-      preview: "Can you explain the legal remedies for property disputes?"
-    },
-    {
-      id: "3",
-      title: "Contract Breach Analysis",
-      timestamp: "3 days ago", 
-      preview: "What are the consequences of breaching a service contract?"
-    },
-    {
-      id: "4",
-      title: "Employment Rights",
-      timestamp: "1 week ago",
-      preview: "What are my rights if terminated without notice?"
+  // Convert conversations from Redux to ChatItem format
+  const recentChats: ChatItem[] = (ragState.conversations || []).map((conv: any) => {
+    const date = new Date(conv.lastMessageAt || conv.createdAt);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    let timestamp = "Just now";
+    if (diffDays > 0) {
+      timestamp = `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    } else if (diffHours > 0) {
+      timestamp = `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    } else {
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      if (diffMins > 0) {
+        timestamp = `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+      }
     }
-  ];
+
+    return {
+      id: conv.conversationId,
+      title: conv.title || "New Conversation",
+      timestamp,
+      preview: conv.firstMessage || conv.preview || "New conversation",
+    };
+  });
 
   // Filter chats based on local search query
   const filteredChats = searchQuery.trim()
@@ -236,6 +258,13 @@ const ChatSidebar = ({
         <Button 
           className="w-full bg-blue-500 hover:opacity-90 focus-ring shadow-md hover-lift "
           size="lg"
+          onClick={() => {
+            if (onNewChat) {
+              onNewChat();
+            } else if (window.dispatchEvent) {
+              window.dispatchEvent(new CustomEvent("newChat"));
+            }
+          }}
         >
           <Plus className="w-4 h-4 mr-2" />
           New Chat
@@ -252,7 +281,7 @@ const ChatSidebar = ({
           <Library className="w-4 h-4 mr-3" />
           <span>Library</span>
           <Badge variant="secondary" className="ml-auto bg-accent text-accent-foreground">
-            {ragState.documents.length}
+            {documents.length}
           </Badge>
         </Button>
         {retrievedChunks.length > 0 && (
@@ -271,11 +300,11 @@ const ChatSidebar = ({
       </div>
 
       {/* Documents List */}
-      {ragState.documents.length > 0 && (
+      {documents.length > 0 && (
         <div className="px-4 py-3 border-b border-border">
           <h3 className="text-sm font-medium text-zinc-400 mb-2">Documents</h3>
           <div className="space-y-1 max-h-48 overflow-y-auto">
-            {ragState.documents.map((doc: any) => (
+            {documents.map((doc: any) => (
               <button
                 key={doc._id || doc.id}
                 onClick={() => onSelectDocument && onSelectDocument(doc._id || doc.id)}
@@ -375,7 +404,14 @@ const ChatSidebar = ({
               filteredChats.map((chat) => (
                 <div
                 key={chat.id}
-                className="group p-3 rounded-radius-sm hover:bg-surface-elevated cursor-pointer border border-transparent hover:border-border transition-all sidebar-item-glow hover:rounded-[16px]"
+                className={`group p-3 rounded-radius-sm hover:bg-surface-elevated cursor-pointer border border-transparent hover:border-border transition-all sidebar-item-glow hover:rounded-[16px] ${
+                  ragState?.currentConversationId === chat.id ? "bg-surface-elevated border-border" : ""
+                }`}
+                onClick={() => {
+                  if (onSelectConversation) {
+                    onSelectConversation(chat.id);
+                  }
+                }}
               >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -413,23 +449,42 @@ const ChatSidebar = ({
                         side="right"
                         align="start"
                       >
-                        <DropdownMenuItem className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer">
+                        <DropdownMenuItem
+                          className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onSelectConversation) {
+                              onSelectConversation(chat.id);
+                            }
+                          }}
+                        >
                           <Play className="w-4 h-4 mr-2" />
                           Resume Chat
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer">
-                          <Edit3 className="w-4 h-4 mr-2" />
-                          Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer">
-                          <Share className="w-4 h-4 mr-2" />
-                          Share
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer">
-                          <Archive className="w-4 h-4 mr-2" />
-                          Archive
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer text-destructive hover:text-destructive">
+                        <DropdownMenuItem
+                          className="hover:bg-surface-chat rounded-md transition-colors cursor-pointer text-destructive hover:text-destructive"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              await deleteConversation(chat.id);
+                              dispatch(removeConversation(chat.id));
+                              if (ragState?.currentConversationId === chat.id) {
+                                dispatch(setCurrentConversationId(null));
+                                localStorage.removeItem("rag_current_conversation_id");
+                              }
+                              toast({
+                                description: "Conversation deleted",
+                                duration: 2000,
+                              });
+                            } catch (error) {
+                              toast({
+                                title: "Failed to delete conversation",
+                                description: error instanceof Error ? error.message : "Unknown error",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
@@ -452,14 +507,18 @@ const ChatSidebar = ({
               className="w-full justify-start hover:bg-surface-elevated focus-ring"
             >
               <Avatar className="w-8 h-8 mr-3">
-                <AvatarImage src="" alt="User" />
+                <AvatarImage src={authState?.user?.avatar || ""} alt="User" />
                 <AvatarFallback className="bg-blue-500 text-primary-foreground">
-                  U
+                  {(authState?.user?.name || ragState?.userName || "Guest").charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left">
-                <div className="text-sm font-medium">Legal User</div>
-                <div className="text-xs text-zinc-600">user@example.com</div>
+                <div className="text-sm font-medium">
+                  {authState?.user?.name || ragState?.userName || "Guest"}
+                </div>
+                <div className="text-xs text-zinc-600">
+                  {authState?.isAuthenticated ? "Active session" : "Anonymous session"}
+                </div>
               </div>
             </Button>
           </PopoverTrigger>
@@ -494,14 +553,56 @@ const ChatSidebar = ({
               <Button 
                 variant="ghost" 
                 className="w-full justify-start hover:bg-surface-chat"
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  const isDark = document.documentElement.classList.contains("dark");
+                  if (isDark) {
+                    document.documentElement.classList.remove("dark");
+                    toast({
+                      description: "Switched to light theme",
+                      duration: 2000,
+                    });
+                  } else {
+                    document.documentElement.classList.add("dark");
+                    toast({
+                      description: "Switched to dark theme",
+                      duration: 2000,
+                    });
+                  }
+                }}
               >
                 <Sun className="w-4 h-4 mr-3" />
-                Light Theme
+                Toggle Theme
               </Button>
               <div className="my-1 h-px bg-border" />
               <Button 
                 variant="ghost" 
                 className="w-full justify-start hover:bg-surface-chat text-destructive"
+                onClick={async () => {
+                  setIsProfileOpen(false);
+                  try {
+                    await dispatch(logoutUser() as any).unwrap();
+                    dispatch(localLogout());
+                    // Clear RAG token as well
+                    localStorage.removeItem("rag_public_session_token");
+                    localStorage.removeItem("rag_current_conversation_id");
+                    toast({
+                      description: "Logged out successfully",
+                      duration: 2000,
+                    });
+                    navigate("/login", { replace: true });
+                  } catch (error: any) {
+                    // Even if backend fails, clear local state
+                    dispatch(localLogout());
+                    localStorage.removeItem("rag_public_session_token");
+                    localStorage.removeItem("rag_current_conversation_id");
+                    toast({
+                      description: "Logged out",
+                      duration: 2000,
+                    });
+                    navigate("/login", { replace: true });
+                  }
+                }}
               >
                 <LogOut className="w-4 h-4 mr-3" />
                 Logout
