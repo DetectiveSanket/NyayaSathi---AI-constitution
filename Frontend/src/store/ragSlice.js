@@ -10,6 +10,7 @@ const initialState = {
   summary: null,
   documents: [], // List of uploaded documents
   currentLanguage: "english",
+  autoSummarize: false, // Auto-summarize toggle
   // Conversation management
   currentConversationId: null,
   conversations: [], // List of recent conversations
@@ -84,6 +85,9 @@ const ragSlice = createSlice({
     setUserName: (state, action) => {
       state.userName = action.payload;
     },
+    setAutoSummarize: (state, action) => {
+      state.autoSummarize = action.payload;
+    },
   },
 });
 
@@ -106,6 +110,7 @@ export const {
   removeConversation,
   setConversationsLoading,
   setUserName,
+  setAutoSummarize,
 } = ragSlice.actions;
 
 export default ragSlice.reducer;

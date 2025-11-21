@@ -26,6 +26,7 @@ import {
   setConversationsLoading,
   setUserName,
 } from "../../store/ragSlice.js";
+import { setSelectedDocument as setSelectedDocumentAction } from "../../store/ragSlice.js";
 import {
   listConversations,
   getConversationMessages,
@@ -84,6 +85,7 @@ const Index = () => {
   const messages = ragState.messages.length > 0 ? ragState.messages : localMessages;
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const inputMessageRef = useRef<{ setMessage?: (msg: string) => void }>({});
 
   // Load conversations from backend
   const loadConversations = async () => {
@@ -430,6 +432,17 @@ const Index = () => {
     setSearchFromSidebar("");
   };
 
+  // Handle document upload - auto-populate "summary" if auto-summarize is ON
+  const handleDocumentUploaded = (documentId: string) => {
+    // Set the uploaded document as selected
+    dispatch(setSelectedDocumentAction(documentId));
+    
+    // If auto-summarize is ON, auto-populate "summary" in input
+    if (ragState.autoSummarize && inputMessageRef.current.setMessage) {
+      inputMessageRef.current.setMessage("summary");
+    }
+  };
+
   if (isMobile) {
     return <MobileChatLayout messages={messages} isLoading={isLoading} onSendMessage={handleSendMessage} />;
   }
@@ -566,6 +579,8 @@ const Index = () => {
                 onSendMessage={handleSendMessage} 
                 isLoading={isLoading || queryLoading}
                 selectedDocumentId={ragState.selectedDocumentId}
+                onDocumentUploaded={handleDocumentUploaded}
+                inputMessageRef={inputMessageRef}
               />
             </div>
           </div>

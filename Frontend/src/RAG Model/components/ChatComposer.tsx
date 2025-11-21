@@ -42,14 +42,20 @@ import TTSControls from "./TTSControls";
 import { FileUploadZone } from "./FileUploadZone";
 import { DocumentLibraryModal } from "./DocumentLibraryModal";
 import { useFileManager } from "../contexts/FileManagerContext";
+import { useSelector, useDispatch } from "react-redux";
+import { setAutoSummarize } from "../../store/ragSlice.js";
+import { useSummarize } from "../../hooks/useSummarize.js";
+import { addMessage, setMode, setSummary } from "../../store/ragSlice.js";
 
 interface ChatComposerProps {
   onSendMessage: (message: string, language?: string, documentId?: string) => void;
   isLoading?: boolean;
   selectedDocumentId?: string | null;
+  onDocumentUploaded?: (documentId: string) => void; // Callback when document is uploaded
+  inputMessageRef?: React.MutableRefObject<{ setMessage?: (msg: string) => void }>; // Ref to expose setMessage
 }
 
-const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId }: ChatComposerProps) => {
+const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, onDocumentUploaded, inputMessageRef }: ChatComposerProps) => {
   const [message, setMessage] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   const [voiceEnabled, setVoiceEnabled] = useState(false);
@@ -59,12 +65,42 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId }: 
   const [showLibrary, setShowLibrary] = useState(false);
   const [uploadType, setUploadType] = useState<string>("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-  const [isSummarizeOn, setIsSummarizeOn] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { uploadFiles } = useFileManager();
+  const dispatch = useDispatch();
+  const ragState = useSelector((state: any) => state.rag);
+  const autoSummarize = ragState?.autoSummarize || false;
+  
+  // Summarize hook
+  const { summarize, loading: summarizeLoading } = useSummarize({
+    onSuccess: (result) => {
+      // Add summary as assistant message
+      dispatch(addMessage({
+        id: Date.now().toString(),
+        type: "assistant",
+        content: result.summary,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        mode: "contextual",
+      }));
+      dispatch(setMode("contextual"));
+      dispatch(setSummary(result));
+      toast({
+        title: "Summary generated",
+        description: `Document summarized successfully (${result.chunksUsed} chunks used)`,
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Summarization failed",
+        description: error.message || "Failed to generate summary",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Initialize Web Speech API
   useEffect(() => {
@@ -169,7 +205,44 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId }: 
     }
   }, [selectedLanguage]);
 
+  // Expose setMessage function to parent via ref
+  useEffect(() => {
+    if (inputMessageRef) {
+      inputMessageRef.current.setMessage = (msg: string) => {
+        setMessage(msg);
+        // Auto-resize textarea
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
+          }
+        }, 10);
+      };
+    }
+  }, [inputMessageRef]);
+
   const handleSend = () => {
+    const trimmedMessage = message.trim().toLowerCase();
+    
+    // Check if message is "summary" and we have a selected document
+    if (trimmedMessage === "summary" && selectedDocumentId) {
+      // Add user message first
+      dispatch(addMessage({
+        id: Date.now().toString(),
+        type: "user",
+        content: "summary",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }));
+      
+      // Call summarize instead of regular query
+      summarize(selectedDocumentId, "medium", selectedLanguage);
+      setMessage("");
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+      return;
+    }
+    
     if (message.trim() && !isLoading) {
       onSendMessage(message.trim(), selectedLanguage, selectedDocumentId || undefined);
       setMessage("");
@@ -361,11 +434,18 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId }: 
 
                 <div>
                   <button
-                    onClick={() => setIsSummarizeOn((prev) => !prev)}
+                    onClick={() => {
+                      const newState = !autoSummarize;
+                      dispatch(setAutoSummarize(newState));
+                      toast({
+                        description: newState ? "Auto-summarize enabled" : "Auto-summarize disabled",
+                        duration: 2000,
+                      });
+                    }}
                     className={`px-4 py-2 rounded-md font-semibold transition-all duration-200 shadow-sm border border-border/30 focus:outline-none focus:ring-2 focus:ring-primary/40
-                      ${isSummarizeOn ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-surface-chat/60 text-foreground/90 hover:bg-primary/10'}`}
+                      ${autoSummarize ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-surface-chat/60 text-foreground/90 hover:bg-primary/10'}`}
                   >
-                    {isSummarizeOn ? 'Summarizing (ON)' : 'Summarize this document'}
+                    {autoSummarize ? 'Summarizing (ON)' : 'Summarize this document'}
                   </button>
                 </div>
 
@@ -572,6 +652,7 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId }: 
                     : uploadType === "video" ? "video/*"
                     : "*"}
                 onClose={() => setShowUploadZone(false)}
+                onDocumentUploaded={onDocumentUploaded}
                 />
             )}
 

@@ -12,9 +12,10 @@ interface FileUploadZoneProps {
   accept?: string;
   maxFiles?: number;
   onClose?: () => void;
+  onDocumentUploaded?: (documentId: string) => void; // Callback when document is uploaded
 }
 
-export const FileUploadZone = ({ accept, maxFiles = 10, onClose }: FileUploadZoneProps) => {
+export const FileUploadZone = ({ accept, maxFiles = 10, onClose, onDocumentUploaded }: FileUploadZoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const { uploadFiles, uploadProgress } = useFileManager();
   const dispatch = useDispatch();
@@ -32,6 +33,10 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose }: FileUploadZon
         filename: "Uploaded Document",
         processed: true,
       }));
+      // Notify parent component about document upload
+      if (onDocumentUploaded) {
+        onDocumentUploaded(result.documentId);
+      }
       if (onClose) onClose();
     },
     onError: (error) => {
