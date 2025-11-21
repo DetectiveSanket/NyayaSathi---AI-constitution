@@ -19,6 +19,7 @@ import {
   addMessage,
   setChunks,
   setMode,
+  setSummary,
   setSelectedDocument,
   clearMessages,
   setMessages,
@@ -321,6 +322,15 @@ const Index = () => {
       await initRagSession();
     }
 
+    // Remove welcome message if it exists (first user message starts conversation)
+    const currentMessages = [...(ragState.messages || [])];
+    const welcomeMessageIndex = currentMessages.findIndex(msg => msg.type === "system" && msg.id?.startsWith("welcome-"));
+    if (welcomeMessageIndex !== -1) {
+      // Remove welcome message
+      currentMessages.splice(welcomeMessageIndex, 1);
+      dispatch(setMessages(currentMessages));
+    }
+
     const newMessage: Message = {
       id: Date.now().toString(),
       type: "user",
@@ -360,31 +370,37 @@ const Index = () => {
         }));
       }
       
-      // STEP 1: IMMEDIATELY clear all messages synchronously - no async operations yet
-      dispatch(setMessages([]));
-      dispatch(clearMessages()); // Also clear chunks, mode, summary
-      
-      // STEP 2: Clear conversation ID to prevent any restoration
+      // STEP 1: Clear conversation ID to prevent any restoration
       setConversationId(null);
       dispatch(setCurrentConversationId(null));
       localStorage.removeItem("rag_current_conversation_id");
       
-      // STEP 3: Clear input message
+      // STEP 2: Clear input message
       if (inputMessageRef.current.setMessage) {
         inputMessageRef.current.setMessage("");
       }
       
-      // STEP 4: Create new conversation (async operation)
+      // STEP 3: Create new conversation (async operation)
       const newConversation = await createNewConversation();
       if (newConversation.conversationId) {
         setConversationId(newConversation.conversationId);
         dispatch(setCurrentConversationId(newConversation.conversationId));
         localStorage.setItem("rag_current_conversation_id", newConversation.conversationId);
-        
-        // STEP 5: Ensure messages are still empty for the new conversation
-        // This prevents any race conditions or restoration
-        dispatch(setMessages([]));
       }
+
+      // STEP 4: Clear chunks, mode, summary (but keep messages array for welcome message)
+      dispatch(setChunks([]));
+      dispatch(setMode(null));
+      dispatch(setSummary(null));
+      
+      // STEP 5: Add welcome message for new chat
+      const welcomeMessage: Message = {
+        id: `welcome-${Date.now()}`,
+        type: "system",
+        content: "Welcome to NyayaSathi! I'm your AI legal assistant. How can I help you today?",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      dispatch(setMessages([welcomeMessage]));
 
       // STEP 6: Refresh conversation list
       await loadConversations();

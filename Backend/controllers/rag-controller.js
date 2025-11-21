@@ -36,14 +36,15 @@ const SIMPLE_QUERY_MAX_WORDS = 12;
 const SIMPLE_QUERY_MAX_CHARS = 80;
 
 // More specific contextual keywords - only trigger when clearly document-related
-const contextualKeywords = /\b(document|file|section|article|clause|paragraph|page|upload|case|petition|act|statute|reference|above|chunk|resume|cv|project|uploaded|pdf|docx)\b/i;
+// NOTE: "section", "article", "act", "statute" are removed as they're common in general legal questions
+const contextualKeywords = /\b(document|file|upload|chunk|resume|cv|project|uploaded|pdf|docx|uploaded\s+file)\b/i;
 
-// Patterns that explicitly indicate document queries
+// Patterns that explicitly indicate document queries (must reference uploaded documents)
 const documentQueryPatterns = [
-  /\b(in|from|of|within)\s+(the\s+)?(resume|cv|document|file|pdf|uploaded|project|uploaded\s+file)\b/i,
-  /\b(resume|cv|document|file|pdf|uploaded|project)\s+(mentions|contains|has|includes|shows|describes|explains|says|states|about)\b/i,
-  /\b(tell me|what|show me|find|search|look for|extract|get|retrieve)\s+.*\s+(in|from|of)\s+(the\s+)?(resume|cv|document|file|pdf|uploaded|project)\b/i,
-  /\b(what|which|where)\s+(is|are|does|do)\s+.*\s+(in|from|of)\s+(the\s+)?(resume|cv|document|file|pdf|uploaded|project)\b/i,
+  /\b(in|from|of|within)\s+(the\s+)?(resume|cv|document|file|pdf|uploaded|project|uploaded\s+file|my\s+(resume|document|file))\b/i,
+  /\b(resume|cv|document|file|pdf|uploaded|project|uploaded\s+file)\s+(mentions|contains|has|includes|shows|describes|explains|says|states|about)\b/i,
+  /\b(tell me|what|show me|find|search|look for|extract|get|retrieve)\s+.*\s+(in|from|of)\s+(the\s+)?(resume|cv|document|file|pdf|uploaded|project|uploaded\s+file|my\s+(resume|document|file))\b/i,
+  /\b(what|which|where)\s+(is|are|does|do)\s+.*\s+(in|from|of)\s+(the\s+)?(resume|cv|document|file|pdf|uploaded|project|uploaded\s+file|my\s+(resume|document|file))\b/i,
 ];
 
 // Patterns that indicate general questions (should use auto mode)
@@ -52,6 +53,11 @@ const generalQuestionPatterns = [
   /\b(how are you|who are you|what are you|tell me about you|about yourself|your role|your purpose|your function)\b/i,
   /\b(in general|generally|overall|basically|basically speaking|in simple terms|simply|just|only)\b/i,
   /\b(not asking|not about|not from|not in|don't need|don't want|no need|no document|no file)\b/i,
+  // General legal questions about sections, acts, statutes (not about uploaded documents)
+  /\b(section|article|clause|paragraph|act|statute|ipc|penal\s+code|indian\s+penal\s+code)\s+\d+/i,
+  /\b(what|which|how|when|where|why)\s+(is|are|does|do|can|will|should)\s+.*\s+(section|article|act|statute|ipc|penal\s+code)/i,
+  /\b(section|article|act|statute)\s+\d+\s+.*\s+(punishment|penalty|fine|imprisonment|what|which|how)/i,
+  /\b(if|when)\s+.*\s+(section|article|act|statute)\s+\d+/i,
 ];
 
 const simplePrefixes =
@@ -89,17 +95,23 @@ const normalizeMatches = (matches = []) =>
 const isContextualQuery = (text = "") => {
   const trimmed = text.trim().toLowerCase();
   
-  // First check: explicit document keywords
+  // First check: explicit document keywords (resume, cv, uploaded file, etc.)
   if (contextualKeywords.test(trimmed)) {
     // But make sure it's not a general question about the keyword itself
     const generalAboutDocument = /^(what|who|when|where|why|how|tell me about|explain|define)\s+(is|are|does|do|can|will)\s+(a|an|the)?\s*(document|file|pdf|resume|cv)\b/i;
     if (generalAboutDocument.test(text)) {
       return false; // General question about documents, not querying a document
     }
-    return true;
+    // Check if it's asking about uploaded documents specifically
+    const uploadedDocPattern = /\b(uploaded|my|the)\s+(document|file|pdf|resume|cv|project)\b/i;
+    if (uploadedDocPattern.test(trimmed)) {
+      return true; // Asking about uploaded document
+    }
+    // If keyword appears but not in document context, it might be general
+    return false; // Be conservative - only trigger if clearly about uploaded docs
   }
   
-  // Second check: document query patterns
+  // Second check: document query patterns (must explicitly reference uploaded documents)
   for (const pattern of documentQueryPatterns) {
     if (pattern.test(trimmed)) {
       return true;
@@ -147,37 +159,56 @@ const isSimpleQuery = async (text = "", documentId = null) => {
     return false;
   }
   
-  // Priority 1: Check for explicit general question patterns
+  // Priority 1: Check for explicit general question patterns (including legal questions)
   if (isGeneralQuestion(trimmed)) {
     console.log("✅ General question pattern detected, using auto mode");
     return true;
   }
   
   // Priority 2: Check for explicit document query patterns
+  // Only trigger if clearly asking about uploaded documents
   if (isContextualQuery(trimmed)) {
     console.log("🔍 Document query pattern detected, using contextual mode");
     return false;
+  }
+  
+  // Priority 2.5: Check if it's a general legal question (about laws, sections, acts)
+  // These should use auto mode, not contextual
+  const generalLegalPattern = /\b(what|which|how|when|where|why|if|tell me|explain|describe)\s+.*\s+(section|article|act|statute|ipc|penal\s+code|indian\s+penal\s+code)\s+(\d+|means|is|about)/i;
+  if (generalLegalPattern.test(trimmed) && !isContextualQuery(trimmed)) {
+    console.log("✅ General legal question detected, using auto mode");
+    return true;
   }
   
   // Priority 3: Use LLM-based classification for ambiguous queries
   // This helps with edge cases where pattern matching isn't enough
   try {
     const classificationPrompt = `You are a query classifier. Determine if the user's question is asking about:
-1. GENERAL KNOWLEDGE or ABOUT YOU (use "auto")
+1. GENERAL KNOWLEDGE, LEGAL QUESTIONS, or ABOUT YOU (use "auto")
 2. SPECIFIC CONTENT FROM AN UPLOADED DOCUMENT (use "contextual")
 
 User query: "${trimmed}"
 
 Respond with ONLY one word: "auto" or "contextual"
 
-Examples:
+Examples (use "auto"):
 - "who are you" → auto
 - "tell me about you" → auto  
 - "how are you" → auto
+- "what is Section 154 of IPC" → auto (general legal question)
+- "if someone came under Section 154, what punishment?" → auto (general legal question)
+- "what is the punishment for Section 302?" → auto (general legal question)
+- "explain Indian Penal Code Section 154" → auto (general legal question)
 - "what is a document" → auto
-- "tell me about bikes project in resume" → contextual
-- "what is mentioned in the document" → contextual
-- "find information about X in the file" → contextual
+
+Examples (use "contextual"):
+- "tell me about bikes project in resume" → contextual (asks about uploaded document)
+- "what is mentioned in the document" → contextual (asks about uploaded document)
+- "find information about X in the file" → contextual (asks about uploaded document)
+- "what does my resume say about X" → contextual (asks about uploaded document)
+
+Key rule: Questions about legal sections, acts, statutes, or general legal knowledge should use "auto", NOT "contextual".
+Only use "contextual" if the question explicitly asks about content from an uploaded document/resume/file.
 
 Classification:`;
 
