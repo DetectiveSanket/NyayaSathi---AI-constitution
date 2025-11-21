@@ -75,9 +75,22 @@ const Index = () => {
     ragState.currentConversationId || null
   );
   const [isRestoringConversation, setIsRestoringConversation] = useState(false);
+  const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
 
   // Use Redux messages only - no local fallback
-  const messages = ragState.messages || [];
+  // If we're creating a new chat, force empty messages
+  // Also ensure messages match the current conversationId
+  const currentConvId = conversationId || ragState.currentConversationId;
+  let messages = (isCreatingNewChat ? [] : (ragState.messages || []));
+  
+  // Safety check: If we have messages but no conversationId, clear them
+  // This prevents showing messages from a previous session
+  if (messages.length > 0 && !currentConvId && !isRestoringConversation) {
+    console.log("🧹 Clearing orphaned messages (no conversationId)");
+    messages = [];
+    // Dispatch to actually clear them
+    dispatch(setMessages([]));
+  }
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const inputMessageRef = useRef<{ setMessage?: (msg: string) => void }>({});
@@ -182,12 +195,20 @@ const Index = () => {
       await loadConversations();
 
       // Try to restore conversation from localStorage or URL
-      const savedConversationId = localStorage.getItem("rag_current_conversation_id");
-      if (savedConversationId && ragState.currentConversationId !== savedConversationId) {
-        await restoreConversation(savedConversationId);
-      } else if (!savedConversationId) {
-        // If no saved conversation, start with empty messages
-        dispatch(setMessages([]));
+      // Only restore if we have a saved conversationId AND it matches the current one
+      // AND we're not in the middle of creating a new chat
+      if (!isCreatingNewChat) {
+        const savedConversationId = localStorage.getItem("rag_current_conversation_id");
+        const currentConvId = ragState.currentConversationId || conversationId;
+        
+        if (savedConversationId && currentConvId && savedConversationId === currentConvId) {
+          // Only restore if the conversationId matches what's in state
+          await restoreConversation(savedConversationId);
+        } else if (!savedConversationId || !currentConvId) {
+          // If no saved conversation or no current conversation, start with empty messages
+          dispatch(setMessages([]));
+          dispatch(clearMessages());
+        }
       }
     };
     
@@ -195,7 +216,7 @@ const Index = () => {
     initialize().catch((error) => {
       console.error("Failed to initialize:", error);
     });
-  }, []);
+  }, []); // Only run on mount
 
   // Update user name when auth state changes
   useEffect(() => {
@@ -260,6 +281,27 @@ const Index = () => {
     },
   });
 
+  // Watch for conversationId changes and ensure messages are cleared when switching to new conversation
+  useEffect(() => {
+    // If conversationId changes to a new value (not just null), ensure we're not showing old messages
+    // This prevents message leakage when switching conversations
+    const currentConvId = conversationId || ragState.currentConversationId;
+    
+    // If we have a conversationId but messages don't match what's stored for that conversation
+    if (currentConvId && ragState.messagesByConversation) {
+      const storedMessages = ragState.messagesByConversation[currentConvId];
+      // If stored messages exist but current messages don't match, it means we switched conversations
+      // Don't auto-load here - let restoreConversation handle it explicitly
+    } else if (!currentConvId) {
+      // No conversation ID means new chat - ensure messages are empty
+      if (ragState.messages && ragState.messages.length > 0) {
+        console.log("🧹 No conversation ID, clearing messages");
+        dispatch(setMessages([]));
+        dispatch(clearMessages());
+      }
+    }
+  }, [conversationId, ragState.currentConversationId]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -304,6 +346,9 @@ const Index = () => {
 
   const handleNewChat = async () => {
     try {
+      // Set flag to prevent any message restoration during new chat creation
+      setIsCreatingNewChat(true);
+      
       // Ensure messagesByConversation is initialized
       dispatch(initializeMessagesByConversation());
       
@@ -315,30 +360,37 @@ const Index = () => {
         }));
       }
       
-      // COMPLETELY clear all messages - no fallback, no welcome message
+      // STEP 1: IMMEDIATELY clear all messages synchronously - no async operations yet
       dispatch(setMessages([]));
       dispatch(clearMessages()); // Also clear chunks, mode, summary
       
-      // Clear conversation ID
+      // STEP 2: Clear conversation ID to prevent any restoration
       setConversationId(null);
       dispatch(setCurrentConversationId(null));
       localStorage.removeItem("rag_current_conversation_id");
       
-      // Clear input message
+      // STEP 3: Clear input message
       if (inputMessageRef.current.setMessage) {
         inputMessageRef.current.setMessage("");
       }
       
-      // Create new conversation
+      // STEP 4: Create new conversation (async operation)
       const newConversation = await createNewConversation();
       if (newConversation.conversationId) {
         setConversationId(newConversation.conversationId);
         dispatch(setCurrentConversationId(newConversation.conversationId));
         localStorage.setItem("rag_current_conversation_id", newConversation.conversationId);
+        
+        // STEP 5: Ensure messages are still empty for the new conversation
+        // This prevents any race conditions or restoration
+        dispatch(setMessages([]));
       }
 
-      // Refresh conversation list
+      // STEP 6: Refresh conversation list
       await loadConversations();
+
+      // STEP 7: Clear the flag after everything is done
+      setIsCreatingNewChat(false);
 
       toast({
         description: "New chat started",
@@ -346,6 +398,10 @@ const Index = () => {
       });
     } catch (error) {
       console.error("Failed to create new chat:", error);
+      // Even on error, ensure messages are cleared
+      dispatch(setMessages([]));
+      dispatch(clearMessages());
+      setIsCreatingNewChat(false);
       toast({
         title: "Failed to create new chat",
         description: error instanceof Error ? error.message : "Unknown error",

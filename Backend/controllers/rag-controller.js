@@ -35,8 +35,25 @@ const MAX_CONTEXT_CHARS = 15000;
 const SIMPLE_QUERY_MAX_WORDS = 12;
 const SIMPLE_QUERY_MAX_CHARS = 80;
 
-const contextualKeywords =
-  /\b(document|file|section|article|clause|paragraph|page|context|upload|case|petition|act|statute|reference|above|chunk|resume|cv|project|uploaded|pdf|docx|text|content|data|information|details|mention|describe|about|in|from)\b/i;
+// More specific contextual keywords - only trigger when clearly document-related
+const contextualKeywords = /\b(document|file|section|article|clause|paragraph|page|upload|case|petition|act|statute|reference|above|chunk|resume|cv|project|uploaded|pdf|docx)\b/i;
+
+// Patterns that explicitly indicate document queries
+const documentQueryPatterns = [
+  /\b(in|from|of|within)\s+(the\s+)?(resume|cv|document|file|pdf|uploaded|project|uploaded\s+file)\b/i,
+  /\b(resume|cv|document|file|pdf|uploaded|project)\s+(mentions|contains|has|includes|shows|describes|explains|says|states|about)\b/i,
+  /\b(tell me|what|show me|find|search|look for|extract|get|retrieve)\s+.*\s+(in|from|of)\s+(the\s+)?(resume|cv|document|file|pdf|uploaded|project)\b/i,
+  /\b(what|which|where)\s+(is|are|does|do)\s+.*\s+(in|from|of)\s+(the\s+)?(resume|cv|document|file|pdf|uploaded|project)\b/i,
+];
+
+// Patterns that indicate general questions (should use auto mode)
+const generalQuestionPatterns = [
+  /^(who|what|when|where|why|how|tell me about|explain|define|describe)\s+(you|yourself|your|are you|is this|is that|can you|do you|will you)\b/i,
+  /\b(how are you|who are you|what are you|tell me about you|about yourself|your role|your purpose|your function)\b/i,
+  /\b(in general|generally|overall|basically|basically speaking|in simple terms|simply|just|only)\b/i,
+  /\b(not asking|not about|not from|not in|don't need|don't want|no need|no document|no file)\b/i,
+];
+
 const simplePrefixes =
   /^(what|who|when|where|why|how|define|explain|tell me about|give me|summarize)\b/i;
 
@@ -66,65 +83,158 @@ const normalizeMatches = (matches = []) =>
     order: typeof match.metadata?.order === "number" ? match.metadata.order : 0,
   }));
 
-const isContextualQuery = (text = "") => contextualKeywords.test(text);
+/**
+ * Check if query is clearly about documents (contextual mode)
+ */
+const isContextualQuery = (text = "") => {
+  const trimmed = text.trim().toLowerCase();
+  
+  // First check: explicit document keywords
+  if (contextualKeywords.test(trimmed)) {
+    // But make sure it's not a general question about the keyword itself
+    const generalAboutDocument = /^(what|who|when|where|why|how|tell me about|explain|define)\s+(is|are|does|do|can|will)\s+(a|an|the)?\s*(document|file|pdf|resume|cv)\b/i;
+    if (generalAboutDocument.test(text)) {
+      return false; // General question about documents, not querying a document
+    }
+    return true;
+  }
+  
+  // Second check: document query patterns
+  for (const pattern of documentQueryPatterns) {
+    if (pattern.test(trimmed)) {
+      return true;
+    }
+  }
+  
+  return false;
+};
 
-const isSimpleQuery = (text = "", documentId = null) => {
+/**
+ * Check if query is a general question (auto mode)
+ */
+const isGeneralQuestion = (text = "") => {
+  const trimmed = text.trim();
+  
+  // Check for explicit general question patterns
+  for (const pattern of generalQuestionPatterns) {
+    if (pattern.test(trimmed)) {
+      return true;
+    }
+  }
+  
+  // Check for simple prefixes without document references
+  if (simplePrefixes.test(trimmed)) {
+    // Make sure it doesn't contain document keywords
+    if (!contextualKeywords.test(trimmed)) {
+      return true;
+    }
+  }
+  
+  return false;
+};
+
+/**
+ * Determine if query should use simple/auto mode
+ * Returns true for auto mode, false for contextual mode
+ */
+const isSimpleQuery = async (text = "", documentId = null) => {
   const trimmed = text.trim();
   if (!trimmed) return false;
   
-  // If documentId is provided, ALWAYS use contextual mode
+  // If documentId is explicitly provided, ALWAYS use contextual mode
   if (documentId) {
     console.log("🔍 Document ID provided, forcing contextual mode");
     return false;
   }
   
-  // Check for contextual keywords
-  if (isContextualQuery(trimmed)) {
-    console.log("🔍 Contextual keywords detected, using contextual mode");
-    return false;
+  // Priority 1: Check for explicit general question patterns
+  if (isGeneralQuestion(trimmed)) {
+    console.log("✅ General question pattern detected, using auto mode");
+    return true;
   }
-
-  // Check for phrases that indicate document queries (e.g., "tell me about X in resume")
-  const documentPhrases = /\b(in|from|about|tell me about|what is in|what does|show me|find|search|look for|extract|get|retrieve|mention|describe|explain).*\b(resume|cv|document|file|pdf|uploaded|project|data|information|text|content)\b/i;
-  if (documentPhrases.test(trimmed)) {
-    console.log("🔍 Document-related phrase detected, using contextual mode");
+  
+  // Priority 2: Check for explicit document query patterns
+  if (isContextualQuery(trimmed)) {
+    console.log("🔍 Document query pattern detected, using contextual mode");
     return false;
   }
   
-  // Check for reverse pattern: "resume/document mentions X" or "X in resume"
-  const reverseDocumentPattern = /\b(resume|cv|document|file|pdf|uploaded|project).*\b(about|mentions|contains|has|includes|shows|describes|explains|says|states)\b/i;
-  if (reverseDocumentPattern.test(trimmed)) {
-    console.log("🔍 Reverse document pattern detected, using contextual mode");
-    return false;
-  }
+  // Priority 3: Use LLM-based classification for ambiguous queries
+  // This helps with edge cases where pattern matching isn't enough
+  try {
+    const classificationPrompt = `You are a query classifier. Determine if the user's question is asking about:
+1. GENERAL KNOWLEDGE or ABOUT YOU (use "auto")
+2. SPECIFIC CONTENT FROM AN UPLOADED DOCUMENT (use "contextual")
 
-  // If query contains "in resume", "in document", "in file", etc., use contextual mode
-  const inDocumentPattern = /\b(in|from|of|within)\s+(resume|cv|document|file|pdf|uploaded|project|the\s+(resume|document|file))\b/i;
-  if (inDocumentPattern.test(trimmed)) {
-    console.log("🔍 'In document' pattern detected, using contextual mode");
-    return false;
-  }
+User query: "${trimmed}"
 
+Respond with ONLY one word: "auto" or "contextual"
+
+Examples:
+- "who are you" → auto
+- "tell me about you" → auto  
+- "how are you" → auto
+- "what is a document" → auto
+- "tell me about bikes project in resume" → contextual
+- "what is mentioned in the document" → contextual
+- "find information about X in the file" → contextual
+
+Classification:`;
+
+    const classification = await googleGenerate("gemini-2.0-flash", classificationPrompt);
+    const normalized = classification.trim().toLowerCase();
+    
+    if (normalized.includes("auto")) {
+      console.log("✅ LLM classified as auto mode");
+      return true;
+    } else if (normalized.includes("contextual")) {
+      console.log("🔍 LLM classified as contextual mode");
+      return false;
+    }
+  } catch (error) {
+    console.warn("⚠️ LLM classification failed, falling back to pattern matching:", error.message);
+  }
+  
+  // Fallback: Use simple heuristics
   const wordCount = trimmed.split(/\s+/).length;
   if (wordCount <= SIMPLE_QUERY_MAX_WORDS || trimmed.length <= SIMPLE_QUERY_MAX_CHARS) {
-    return true;
+    // Short queries are likely general questions unless they contain document keywords
+    if (!contextualKeywords.test(trimmed)) {
+      console.log("✅ Short query without document keywords, using auto mode");
+      return true;
+    }
   }
 
-  return simplePrefixes.test(trimmed);
+  // Default to contextual if ambiguous (safer for document queries)
+  console.log("⚠️ Ambiguous query, defaulting to contextual mode");
+  return false;
 };
 
 const buildSimpleAnswerPrompt = ({ query, languageLabel, languageInstruction, memoryContext = "" }) =>
   [
-    "You are NyayaSathi, an AI legal assistant.",
-    "Provide a concise answer using general legal knowledge. Do NOT reference uploaded documents.",
-    "If the user asks about a specific law, explain it in simple terms and provide relevant references.",
-    
-
-    memoryContext, // Include conversation memory if available
-    `User now asks: ${query}`,
-    `Respond in ${languageLabel}.`,
+    "You are NyayaSathi, an AI legal assistant designed to help users with legal questions and information.",
+    "",
+    "Your role:",
+    "- Answer general questions about yourself, your capabilities, and legal concepts",
+    "- Provide helpful, friendly, and informative responses",
+    "- Use your general knowledge to answer questions",
+    "- Be conversational and natural in your responses",
+    "",
+    "Important guidelines:",
+    "- If asked about yourself (e.g., 'who are you', 'tell me about you'), introduce yourself as NyayaSathi, an AI legal assistant",
+    "- If asked general questions, answer using your knowledge base",
+    "- Do NOT reference uploaded documents unless the user explicitly asks about document content",
+    "- If the user asks about a specific law, explain it in simple terms and provide relevant references",
+    "- Be flexible and adapt to the user's intent",
+    "",
+    memoryContext ? `Conversation context:\n${memoryContext}\n` : "",
+    `User question: ${query}`,
+    "",
+    `Please respond in ${languageLabel}.`,
     languageInstruction,
-  ].join("\n");
+    "",
+    "Provide a clear, helpful, and natural response:",
+  ].filter(Boolean).join("\n");
 
 export const processDocument = async (req, res) => {
   try {
@@ -272,7 +382,7 @@ export const queryRag = async (req, res) => {
     const languageLabel = getLanguageLabel(langKey);
 
     // Check if query should use simple mode (only if no documentId and no contextual keywords)
-    const shouldUseSimpleMode = isSimpleQuery(query, documentId);
+    const shouldUseSimpleMode = await isSimpleQuery(query, documentId);
     
     console.log("🔍 Query analysis:", {
       query,
@@ -363,13 +473,21 @@ export const queryRag = async (req, res) => {
     // CONTEXTUAL MODE: NO memory - only use document chunks
     const prompt = [
       "You are NyayaSathi, an AI legal assistant.",
-      `Answer the user's question strictly using the provided context chunks. Respond in ${languageLabel}.`,
-      "If the context does not contain the answer, say you do not have enough information.",
+      "",
+      "Instructions:",
+      "- Answer the user's question using ONLY the provided context chunks from uploaded documents",
+      "- If the context does not contain relevant information, respond: 'I do not have enough information to answer this question based on the uploaded documents.'",
+      "- Do NOT use general knowledge or make assumptions",
+      "- Be specific and cite relevant parts of the context when possible",
+      "",
+      `Respond in ${languageLabel}.`,
       languageInstruction,
       "",
-      `Context:\n${contextString}`,
+      `Context from documents:\n${contextString}`,
       "",
-      `Question: ${query}`,
+      `User question: ${query}`,
+      "",
+      "Answer based on the context provided:",
     ].join("\n");
 
     const completion = await ragModel.invoke(prompt);

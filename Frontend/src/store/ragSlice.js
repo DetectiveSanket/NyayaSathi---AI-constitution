@@ -30,6 +30,10 @@ const ragSlice = createSlice({
       }
     },
     addMessage: (state, action) => {
+      // Ensure messages array exists
+      if (!state.messages) {
+        state.messages = [];
+      }
       state.messages.push(action.payload);
     },
     setChunks: (state, action) => {
