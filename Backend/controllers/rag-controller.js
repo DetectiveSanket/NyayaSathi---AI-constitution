@@ -60,6 +60,10 @@ const generalQuestionPatterns = [
   /\b(if|when)\s+.*\s+(section|article|act|statute)\s+\d+/i,
 ];
 
+// General legal questions about laws/sections/IPC that should prefer auto mode
+const generalLegalPattern =
+  /\b(what|which|how|when|where|why|if|tell me|explain|describe)\s+.*\s+(section|article|act|statute|ipc|penal\s+code|indian\s+penal\s+code)\s+(\d+|means|is|about)/i;
+
 const simplePrefixes =
   /^(what|who|when|where|why|how|define|explain|tell me about|give me|summarize)\b/i;
 
@@ -153,28 +157,27 @@ const isSimpleQuery = async (text = "", documentId = null) => {
   const trimmed = text.trim();
   if (!trimmed) return false;
   
-  // If documentId is explicitly provided, ALWAYS use contextual mode
-  if (documentId) {
-    console.log("🔍 Document ID provided, forcing contextual mode");
+  // Priority 1: If documentId provided AND query clearly targets uploaded document, use contextual
+  if (documentId && isContextualQuery(trimmed)) {
+    console.log("🔍 Document ID provided and document query detected, using contextual mode");
     return false;
   }
   
-  // Priority 1: Check for explicit general question patterns (including legal questions)
+  // Priority 2: Check for explicit general question patterns (including legal questions)
   if (isGeneralQuestion(trimmed)) {
     console.log("✅ General question pattern detected, using auto mode");
     return true;
   }
   
-  // Priority 2: Check for explicit document query patterns
+  // Priority 3: Check for explicit document query patterns
   // Only trigger if clearly asking about uploaded documents
   if (isContextualQuery(trimmed)) {
     console.log("🔍 Document query pattern detected, using contextual mode");
     return false;
   }
   
-  // Priority 2.5: Check if it's a general legal question (about laws, sections, acts)
+  // Priority 3.5: Check if it's a general legal question (about laws, sections, acts)
   // These should use auto mode, not contextual
-  const generalLegalPattern = /\b(what|which|how|when|where|why|if|tell me|explain|describe)\s+.*\s+(section|article|act|statute|ipc|penal\s+code|indian\s+penal\s+code)\s+(\d+|means|is|about)/i;
   if (generalLegalPattern.test(trimmed) && !isContextualQuery(trimmed)) {
     console.log("✅ General legal question detected, using auto mode");
     return true;
@@ -481,8 +484,56 @@ export const queryRag = async (req, res) => {
     });
 
     if (!matches.length) {
+      // If no document matches BUT the question looks general/legal, fall back to auto mode
+      if (isGeneralQuestion(query) || generalLegalPattern.test(query)) {
+        console.log("ℹ️ No document matches found; falling back to auto mode for general/legal question");
+
+        const memory = await getMemory(userId);
+        let memoryContext = "";
+        if (memory.length > 0) {
+          const memoryText = memory
+            .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+            .join("\n");
+          memoryContext = `\n\nHere is the conversation memory (last ${memory.length} turns):\n${memoryText}\n`;
+        }
+
+        const simplePrompt = buildSimpleAnswerPrompt({
+          query,
+          languageInstruction,
+          languageLabel,
+          memoryContext,
+        });
+        const simpleAnswer = await googleGenerate(DEFAULT_RAG_MODEL, simplePrompt);
+
+        await saveMessage(userId, "user", query);
+        await saveMessage(userId, "assistant", simpleAnswer);
+
+        await saveConversationMessage(currentConversationId, userId, {
+          role: "user",
+          content: query,
+          metadata: { mode: "auto", language: langKey, memoryUsed: true },
+        });
+        await saveConversationMessage(currentConversationId, userId, {
+          role: "assistant",
+          content: simpleAnswer,
+          metadata: { mode: "auto", language: langKey, memoryUsed: true },
+        });
+
+        return res.status(200).json({
+          answer: simpleAnswer,
+          chunks: [],
+          language: langKey,
+          supportedLanguages,
+          mode: "auto",
+          memoryUsed: true,
+          conversationId: currentConversationId,
+          isNewConversation,
+        });
+      }
+
+      // Default contextual response when truly document-specific but no matches
       return res.status(200).json({
-        answer: "I could not find relevant information for that question.",
+        answer: "I could not find relevant information for that question in the uploaded documents.",
         chunks: [],
         language: langKey,
         supportedLanguages,
