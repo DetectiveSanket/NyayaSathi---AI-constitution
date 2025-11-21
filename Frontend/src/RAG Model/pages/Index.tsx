@@ -21,6 +21,10 @@ import {
   setMode,
   setSelectedDocument,
   clearMessages,
+  setMessages,
+  initializeMessagesByConversation,
+  setMessagesForConversation,
+  loadMessagesForConversation,
   setCurrentConversationId,
   setConversations,
   setConversationsLoading,
@@ -72,17 +76,8 @@ const Index = () => {
   );
   const [isRestoringConversation, setIsRestoringConversation] = useState(false);
 
-  // Use Redux messages or fallback to local state
-  const [localMessages, setLocalMessages] = useState<Message[]>([
-      {
-        id: "1",
-        type: "system",
-        content: "Welcome to NyayaSathi. Ask me anything about legal matters!",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      },
-  ]);
-  
-  const messages = ragState.messages.length > 0 ? ragState.messages : localMessages;
+  // Use Redux messages only - no local fallback
+  const messages = ragState.messages || [];
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const inputMessageRef = useRef<{ setMessage?: (msg: string) => void }>({});
@@ -105,11 +100,23 @@ const Index = () => {
   const restoreConversation = async (convId: string) => {
     try {
       setIsRestoringConversation(true);
-      const messages = await getConversationMessages(convId);
+      
+      // Ensure messagesByConversation is initialized
+      dispatch(initializeMessagesByConversation());
+      
+      // First, save current conversation messages if we have an active conversation
+      if (conversationId && ragState.messages && ragState.messages.length > 0) {
+        dispatch(setMessagesForConversation({
+          conversationId: conversationId,
+          messages: ragState.messages
+        }));
+      }
+      
+      const backendMessages = await getConversationMessages(convId);
       
       // Convert backend messages to frontend format
-      const restoredMessages: Message[] = messages.map((msg: any) => ({
-        id: msg.id || Date.now().toString(),
+      const restoredMessages: Message[] = backendMessages.map((msg: any) => ({
+        id: msg.id || msg._id || Date.now().toString(),
         type: msg.role === "assistant" ? "assistant" : msg.role === "user" ? "user" : "system",
         content: msg.content,
         timestamp: msg.timestamp
@@ -119,14 +126,24 @@ const Index = () => {
         chunks: msg.metadata?.chunks || [],
       }));
 
-      // Clear current messages and set restored ones
-      dispatch(clearMessages());
-      restoredMessages.forEach((msg) => dispatch(addMessage(msg)));
+      // REPLACE all messages (not append) - completely clear and set new ones
+      dispatch(setMessages(restoredMessages));
+      
+      // Store messages for this conversation
+      dispatch(setMessagesForConversation({
+        conversationId: convId,
+        messages: restoredMessages
+      }));
 
       // Set conversation ID
       setConversationId(convId);
       dispatch(setCurrentConversationId(convId));
       localStorage.setItem("rag_current_conversation_id", convId);
+      
+      // Clear input message
+      if (inputMessageRef.current.setMessage) {
+        inputMessageRef.current.setMessage("");
+      }
 
       toast({
         description: "Conversation restored",
@@ -147,6 +164,9 @@ const Index = () => {
   // Initialize RAG session and load conversations on mount
   useEffect(() => {
     const initialize = async () => {
+      // Ensure messagesByConversation is initialized (for migration from old persisted state)
+      dispatch(initializeMessagesByConversation());
+      
       await initRagSession();
       
       // Set user name from auth state if available
@@ -165,6 +185,9 @@ const Index = () => {
       const savedConversationId = localStorage.getItem("rag_current_conversation_id");
       if (savedConversationId && ragState.currentConversationId !== savedConversationId) {
         await restoreConversation(savedConversationId);
+      } else if (!savedConversationId) {
+        // If no saved conversation, start with empty messages
+        dispatch(setMessages([]));
       }
     };
     
@@ -211,6 +234,20 @@ const Index = () => {
       dispatch(addMessage(assistantMessage));
       dispatch(setChunks(result.chunks || []));
       dispatch(setMode(result.mode || null));
+      
+      // Update stored messages for this conversation (includes both user and assistant messages)
+      if (result.conversationId) {
+        // Ensure messagesByConversation is initialized
+        dispatch(initializeMessagesByConversation());
+        
+        // Get current messages from Redux state (which now includes the assistant message)
+        const currentMessages = [...(ragState.messages || [])];
+        dispatch(setMessagesForConversation({
+          conversationId: result.conversationId,
+          messages: currentMessages
+        }));
+      }
+      
       setIsLoading(false);
     },
     onError: (error) => {
@@ -249,6 +286,7 @@ const Index = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     dispatch(addMessage(newMessage));
+    
     setIsLoading(true);
 
     try {
@@ -266,11 +304,30 @@ const Index = () => {
 
   const handleNewChat = async () => {
     try {
-      // Clear current conversation
-      dispatch(clearMessages());
+      // Ensure messagesByConversation is initialized
+      dispatch(initializeMessagesByConversation());
+      
+      // Save current conversation messages before switching
+      if (conversationId && ragState.messages && ragState.messages.length > 0) {
+        dispatch(setMessagesForConversation({
+          conversationId: conversationId,
+          messages: ragState.messages
+        }));
+      }
+      
+      // COMPLETELY clear all messages - no fallback, no welcome message
+      dispatch(setMessages([]));
+      dispatch(clearMessages()); // Also clear chunks, mode, summary
+      
+      // Clear conversation ID
       setConversationId(null);
       dispatch(setCurrentConversationId(null));
       localStorage.removeItem("rag_current_conversation_id");
+      
+      // Clear input message
+      if (inputMessageRef.current.setMessage) {
+        inputMessageRef.current.setMessage("");
+      }
       
       // Create new conversation
       const newConversation = await createNewConversation();
@@ -279,16 +336,6 @@ const Index = () => {
         dispatch(setCurrentConversationId(newConversation.conversationId));
         localStorage.setItem("rag_current_conversation_id", newConversation.conversationId);
       }
-
-      // Reset to welcome message
-      setLocalMessages([
-        {
-          id: Date.now().toString(),
-          type: "system",
-          content: "New conversation started. How can I help you?",
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        },
-      ]);
 
       // Refresh conversation list
       await loadConversations();

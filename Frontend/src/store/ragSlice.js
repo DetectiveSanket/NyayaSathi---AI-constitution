@@ -2,7 +2,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  messages: [],
+  messages: [], // Current active conversation messages
+  messagesByConversation: {}, // Messages stored per conversationId: { [conversationId]: Message[] }
   retrievedChunks: [],
   loading: false,
   selectedDocumentId: null,
@@ -22,6 +23,12 @@ const ragSlice = createSlice({
   name: "rag",
   initialState,
   reducers: {
+    // Initialize messagesByConversation if it doesn't exist (for migration from old state)
+    initializeMessagesByConversation: (state) => {
+      if (!state.messagesByConversation) {
+        state.messagesByConversation = {};
+      }
+    },
     addMessage: (state, action) => {
       state.messages.push(action.payload);
     },
@@ -54,6 +61,34 @@ const ragSlice = createSlice({
       state.retrievedChunks = [];
       state.lastMode = null;
       state.summary = null;
+    },
+    setMessages: (state, action) => {
+      // Replace all messages (used when loading a conversation)
+      state.messages = action.payload || [];
+    },
+    setMessagesForConversation: (state, action) => {
+      // Store messages for a specific conversation
+      const { conversationId, messages } = action.payload;
+      if (conversationId) {
+        // Ensure messagesByConversation exists
+        if (!state.messagesByConversation) {
+          state.messagesByConversation = {};
+        }
+        state.messagesByConversation[conversationId] = messages || [];
+      }
+    },
+    loadMessagesForConversation: (state, action) => {
+      // Load messages for a conversation into active messages
+      const conversationId = action.payload;
+      // Ensure messagesByConversation exists
+      if (!state.messagesByConversation) {
+        state.messagesByConversation = {};
+      }
+      if (conversationId && state.messagesByConversation[conversationId]) {
+        state.messages = [...state.messagesByConversation[conversationId]];
+      } else {
+        state.messages = [];
+      }
     },
     clearChunks: (state) => {
       state.retrievedChunks = [];
@@ -102,6 +137,10 @@ export const {
   addDocument,
   setCurrentLanguage,
   clearMessages,
+  setMessages,
+  initializeMessagesByConversation,
+  setMessagesForConversation,
+  loadMessagesForConversation,
   clearChunks,
   setCurrentConversationId,
   setConversations,

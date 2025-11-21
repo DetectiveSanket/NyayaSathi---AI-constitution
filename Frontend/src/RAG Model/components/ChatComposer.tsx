@@ -43,9 +43,8 @@ import { FileUploadZone } from "./FileUploadZone";
 import { DocumentLibraryModal } from "./DocumentLibraryModal";
 import { useFileManager } from "../contexts/FileManagerContext";
 import { useSelector, useDispatch } from "react-redux";
-import { setAutoSummarize } from "../../store/ragSlice.js";
+import { setAutoSummarize, addMessage, setMode, setSummary, setMessagesForConversation } from "../../store/ragSlice.js";
 import { useSummarize } from "../../hooks/useSummarize.js";
-import { addMessage, setMode, setSummary } from "../../store/ragSlice.js";
 
 interface ChatComposerProps {
   onSendMessage: (message: string, language?: string, documentId?: string) => void;
@@ -78,15 +77,27 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
   const { summarize, loading: summarizeLoading } = useSummarize({
     onSuccess: (result) => {
       // Add summary as assistant message
-      dispatch(addMessage({
+      const summaryMessage = {
         id: Date.now().toString(),
         type: "assistant",
         content: result.summary,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         mode: "contextual",
-      }));
+      };
+      dispatch(addMessage(summaryMessage));
       dispatch(setMode("contextual"));
       dispatch(setSummary(result));
+      
+      // Update stored messages for current conversation if exists
+      const conversationId = ragState?.currentConversationId;
+      if (conversationId) {
+        const currentMessages = ragState.messages || [];
+        dispatch(setMessagesForConversation({
+          conversationId: conversationId,
+          messages: [...currentMessages, summaryMessage]
+        }));
+      }
+      
       toast({
         title: "Summary generated",
         description: `Document summarized successfully (${result.chunksUsed} chunks used)`,
