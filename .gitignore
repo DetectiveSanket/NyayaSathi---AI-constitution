@@ -61,3 +61,6 @@ Thumbs.db
 .kluster
 
 
+# Ignore temp folder
+Temp/
+Temp/*
