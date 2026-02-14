@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useToast } from "../hooks/use-toast";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+
 import { Camera } from "lucide-react";
 import { updateProfile } from "../../features/auth/authThunks.js";
 import { setUserName } from "../../store/ragSlice.js";
@@ -156,3 +158,5 @@ export const EditProfileModal = ({ isOpen, onClose }: EditProfileModalProps) => 
     </Dialog>
   );
 };
+
+export default EditProfileModal;

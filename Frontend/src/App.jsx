@@ -1,18 +1,26 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from 'sonner';
 
-import ForgetPassword from "./auth/ForgetPassword";
-import OTPVerification from "./auth/OTPVerification";
-import ResetPassword from "./auth/ResetPassword";
-import ResetPasswordOTP from "./auth/ResetPasswordOTP";
-import LogIn from "./shared/LogIn";
-import Register from "./shared/Register";
-import WebIntro from "./Web Intro/WebIntro";
-import Doc from "./Documentation/app";
-import Chatbot from "./RAG Model/chatBot";
-import Error from "./ProtectionRoutes/Error";
+//* Loading component for Suspense fallback
+import Loading from './shared/Loading';
+
+//* Auth pages - can also be lazy loaded
+const ForgetPassword = lazy(() => import('./auth/ForgetPassword'));
+const OTPVerification = lazy(() => import('./auth/OTPVerification'));
+const ResetPassword = lazy(() => import('./auth/ResetPassword'));
+const ResetPasswordOTP = lazy(() => import('./auth/ResetPasswordOTP'));
+
+//* Route protection components - NOT lazy loaded (needed immediately for routing logic)
 import ProtectedRoute from './ProtectionRoutes/ProtectedRoute';
 import GuestRoute from './ProtectionRoutes/GuestRoute';
 
+//* Page components - Lazy loaded (only loads when route is visited)
+const LogIn = lazy(() => import('./shared/LogIn'));
+const Register = lazy(() => import('./shared/Register'));
+const WebIntro = lazy(() => import('./Web Intro/WebIntro'));
+const Doc = lazy(() => import('./Documentation/app'));
+const Chatbot = lazy(() => import('./RAG Model/chatBot'));
+const Error = lazy(() => import('./ProtectionRoutes/Error'));
 
 import {
     createBrowserRouter,
@@ -23,14 +31,20 @@ const router = createBrowserRouter([
 
     {
       path: "/",
-      element: <WebIntro />,
+      element: (
+        <Suspense fallback={<Loading />}>
+          <WebIntro />
+        </Suspense>
+      ),
     },
 
     {
         path: "/login",
         element: (
           <GuestRoute>
-            <LogIn />
+            <Suspense fallback={<Loading />}>
+              <LogIn />
+            </Suspense>
           </GuestRoute>
         ),
     },
@@ -39,21 +53,29 @@ const router = createBrowserRouter([
         path: "/register",
         element: (
             <GuestRoute>
+              <Suspense fallback={<Loading />}>
                 <Register />
+              </Suspense>
             </GuestRoute>
         ),
     },
 
     {
         path:"/otpverification",
-        element:<OTPVerification/>
+        element: (
+          <Suspense fallback={<Loading />}>
+            <OTPVerification/>
+          </Suspense>
+        ),
     },
 
     {
         path: "/forgot-password",
         element: (
           <GuestRoute>
-            <ForgetPassword />
+            <Suspense fallback={<Loading />}>
+              <ForgetPassword />
+            </Suspense>
           </GuestRoute>
         ),
     },
@@ -62,7 +84,9 @@ const router = createBrowserRouter([
         path: "/reset-password-otp",
         element: (
             <GuestRoute>
+              <Suspense fallback={<Loading />}>
                 <ResetPasswordOTP />
+              </Suspense>
             </GuestRoute>
         ),
     },
@@ -71,14 +95,20 @@ const router = createBrowserRouter([
         path: "/resetpassword",
         element: (
             <GuestRoute>
+              <Suspense fallback={<Loading />}>
                 <ResetPassword />
+              </Suspense>
             </GuestRoute>
         ),
     },
 
     {
         path:"/doc",
-        element:<Doc/>
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Doc/>
+          </Suspense>
+        ),
     },
 
     // chatbot - protected route
@@ -86,7 +116,9 @@ const router = createBrowserRouter([
         path:"/chatbot",
         element: (
             <ProtectedRoute>
+              <Suspense fallback={<Loading />}>
                 <Chatbot />
+              </Suspense>
             </ProtectedRoute>
         ),
     },
@@ -94,7 +126,11 @@ const router = createBrowserRouter([
     // Catch-all route for undefined paths and display Error component
     {
         path:"*",
-        element:<Error/>
+        element: (
+          <Suspense fallback={<Loading />}>
+            <Error/>
+          </Suspense>
+        ),
     }
     
 ]);
@@ -103,6 +139,7 @@ const router = createBrowserRouter([
 function App() {
     return (
         <>
+
             <RouterProvider router={router} />
             <Toaster /> {/*//* used for showing toast notifications , if you not import here then it will not work because it create a context for the whole app ,  this is install npm i sonner or*/}
              

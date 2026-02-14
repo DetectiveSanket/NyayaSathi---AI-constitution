@@ -172,3 +172,5 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     </Dialog>
   );
 };
+
+export default SettingsModal;

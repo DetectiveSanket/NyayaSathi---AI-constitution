@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -39,9 +39,17 @@ import {
   FileCheck,
   ScrollText
 } from "lucide-react";
-import { DocumentLibraryModal } from "./DocumentLibraryModal";
-import { EditProfileModal } from "./EditProfileModal";
-import { SettingsModal } from "./SettingsModal";
+
+//* Components that are dynamically imported to avoid circular dependencies with contexts
+// import { DocumentLibraryModal } from "./DocumentLibraryModal";
+// import { EditProfileModal } from "./EditProfileModal";
+// import { SettingsModal } from "./SettingsModal";
+
+// Lazy load modals to avoid circular dependencies and improve initial load time
+const DocumentLibraryModal = lazy(() => import("./DocumentLibraryModal"));
+const EditProfileModal = lazy(() => import("./EditProfileModal"));
+const SettingsModal = lazy(() => import("./SettingsModal"));
+
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { listDocuments, deleteConversation } from "../../services/ragService.js";
@@ -613,9 +621,17 @@ const ChatSidebar = ({
       </div>
 
       {/* Modals */}
-      <DocumentLibraryModal isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />
-      <EditProfileModal isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <Suspense fallback={"Loading library..."}>
+        <DocumentLibraryModal isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />
+      </Suspense>
+
+      <Suspense fallback={"Loading profile editor..."}>
+        <EditProfileModal isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
+      </Suspense>
+
+      <Suspense fallback={"Loading settings..."}>
+        <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      </Suspense>
       </div>
     </TooltipProvider>
   );

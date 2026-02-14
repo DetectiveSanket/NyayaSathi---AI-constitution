@@ -282,3 +282,5 @@ export const DocumentLibraryModal = ({ isOpen, onClose }: DocumentLibraryModalPr
     </>
   );
 };
+
+export default DocumentLibraryModal;

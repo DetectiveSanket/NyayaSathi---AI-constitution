@@ -1,17 +1,30 @@
-import { useState, useRef, useEffect } from "react";
+
+import { useState, useRef, useEffect,Suspense, lazy } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useResponsive } from "../hooks/useResponsive";
-import ChatHeader from "../components/ChatHeader";
-import ChatSidebar from "../components/ChatSidebar";
-import MessageBubble from "../components/MessageBubble";
-import ChatComposer from "../components/ChatComposer";
-import MobileChatLayout from "../components/MobileChatLayout";
+
+//* Components 
+// import ChatHeader from "../components/ChatHeader";
+// import ChatSidebar from "../components/ChatSidebar";
+// import MessageBubble from "../components/MessageBubble";
+// import ChatComposer from "../components/ChatComposer";
+// import MobileChatLayout from "../components/MobileChatLayout";
+
+// Lazy load components for better performance
+const ChatHeader = lazy(() => import("../components/ChatHeader"));
+const ChatSidebar = lazy(() => import("../components/ChatSidebar"));
+const MessageBubble = lazy(() => import("../components/MessageBubble"));
+const ChatComposer = lazy(() => import("../components/ChatComposer"));
+const MobileChatLayout = lazy(() => import("../components/MobileChatLayout"));
+
 import { Badge } from "../components/ui/badge";
 import { ScrollArea } from "../components/ui/scroll-area";
-import { useToast } from "../hooks/use-toast";
 import { Input } from "../components/ui/input";
-import { Search, X, Eye, EyeOff } from "lucide-react";
 import { Button } from "../components/ui/button";
+
+
+import { useToast } from "../hooks/use-toast";
+import { Search, X, Eye, EyeOff } from "lucide-react";
 import jsPDF from "jspdf";
 import { useRagQuery } from "../../hooks/useRagQuery.js";
 import { useRagSession } from "../../hooks/useRagSession.js";
@@ -562,151 +575,167 @@ const Index = () => {
     }
   };
 
-  if (isMobile) {
-    return <MobileChatLayout messages={messages} isLoading={isLoading} onSendMessage={handleSendMessage} />;
-  }
+    if (isMobile) {
+        return (
+            <Suspense fallback={"Loading mobile layout..."}>
+                <MobileChatLayout messages={messages} isLoading={isLoading} onSendMessage={handleSendMessage} />
+            </Suspense>
+        )
+    }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-inter">
-      <ChatHeader 
-        onExportChat={handleExportChat}
-        lastMode={ragState.lastMode}
-        selectedDocumentId={ragState.selectedDocumentId}
-      />
-      <div className="flex h-[calc(100vh-4rem)]">
-        <ChatSidebar 
-          isCollapsed={sidebarCollapsed} 
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          onSearch={handleSidebarSearch}
-          retrievedChunks={ragState.retrievedChunks}
-          selectedDocumentId={ragState.selectedDocumentId}
-          onSelectDocument={(docId) => dispatch(setSelectedDocument(docId))}
-          onNewChat={handleNewChat}
-          onSelectConversation={restoreConversation}
-        />
-        <div className="flex-1 flex flex-col relative">
-          <div className="px-6 py-5 border-b border-border/50 bg-gradient-surface backdrop-blur-sm">
-            <div className="max-w-4xl mx-auto w-full">
-              <div className="flex items-center justify-between mb-3">
-                <h1 className="text-xl font-semibold text-foreground">Legal Document Analysis</h1>
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsSearchVisible(!isSearchVisible)}
-                    className="flex items-center gap-2 bg-surface-elevated/60 hover:bg-surface-elevated border-border/50"
-                  >
-                    {isSearchVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    {isSearchVisible ? "Hide Search" : "Show Search"}
-                  </Button>
-                  <Badge variant="secondary" className="bg-surface-elevated/80 text-secondary border-border/30 font-medium">Active Session</Badge>
-                </div>
-              </div>
-              {/* Search Bar */}
-              {isSearchVisible && (
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search messages..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-10 bg-surface-elevated/60 border-border/50 focus:border-primary/50 h-9"
-                  />
-                  {searchQuery && (
+        <div className="min-h-screen bg-background text-foreground font-inter">
+            <Suspense fallback={"Loading header..."}>
+                <ChatHeader 
+                    onExportChat={handleExportChat}
+                    lastMode={ragState.lastMode}
+                    selectedDocumentId={ragState.selectedDocumentId}
+                />
+            </Suspense>
+        
+        <div className="flex h-[calc(100vh-4rem)]">
+            <Suspense fallback={"Loading sidebar..."}>
+                <ChatSidebar 
+                    isCollapsed={sidebarCollapsed} 
+                    onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    onSearch={handleSidebarSearch}
+                    retrievedChunks={ragState.retrievedChunks}
+                    selectedDocumentId={ragState.selectedDocumentId}
+                    onSelectDocument={(docId) => dispatch(setSelectedDocument(docId))}
+                    onNewChat={handleNewChat}
+                    onSelectConversation={restoreConversation}
+                />
+            </Suspense>
+
+            <div className="flex-1 flex flex-col relative">
+            <div className="px-6 py-5 border-b border-border/50 bg-gradient-surface backdrop-blur-sm">
+                <div className="max-w-4xl mx-auto w-full">
+                <div className="flex items-center justify-between mb-3">
+                    <h1 className="text-xl font-semibold text-foreground">Legal Document Analysis</h1>
+                    <div className="flex items-center gap-3">
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearSearch}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-surface-chat"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsSearchVisible(!isSearchVisible)}
+                        className="flex items-center gap-2 bg-surface-elevated/60 hover:bg-surface-elevated border-border/50"
                     >
-                      <X className="w-4 h-4" />
+                        {isSearchVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {isSearchVisible ? "Hide Search" : "Show Search"}
                     </Button>
-                  )}
+                    <Badge variant="secondary" className="bg-surface-elevated/80 text-secondary border-border/30 font-medium">Active Session</Badge>
+                    </div>
                 </div>
-              )}
-            </div>
-          </div>
-          <div className="flex-1 overflow-hidden pb-32">
-            <ScrollArea className="h-full">
-              <div className="py-4 space-y-4 min-h-full flex flex-col justify-end">
-                <div className="max-w-4xl mx-auto w-full space-y-6 pb-4 px-6">
-                  {(searchQuery.trim() || searchFromSidebar.trim()) && (
-                    <div className="flex items-center justify-between bg-surface-elevated/60 border border-border/50 rounded-lg p-3">
-                      <div className="flex items-center gap-2">
-                        <Search className="w-4 h-4 text-primary" />
-                        <span className="text-sm text-foreground">
-                          Searching for: <strong>"{searchQuery || searchFromSidebar}"</strong>
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          ({filteredMessages.length} result{filteredMessages.length !== 1 ? 's' : ''})
-                        </span>
-                      </div>
-                      <Button
+                {/* Search Bar */}
+                {isSearchVisible && (
+                    <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder="Search messages..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 pr-10 bg-surface-elevated/60 border-border/50 focus:border-primary/50 h-9"
+                    />
+                    {searchQuery && (
+                        <Button
                         variant="ghost"
                         size="sm"
                         onClick={clearSearch}
-                        className="h-7 px-2 hover:bg-surface-chat"
-                      >
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-surface-chat"
+                        >
                         <X className="w-4 h-4" />
-                      </Button>
+                        </Button>
+                    )}
                     </div>
-                  )}
-                  {filteredMessages.length === 0 && (searchQuery.trim() || searchFromSidebar.trim()) ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Search className="w-12 h-12 text-muted-foreground/50 mb-3" />
-                      <p className="text-muted-foreground">No messages found matching "{searchQuery || searchFromSidebar}"</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={clearSearch}
-                        className="mt-3"
-                      >
-                        Clear Search
-                      </Button>
-                    </div>
-                  ) : (
-                    filteredMessages.map((message) => (
-                      <div key={message.id} className="group"><MessageBubble message={message} /></div>
-                    ))
-                  )}
-                  {(isLoading || queryLoading) && (
-                    <div className="flex justify-start">
-                      <div className="flex space-x-3 max-w-[85%]">
-                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-xs font-medium text-primary-foreground">AI</div>
-                          <div className="bg-surface-elevated border border-border px-4 py-3 rounded-2xl">
-                            <div className="flex items-center space-x-2">
-                              <div className="flex space-x-1">
-                                <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce animate-bounce-delay-0" />
-                                <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce animate-bounce-delay-150" />
-                                <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce animate-bounce-delay-300" />
-                              </div>
-                              <span className="text-sm text-muted-foreground ml-2">Thinking...</span>
-                            </div>
-                          </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
+                )}
                 </div>
-              </div>
-            </ScrollArea>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 bg-background border-t border-border">
-            <div className="max-w-4xl mx-auto w-full">
-              <ChatComposer 
-                onSendMessage={handleSendMessage} 
-                isLoading={isLoading || queryLoading}
-                selectedDocumentId={ragState.selectedDocumentId}
-                onDocumentUploaded={handleDocumentUploaded}
-                inputMessageRef={inputMessageRef}
-              />
             </div>
-          </div>
+            <div className="flex-1 overflow-hidden pb-32">
+                <ScrollArea className="h-full">
+                <div className="py-4 space-y-4 min-h-full flex flex-col justify-end">
+                    <div className="max-w-4xl mx-auto w-full space-y-6 pb-4 px-6">
+                    {(searchQuery.trim() || searchFromSidebar.trim()) && (
+                        <div className="flex items-center justify-between bg-surface-elevated/60 border border-border/50 rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                            <Search className="w-4 h-4 text-primary" />
+                            <span className="text-sm text-foreground">
+                            Searching for: <strong>"{searchQuery || searchFromSidebar}"</strong>
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                            ({filteredMessages.length} result{filteredMessages.length !== 1 ? 's' : ''})
+                            </span>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearSearch}
+                            className="h-7 px-2 hover:bg-surface-chat"
+                        >
+                            <X className="w-4 h-4" />
+                        </Button>
+                        </div>
+                    )}
+                    {filteredMessages.length === 0 && (searchQuery.trim() || searchFromSidebar.trim()) ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <Search className="w-12 h-12 text-muted-foreground/50 mb-3" />
+                        <p className="text-muted-foreground">No messages found matching "{searchQuery || searchFromSidebar}"</p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={clearSearch}
+                            className="mt-3"
+                        >
+                            Clear Search
+                        </Button>
+                        </div>
+                    ) : (
+                        filteredMessages.map((message) => (
+                            <div key={message.id} className="group">
+                                <Suspense fallback={"Loading message..."}>
+                                    <MessageBubble message={message} />
+                                </Suspense>
+                            </div>
+                        ))
+                    )}
+                    {(isLoading || queryLoading) && (
+                        <div className="flex justify-start">
+                        <div className="flex space-x-3 max-w-[85%]">
+                            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-xs font-medium text-primary-foreground">AI</div>
+                            <div className="bg-surface-elevated border border-border px-4 py-3 rounded-2xl">
+                                <div className="flex items-center space-x-2">
+                                <div className="flex space-x-1">
+                                    <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce animate-bounce-delay-0" />
+                                    <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce animate-bounce-delay-150" />
+                                    <div className="w-2 h-2 bg-zinc-500 rounded-full animate-bounce animate-bounce-delay-300" />
+                                </div>
+                                <span className="text-sm text-muted-foreground ml-2">Thinking...</span>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                    </div>
+                </div>
+                </ScrollArea>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-background border-t border-border">
+                <div className="max-w-4xl mx-auto w-full">
+                    <Suspense fallback={"Loading composer..."}>
+                        <ChatComposer 
+                            onSendMessage={handleSendMessage} 
+                            isLoading={isLoading || queryLoading}
+                            selectedDocumentId={ragState.selectedDocumentId}
+                            onDocumentUploaded={handleDocumentUploaded}
+                            inputMessageRef={inputMessageRef}
+                        />
+                    </ Suspense>
+                </div>
+            </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default Index;
