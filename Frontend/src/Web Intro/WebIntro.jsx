@@ -32,8 +32,6 @@ const Footer = lazy(() => import('./components/Footer'));
 // const AdminsDetails = lazy(() => import('./components/AdminsDetails'));
 
 
-
-
 function WebIntro() {
   return (
         <ThemeProvider>
