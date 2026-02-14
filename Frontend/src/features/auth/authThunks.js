@@ -18,7 +18,7 @@ import {
 /**
     * Important: backend responses assumed from earlier conversations.
     * Adjust paths or response destructuring if your backend returns different shapes.
- */
+*/
 
 // Register (creates user and triggers OTP email)
 export const registerUser = createAsyncThunk(
@@ -36,28 +36,28 @@ export const registerUser = createAsyncThunk(
 
 // Verify Email OTP
 export const verifyOtp = createAsyncThunk(
-  "auth/verifyOtp",
-  async ({ email, otp }, { rejectWithValue }) => {
-    try {
-      const { data } = await api.post(VERIFY_EMAIL_URL, { email, otp });
-      return data; // { message, token }
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+    "auth/verifyOtp",
+    async ({ email, otp }, { rejectWithValue }) => {
+        try {
+            const { data } = await api.post(VERIFY_EMAIL_URL, { email, otp });
+            return data; // { message, token }
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || err.message);
+        }
     }
-  }
 );
 
 // Resend OTP
 export const resendOtp = createAsyncThunk(
-  "auth/resendOtp",
-  async ({ email }, { rejectWithValue }) => {
-    try {
-      const { data } = await api.post(RESEND_OTP_URL, { email });
-      return data; // { message }
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+    "auth/resendOtp",
+    async ({ email }, { rejectWithValue }) => {
+        try {
+            const { data } = await api.post(RESEND_OTP_URL, { email });
+            return data; // { message }
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || err.message);
+        }
     }
-  }
 );
 
 // Login
@@ -164,18 +164,18 @@ export const fetchProfile = createAsyncThunk(
 
 // Update profile (optionally with avatar FormData)
 export const updateProfile = createAsyncThunk(
-  "auth/updateProfile",
-  async (formData, { rejectWithValue }) => {
-    try {
-      // formData can be FormData(), with avatar file appended if used
-      const { data } = await api.put("/api/users/update-profile", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+    "auth/updateProfile",
+    async (formData, { rejectWithValue }) => {
+        try {
+            // formData can be FormData(), with avatar file appended if used
+            const { data } = await api.put("/api/users/update-profile", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+        });
+            return data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || err.message);
+        }
     }
-  }
 );
 
 

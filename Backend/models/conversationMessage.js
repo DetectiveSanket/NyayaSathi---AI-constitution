@@ -6,7 +6,6 @@ const conversationMessageSchema = new mongoose.Schema(
     conversationId: {
       type: String,
       required: true,
-      index: true,
     },
     userId: {
       type: String,

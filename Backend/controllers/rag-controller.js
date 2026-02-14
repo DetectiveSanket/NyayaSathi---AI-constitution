@@ -614,7 +614,28 @@ export const queryRag = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ RAG query error:", err);
-    return res.status(500).json({ message: err.message });
+    
+    // Handle specific error types
+    if (err.code === "QUOTA_EXCEEDED") {
+      return res.status(429).json({ 
+        message: "AI service quota exceeded. Please try again in a few moments.",
+        error: "QUOTA_EXCEEDED",
+        retryAfter: 60 // Suggest retry after 60 seconds
+      });
+    }
+    
+    if (err.code === "NETWORK_ERROR") {
+      return res.status(503).json({ 
+        message: "Unable to connect to AI service. Please check your connection and try again.",
+        error: "NETWORK_ERROR"
+      });
+    }
+    
+    // Generic error response
+    return res.status(err.status || 500).json({ 
+      message: err.message || "An error occurred while processing your request.",
+      error: err.code || "INTERNAL_ERROR"
+    });
   }
 };
 

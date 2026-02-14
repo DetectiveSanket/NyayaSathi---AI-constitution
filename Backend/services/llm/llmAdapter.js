@@ -46,7 +46,28 @@ export async function googleGenerate(
     return result?.response?.text() ?? "";
   } catch (err) {
     console.error("❌ Gemini generation error:", err);
-    throw new Error("Gemini model failed to generate response");
+    
+    // Check for quota exceeded error (429)
+    if (err.status === 429 || err.message?.includes("quota") || err.message?.includes("429")) {
+      const error = new Error("AI service quota exceeded. Please try again later or upgrade your plan.");
+      error.code = "QUOTA_EXCEEDED";
+      error.status = 429;
+      throw error;
+    }
+    
+    // Check for network/connection errors
+    if (err.message?.includes("fetch") || err.message?.includes("network")) {
+      const error = new Error("Unable to connect to AI service. Please check your internet connection.");
+      error.code = "NETWORK_ERROR";
+      error.status = 503;
+      throw error;
+    }
+    
+    // Generic error
+    const error = new Error("AI model failed to generate response. Please try again.");
+    error.code = "GENERATION_ERROR";
+    error.status = 500;
+    throw error;
   }
 }
 

@@ -1,3 +1,5 @@
+/* ------------ Intro page css --------------- */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -189,6 +191,26 @@
 
 .animate-neural-pulse {
   animation: neural-pulse 4s ease-in-out infinite;
+}
+
+/* Loading Bar Animation */
+@keyframes loading-bar {
+  0% {
+    width: 0%;
+    transform: translateX(0);
+  }
+  50% {
+    width: 70%;
+    transform: translateX(20%);
+  }
+  100% {
+    width: 100%;
+    transform: translateX(100%);
+  }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1.5s ease-in-out infinite;
 }
 
 /* 3D Transform Utilities */

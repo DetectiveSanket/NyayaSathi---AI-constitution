@@ -10,6 +10,7 @@ const BASE_URL =
   import.meta.env.VITE_API_URL || (import.meta.env.DEV ? DEV_API_URL : PROD_API_URL);
 
 // ✅ Create reusable axios instance
+
 const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true, // needed if you use cookies for refresh tokens
@@ -17,11 +18,11 @@ const api = axios.create({
 
 // ✅ Dynamically attach/remove Authorization header
 export const setAuthHeader = (token) => {
-  if (token) {
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  } else {
-    delete api.defaults.headers.common["Authorization"];
-  }
+    if (token) {
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+        delete api.defaults.headers.common["Authorization"];
+    }
 };
 
 /**
