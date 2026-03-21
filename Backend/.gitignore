@@ -1,9 +1,9 @@
 # Ignore node_modules in backend
+
 node_modules
 dist
 dist-ssr
 *.local
 
-# remove later 
-utils
-services
+# Ignore environment files
+

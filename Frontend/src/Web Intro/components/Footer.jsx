@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Zap, Github, Twitter, Linkedin, Mail } from 'lucide-react';
 
 const Footer = () => {
