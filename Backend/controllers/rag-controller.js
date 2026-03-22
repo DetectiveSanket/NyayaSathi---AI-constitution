@@ -67,8 +67,8 @@ const generalLegalPattern =
 const simplePrefixes =
   /^(what|who|when|where|why|how|define|explain|tell me about|give me|summarize)\b/i;
 
-const DEFAULT_RAG_MODEL = process.env.RAG_MODEL || "gemini-2.0-flash";
-const TRANSLATE_MODEL = "gemini-2.0-flash";
+const DEFAULT_RAG_MODEL = process.env.RAG_MODEL || "gemini-2.5-flash";
+const TRANSLATE_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 const ragModel = new ChatGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
@@ -215,7 +215,7 @@ Only use "contextual" if the question explicitly asks about content from an uplo
 
 Classification:`;
 
-    const classification = await googleGenerate("gemini-2.0-flash", classificationPrompt);
+    const classification = await googleGenerate(process.env.GEMINI_MODEL || "gemini-2.5-flash", classificationPrompt);
     const normalized = classification.trim().toLowerCase();
     
     if (normalized.includes("auto")) {
@@ -244,9 +244,11 @@ Classification:`;
   return false;
 };
 
-const buildSimpleAnswerPrompt = ({ query, languageLabel, languageInstruction, memoryContext = "" }) =>
-  [
+const buildSimpleAnswerPrompt = ({ query, languageLabel, languageInstruction, memoryContext = "" }) => {
+  const currentDate = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  return [
     "You are NyayaSathi, an AI legal assistant designed to help users with legal questions and information.",
+    `The current date is ${currentDate}. Keep this in mind for context.`,
     "",
     "Your role:",
     "- Answer general questions about yourself, your capabilities, and legal concepts",
@@ -269,6 +271,7 @@ const buildSimpleAnswerPrompt = ({ query, languageLabel, languageInstruction, me
     "",
     "Provide a clear, helpful, and natural response:",
   ].filter(Boolean).join("\n");
+};
 
 export const processDocument = async (req, res) => {
   try {
@@ -553,8 +556,10 @@ export const queryRag = async (req, res) => {
 
     // Build prompt with conversation history
     // CONTEXTUAL MODE: NO memory - only use document chunks
+    const currentDate = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
     const prompt = [
       "You are NyayaSathi, an AI legal assistant.",
+      `The current date is ${currentDate}. Keep this in mind for context.`,
       "",
       "Instructions:",
       "- Answer the user's question using ONLY the provided context chunks from uploaded documents",

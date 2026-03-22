@@ -22,7 +22,7 @@ export async function generateReply({ message, userId }) {
     text: result.output,
     meta: {
       provider: "google-genai",
-      model: "gemini-2.5-flash",
+      model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
     },
   };
 }

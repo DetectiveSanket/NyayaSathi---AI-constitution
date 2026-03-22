@@ -11,7 +11,7 @@ if (!apiKey) {
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
-const DEFAULT_GEN_MODEL = "gemini-2.0-flash";
+const DEFAULT_GEN_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 const normalizeModelName = (modelName) => {
   if (modelName && modelName.trim().length > 0 && modelName === DEFAULT_GEN_MODEL) {
@@ -74,8 +74,8 @@ export async function googleGenerate(
 export async function listModels() {
   return [
     {
-      id: "gemini-2.0-flash",
-      name: "Gemini 2.0 Flash",
+      id: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+      name: `Gemini (${process.env.GEMINI_MODEL || "gemini-2.5-flash"})`,
       description: "Fast, balanced model used for reasoning and summarization.",
     },
   ];

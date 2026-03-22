@@ -7,7 +7,7 @@ dotenv.config();
 
 const embeddings = new GoogleGenerativeAIEmbeddings({
   apiKey: process.env.GOOGLE_API_KEY,
-  modelName: "text-embedding-004",
+  modelName: process.env.EMBEDDING_MODEL || "gemini-embedding-001",
 });
 
 const pc = new Pinecone({
@@ -37,7 +37,7 @@ export async function embedDocumentChunks(chunks = []) {
 
         return {
           id: chunk.chunkId,
-          values: vector,
+          values: vector.slice(0, 768), // Slice to match Pinecone's 768 dimension
           metadata: {
             documentId: chunk.documentId,
             text: chunk.text,
@@ -64,7 +64,8 @@ export async function embedQueryText(text) {
   if (!text || typeof text !== "string") {
     throw new Error("Text is required for embedding.");
   }
-  return embeddings.embedQuery(text);
+  const vector = await embeddings.embedQuery(text);
+  return vector.slice(0, 768); // Slice to match Pinecone dimension
 }
 
 export async function querySimilarChunks({ vector, topK = 5, filter } = {}) {
@@ -87,9 +88,10 @@ export async function fetchDocumentChunksFromPinecone({ documentId, maxChunks = 
     throw new Error("documentId is required to fetch Pinecone chunks.");
   }
 
-  const queryVector = await embeddings.embedQuery(
+  const queryVectorRaw = await embeddings.embedQuery(
     `Summarize the legal document with id ${documentId}`
   );
+  const queryVector = queryVectorRaw.slice(0, 768);
 
   const response = await index.query({
     vector: queryVector,

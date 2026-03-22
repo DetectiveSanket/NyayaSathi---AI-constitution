@@ -96,7 +96,8 @@ Content:
 ${combinedText}
     `;
 
-    const summary = await googleGenerate("gemini-2.0-flash", finalPrompt);
+    // const summary = await googleGenerate("gemini-2.0-flash", finalPrompt);
+    const summary = await googleGenerate(process.env.GEMINI_MODEL || "gemini-2.5-flash", finalPrompt);
 
     return res.json({
       documentId,

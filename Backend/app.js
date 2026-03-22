@@ -1,7 +1,7 @@
 
+import 'dotenv/config'; // Crucial: must be first import so env vars are loaded before other modules
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import connectDB from './DB/db.js';
 import rateLimit from 'express-rate-limit';
@@ -15,7 +15,6 @@ import ragRoutes from "./routes/rag-routes.js";
 
 const app = express();
 
-dotenv.config(); // Load environment variables
 connectDB(); // Connect to the database
 
 // Initialize Redis connection (non-blocking, will connect on first use)
@@ -69,4 +68,6 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`✅ Default GEMINI_MODEL loaded as: ${process.env.GEMINI_MODEL || "NOT SET"}`);
+    console.log(`✅ Default RAG_MODEL loaded as: ${process.env.RAG_MODEL || "NOT SET"}`);
 });
