@@ -7,68 +7,104 @@ dotenv.config();
 
 const apiKey = process.env.GOOGLE_API_KEY;
 if (!apiKey) {
-  throw new Error("GOOGLE_API_KEY env var is required for Gemini access.");
+    throw new Error("GOOGLE_API_KEY env var is required for Gemini access.");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
 const DEFAULT_GEN_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
-const normalizeModelName = (modelName) => {
-  if (modelName && modelName.trim().length > 0 && modelName === DEFAULT_GEN_MODEL) {
-    return modelName;
-  }
-  return DEFAULT_GEN_MODEL;
-};
+const MODEL_FALLBACK_CHAIN = [
+    process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    process.env.GEMINI_FALLBACK_1 || "gemini-2.5-pro",
+    process.env.GEMINI_FALLBACK_2 || "gemini-1.5-flash",
+];
 
 export async function generateReply({ message, conversationId, userId }) {
-  return agentReply({ message, userId });
+    return agentReply({ message, userId });
 }
 
 export async function googleGenerate(
-  modelName = DEFAULT_GEN_MODEL,
-  prompt,
-  { temperature = 0.2, maxOutputTokens = 1024 } = {}
+    modelName = DEFAULT_GEN_MODEL,
+    prompt,
+    { temperature = 0.2, maxOutputTokens = 1024 } = {}
 ) {
-  if (!prompt) {
-    throw new Error("Prompt is required for googleGenerate.");
-  }
-
-  try {
-    const gemini = genAI.getGenerativeModel({ model: normalizeModelName(modelName) });
-    const result = await gemini.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature,
-        maxOutputTokens,
-      },
-    });
-
-    return result?.response?.text() ?? "";
-  } catch (err) {
-    console.error("❌ Gemini generation error:", err);
-    
-    // Check for quota exceeded error (429)
-    if (err.status === 429 || err.message?.includes("quota") || err.message?.includes("429")) {
-      const error = new Error("AI service quota exceeded. Please try again later or upgrade your plan.");
-      error.code = "QUOTA_EXCEEDED";
-      error.status = 429;
-      throw error;
+    if (!prompt) {
+        throw new Error("Prompt is required for googleGenerate.");
     }
-    
-    // Check for network/connection errors
-    if (err.message?.includes("fetch") || err.message?.includes("network")) {
-      const error = new Error("Unable to connect to AI service. Please check your internet connection.");
-      error.code = "NETWORK_ERROR";
-      error.status = 503;
-      throw error;
+
+    // If a specific custom model is requested that isn't the default, try only that one.
+    // Otherwise, use the fallback chain.
+    const modelsToTry = modelName && modelName !== DEFAULT_GEN_MODEL 
+        ? [modelName] 
+        : MODEL_FALLBACK_CHAIN;
+
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+        console.log(`🤖 LLM Adapter: Trying model [${model}]...`);
+        try {
+            const gemini = genAI.getGenerativeModel({ model });
+            const result = await gemini.generateContent({
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature,
+                    maxOutputTokens,
+                },
+            });
+
+            console.log(`✅ LLM Adapter: Successfully generated response using [${model}]`);
+            return result?.response?.text() ?? "";
+
+        } catch (err) {
+        // Check for quota exceeded error (429)
+        if (err.status === 429 || err.message?.includes("quota") || err.message?.includes("429")) {
+            console.warn(`⚠️ LLM Adapter: Model [${model}] hit quota limit (429). Trying next fallback...`);
+            lastError = err;
+            continue; // Proceed to the next model in the chain
+        }
+        
+        // console.error(`❌ Gemini generation error with model [${model}]:`, err);
+        
+        // // Check for network/connection errors
+        // if (err.message?.includes("fetch") || err.message?.includes("network")) {
+        //   const error = new Error("Unable to connect to AI service. Please check your internet connection.");
+        //   error.code = "NETWORK_ERROR";
+        //   error.status = 503;
+        //   throw error;
+        // }  
+
+        // ✅ FIXED - 404 goes to next fallback, only true network errors throw
+        console.error(`❌ Gemini generation error with model [${model}]:`, err);
+
+        // 404 = model not found, try next fallback instead of crashing
+        if (err.status === 404) {
+            console.warn(`⚠️ LLM Adapter: Model [${model}] not found (404). Trying next fallback...`);
+            lastError = err;
+            continue;
+        }
+
+        // Only true network errors (no status code at all)
+        if (!err.status && (err.message?.includes("network") || err.message?.includes("ECONNREFUSED"))) {
+            const error = new Error("Unable to connect to AI service. Please check your internet connection.");
+            error.code = "NETWORK_ERROR";
+            error.status = 503;
+            throw error;
+        }
+        
+            // Generic error
+            const error = new Error("AI model failed to generate response. Please try again.");
+            error.code = "GENERATION_ERROR";
+            error.status = 500;
+            throw error;
+        }
     }
-    
-    // Generic error
-    const error = new Error("AI model failed to generate response. Please try again.");
-    error.code = "GENERATION_ERROR";
-    error.status = 500;
+
+    // If loop completes without returning, all models in the chain failed due to 429 Quota Exceeded
+    console.error("❌ LLM Adapter: All fallback models exhausted. Final error:", lastError?.message);
+    const error = new Error("AI service quota exceeded across all available models. Please try again later or upgrade your plan.");
+    error.code = "QUOTA_EXCEEDED";
+    error.status = 429;
     throw error;
-  }
 }
 
 export async function listModels() {

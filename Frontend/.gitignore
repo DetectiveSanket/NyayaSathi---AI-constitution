@@ -13,8 +13,8 @@ dist-ssr
 *.local
 
 # Util folder 
-**/utils/
-src/utils/
+# **/utils/
+# src/utils/
 
 # Edit your .gitignore and remove or comment out these lines:
 # **/utils/
