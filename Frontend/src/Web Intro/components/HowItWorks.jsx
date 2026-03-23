@@ -1,85 +1,99 @@
 import React from 'react';
-import { Upload, Brain, CheckCircle, ArrowRight } from 'lucide-react';
-import AI3DElements from './AI3DElements';
+import { Upload, Brain, CheckCircle } from 'lucide-react';
+
+const steps = [
+  {
+    icon: Upload,
+    title: 'Upload or Ask',
+    description: 'Upload any legal document or type your question in plain language.',
+    gradient: 'from-violet-500 to-purple-700',
+    number: '01',
+  },
+  {
+    icon: Brain,
+    title: 'AI Simplifies & Translates',
+    description: 'Our AI processes the text and translates complex legal language into simple terms.',
+    gradient: 'from-indigo-500 to-blue-600',
+    number: '02',
+  },
+  {
+    icon: CheckCircle,
+    title: 'Get Clear Answers',
+    description: 'Receive simplified explanations with precise legal references and citations.',
+    gradient: 'from-purple-500 to-pink-500',
+    number: '03',
+  },
+];
 
 const HowItWorks = () => {
-  const steps = [
-    {
-      icon: Upload,
-      title: 'Upload or Ask',
-      description: 'Upload documents or ask questions directly',
-      color: 'from-[var(--ip-accent)] to-[var(--ip-accent-secondary)]'
-    },
-    {
-      icon: Brain,
-      title: 'AI Simplifies & Translates',
-      description: 'AI processes and translates complex legal text',
-      color: 'from-[var(--ip-accent-secondary)] to-[var(--ip-accent)]'
-    },
-    {
-      icon: CheckCircle,
-      title: 'Get Clear Answers',
-      description: 'Simplified explanations with legal references',
-      color: 'from-[var(--ip-accent)] to-[var(--ip-accent-secondary)]'
-    }
-  ];
-
   return (
-    <section id="how-it-works" className="py-20 bg-gradient-to-b from-[var(--ip-bg-secondary)] to-[var(--ip-bg-tertiary)] relative overflow-hidden">
-      {/* AI 3D Elements */}
-      <AI3DElements variant="neural" />
+    <section id="how-it-works" className="py-24 relative overflow-hidden" style={{ background: 'var(--ip-bg-secondary)' }}>
+
+      {/* Top + bottom fade */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 80% 40% at 50% 50%, rgba(129,140,248,0.05) 0%, transparent 70%)',
+      }} />
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold ip-text-primary mb-6">
+          <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--ip-accent)' }}>
+            Simple Process
+          </p>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-5 leading-tight" style={{ color: 'var(--ip-text-primary)' }}>
             How{' '}
-            <span className="bg-gradient-to-r from-[var(--ip-accent)] to-[var(--ip-accent-secondary)] bg-clip-text text-transparent font-extrabold">
-              <span className="ip-text-primary">It Works</span>
+            <span style={{
+              background: 'linear-gradient(135deg, var(--ip-accent), var(--ip-accent-secondary))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              It Works
             </span>
           </h2>
-          <p className="text-xl ip-text-secondary max-w-2xl mx-auto font-medium">
-            <span className="ip-text-primary font-semibold">Simple steps to get legal clarity in minutes</span>
+          <p className="text-lg max-w-xl mx-auto" style={{ color: 'var(--ip-text-secondary)' }}>
+            Three simple steps to get legal clarity in minutes.
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+
+            {/* Connector line (desktop only) */}
+            <div className="hidden md:block absolute top-16 left-1/3 right-1/3 h-px" style={{
+              background: 'linear-gradient(90deg, transparent, var(--ip-accent), transparent)',
+              opacity: 0.3,
+            }} />
+
             {steps.map((step, index) => {
               const Icon = step.icon;
               return (
-                <div key={index} className="relative">
-                  {/* Connecting line */}
-                  {index < steps.length - 1 && (
-                    <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-px bg-gradient-to-r from-[var(--ip-accent)] to-transparent animate-pulse z-10">
-                      <ArrowRight className="absolute -right-2 -top-2 w-4 h-4 ip-text-accent" />
-                    </div>
-                  )}
-                  
-                  <div className="ip-bg-surface-secondary/80 backdrop-blur-md rounded-2xl border ip-border p-8 text-center transform hover:scale-105 hover:-translate-y-4 transition-all duration-500 hover:shadow-2xl hover:shadow-[var(--ip-accent)]/25 hover:border-[var(--ip-accent)]/40 group"
-                       style={{
-                         transform: `perspective(1000px) rotateX(${Math.sin(index * 0.5) * 2}deg) rotateY(${Math.cos(index * 0.3) * 2}deg)`,
-                         animationDelay: `${index * 200}ms`
-                       }}>
-                    
-                    {/* Step number */}
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <div className={`w-8 h-8 bg-gradient-to-r ${step.color} rounded-full flex items-center justify-center ip-text-surface-primary font-bold text-sm group-hover:scale-125 transition-transform duration-300`}>
-                        {index + 1}
-                      </div>
-                    </div>
+                <div key={index} className="group relative rounded-2xl p-8 text-center transition-all duration-500 hover:scale-[1.04] hover:-translate-y-2"
+                  style={{
+                    background: 'linear-gradient(145deg, var(--ip-surface-secondary), var(--ip-surface-primary))',
+                    border: '1px solid var(--ip-border)',
+                  }}>
 
-                    <div className="mt-4 mb-6">
-                      <div className={`w-16 h-16 bg-gradient-to-br ${step.color} rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 group-hover:shadow-lg group-hover:shadow-[var(--ip-accent)]/50`}>
-                        <Icon className="w-8 h-8 ip-text-surface-primary" />
-                      </div>
-                      <h3 className="text-xl font-bold text-[#0073ff] mb-3 group-hover:ip-text-accent transition-colors duration-300">
-                        {step.title}
-                      </h3>
-                      <p className="ip-text-secondary leading-relaxed">
-                        {step.description}
-                      </p>
-                    </div>
+                  {/* Step number badge */}
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white"
+                    style={{ background: 'linear-gradient(135deg, var(--ip-accent), var(--ip-accent-secondary))' }}>
+                    {step.number}
                   </div>
+
+                  {/* Card glow on hover */}
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                    style={{ background: 'radial-gradient(ellipse 60% 60% at 50% 20%, rgba(129,140,248,0.07), transparent)' }} />
+
+                  {/* Icon */}
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center mb-6 mx-auto shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-400 relative`}>
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+
+                  <h3 className="text-lg font-bold mb-3 relative" style={{ color: 'var(--ip-text-primary)' }}>
+                    {step.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed relative" style={{ color: 'var(--ip-text-secondary)' }}>
+                    {step.description}
+                  </p>
                 </div>
               );
             })}

@@ -1,114 +1,170 @@
-import React from 'react';
-import { FileText, Globe, Upload, Scale, ArrowBigRight } from 'lucide-react';
-import AI3DElements from './AI3DElements';
-import SpotlightCard from '../../../components/nurui/SpotlightCard';
+import React, { useRef } from 'react';
+import { FileText, Globe, Upload, Scale, ArrowRight } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
-const Features = () => {
+const features = [
+  {
+    icon: FileText,
+    title: 'Plain Language Law',
+    description: 'Complex legal jargon decoded into clear, simple words anyone can understand.',
+    gradient: 'from-violet-500 to-purple-600',
+  },
+  {
+    icon: Globe,
+    title: 'Multilingual Support',
+    description: 'Full English, Hindi & Marathi support — text and voice, for everyone.',
+    gradient: 'from-indigo-500 to-blue-600',
+  },
+  {
+    icon: Upload,
+    title: 'Upload & Query',
+    description: 'Drop any legal document and ask questions directly about its content.',
+    gradient: 'from-purple-500 to-pink-500',
+  },
+  {
+    icon: Scale,
+    title: 'Incident Guide',
+    description: 'Real-life cases mapped to IPC sections and applicable punishments.',
+    gradient: 'from-blue-500 to-indigo-600',
+  },
+];
 
-  const { token } = useSelector((state) => state.auth);
-  const features = [
-    {
-      icon: FileText,
-      title: 'Plain Language Law',
-      description: 'Legal jargon turned into simple words.',
-      color: 'ip-text-accent',
-      glow: 'purple',
-    },
-    {
-      icon: Globe,
-      title: 'Multilingual Support',
-      description: 'English, Hindi, Marathi (text & voice).',
-      color: 'ip-text-accent-secondary',
-      glow: 'purple',
-    },
-    {
-      icon: Upload,
-      title: 'Upload & Query',
-      description: 'Ask questions directly from documents.',
-      color: 'ip-text-accent',
-      glow: 'purple',
-    },
-    {
-      icon: Scale,
-      title: 'Incident Guide',
-      description: 'Get IPC sections & punishments for real-life cases.',
-      color: 'ip-text-accent-secondary',
-      glow: 'purple',
+/**
+ * GlowCard — custom mouse-tracking spotlight card.
+ * The glow layer sits INSIDE the card (absolute inset) and is
+ * clipped by overflow:hidden + border-radius on the wrapper,
+ * so it never bleaks outside or breaks at edges/corners.
+ */
+const GlowCard = ({ children, className = '' }) => {
+  const cardRef = useRef(null);
+  const glowRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (glowRef.current) {
+      glowRef.current.style.background = `radial-gradient(220px circle at ${x}px ${y}px, rgba(129,140,248,0.22), transparent 70%)`;
+      glowRef.current.style.opacity = '1';
     }
-  ];
+  };
+
+  const handleMouseLeave = () => {
+    if (glowRef.current) {
+      glowRef.current.style.opacity = '0';
+    }
+  };
 
   return (
-        <section id="features" className="py-20 bg-gradient-to-b from-[var(--ip-bg-primary)] to-[var(--ip-bg-secondary)] relative overflow-hidden">
-        {/* AI 3D Elements */}
-        <AI3DElements variant="cubes" />
-        
-            <div className="container mx-auto px-6">
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold ip-text-primary mb-6">
-                        Everything you need to{' '}
-                        <span className="bg-gradient-to-r from-[var(--ip-accent)] to-[var(--ip-accent-secondary)] bg-clip-text text-transparent font-extrabold">
-                        <span className="ip-text-primary">understand the law</span>
-                        </span>
-                    </h2>
-                    <p className="text-xl ip-text-secondary max-w-2xl mx-auto font-medium">
-                        <span className="ip-text-primary font-semibold">Clearly and quickly</span>
-                    </p>
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`group relative rounded-2xl p-7 overflow-hidden cursor-default transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 ${className}`}
+      style={{
+        background: 'linear-gradient(145deg, var(--ip-surface-secondary), var(--ip-surface-primary))',
+        border: '1px solid var(--ip-border)',
+      }}
+    >
+      {/* Glow layer — clipped perfectly by overflow:hidden above */}
+      <div
+        ref={glowRef}
+        className="absolute inset-0 pointer-events-none transition-opacity duration-200"
+        style={{ opacity: 0 }}
+      />
+      {/* Content always sits above glow */}
+      <div className="relative z-10">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const Features = () => {
+  const { token } = useSelector((state) => state.auth);
+
+  return (
+    <section id="features" className="py-24 relative overflow-hidden" style={{ background: 'var(--ip-bg-secondary)' }}>
+
+      {/* Section background accent */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(129,140,248,0.08) 0%, transparent 70%)',
+      }} />
+
+      <div className="container mx-auto px-6 relative z-10">
+        {/* Heading */}
+        <div className="text-center mb-16">
+          <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--ip-accent)' }}>
+            Core Features
+          </p>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-5 leading-tight" style={{ color: 'var(--ip-text-primary)' }}>
+            Everything you need to{' '}
+            <span style={{
+              background: 'linear-gradient(135deg, var(--ip-accent), var(--ip-accent-secondary))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              understand the law
+            </span>
+          </h2>
+          <p className="text-lg max-w-xl mx-auto" style={{ color: 'var(--ip-text-secondary)' }}>
+            Clearly, quickly and in your own language.
+          </p>
+        </div>
+
+        {/* Feature cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <GlowCard key={index}>
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                  <Icon className="w-7 h-7 text-white" />
                 </div>
+                <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--ip-text-primary)' }}>
+                  {feature.title}
+                </h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--ip-text-secondary)' }}>
+                  {feature.description}
+                </p>
+              </GlowCard>
+            );
+          })}
+        </div>
 
-                {/* Features Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-                    {features.map((feature, index) => {
-                        const Icon = feature.icon;
-                        return (
-                        <SpotlightCard key={index} glowColor={feature.glow} size="md" className="rounded-2xl border ip-border p-8 text-center">
-                            <div className="w-16 h-16 bg-gradient-to-br from-[var(--ip-accent)]/20 to-[var(--ip-accent-secondary)]/20 rounded-xl flex items-center justify-center mb-6 mx-auto group">
-                                <Icon className={`w-8 h-8 ${feature.color} transition-transform duration-300 group-hover:scale-125 group-hover:ip-text-accent`} />
-                            </div>
-                            
-                            <h3 className="text-xl font-bold ip-text-primary mb-4">
-                                {feature.title}
-                            </h3>
-                                <p className="ip-text-secondary leading-relaxed">
-                                {feature.description}
-                            </p>
-                        </SpotlightCard>
-                        );
-                    })}
-                </div>
-
-                {/* CTA Section */}
-                <div className="text-center mt-16">
-
-                <div className="bg-gradient-to-r from-[var(--ip-accent)]/10 to-[var(--ip-accent-secondary)]/10 border border-[#123156] rounded-2xl p-12 max-w-4xl mx-auto transform hover:scale-105 hover:-translate-y-2 transition-all duration-500 hover:shadow-2xl hover:shadow-[var(--ip-accent)]/25 hover:border-[var(--ip-accent)]/40">
-                    <h3 className="text-3xl font-bold ip-text-primary mb-4">
-                        Ready to simplify legal complexity?
-                    </h3>
-
-                    <p className="ip-text-secondary mb-8 text-lg">
-                        Join thousands already using NyayaSathi for legal clarity
-                    </p>
-                    
-                    {
-                        token ? (
-                            <button className="px-8 py-4 text-amber-700 bg-gradient-to-r from-[var(--ip-accent)] to-[var(--ip-accent-secondary)] ip-text-surface-primary rounded-lg font-semibold hover:opacity-80 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[var(--ip-accent)]/50">
-                                Try NyayaSathi Now
-                                <ArrowBigRight className="w-5 h-5 inline-block ml-2 -rotate-90" />
-                            </button>
-                        ) : (
-                            <Link to="/login" className="px-8 py-4 text-orange-600 bg-gradient-to-r from-[var(--ip-accent)] to-[var(--ip-accent-secondary)] ip-text-surface-primary rounded-lg font-semibold hover:opacity-80 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[var(--ip-accent)]/50">
-                                Get Started
-                                <ArrowBigRight className="w-5 h-5 inline-block ml-2 -rotate-90" />
-                            </Link>
-                        )
-                    }
-                </div>
-
-                </div>
-            </div>
-        </section>
-    );
+        {/* CTA Banner */}
+        <div className="mt-16 rounded-3xl p-12 text-center max-w-4xl mx-auto relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(129,140,248,0.1), rgba(167,139,250,0.06))',
+            border: '1px solid rgba(129,140,248,0.2)',
+          }}>
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
+            background: 'radial-gradient(ellipse 60% 60% at 50% 50%, rgba(129,140,248,0.08), transparent)',
+          }} />
+          <h3 className="text-2xl md:text-3xl font-bold mb-3 relative" style={{ color: 'var(--ip-text-primary)' }}>
+            Ready to simplify legal complexity?
+          </h3>
+          <p className="mb-8 text-lg relative" style={{ color: 'var(--ip-text-secondary)' }}>
+            Join thousands already using NyayaSathi for legal clarity
+          </p>
+          {token ? (
+            <button className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white transition-all duration-300 hover:scale-105 hover:-translate-y-1 relative"
+              style={{ background: 'linear-gradient(135deg, var(--ip-accent), var(--ip-accent-secondary))', boxShadow: '0 8px 32px rgba(129,140,248,0.35)' }}>
+              Try NyayaSathi Now <ArrowRight className="w-5 h-5" />
+            </button>
+          ) : (
+            <Link to="/login"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white transition-all duration-300 hover:scale-105 hover:-translate-y-1 relative"
+              style={{ background: 'linear-gradient(135deg, var(--ip-accent), var(--ip-accent-secondary))', boxShadow: '0 8px 32px rgba(129,140,248,0.35)' }}>
+              Get Started <ArrowRight className="w-5 h-5" />
+            </Link>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 };
 
 export default Features;

@@ -13,7 +13,7 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('intro-theme');
-    return saved || 'system';
+    return saved || 'amoled';
   });
 
   const [systemTheme, setSystemTheme] = useState('dark');
@@ -44,7 +44,6 @@ export const ThemeProvider = ({ children }) => {
     { id: 'light',  name: 'Light',  icon: '☀️' },
     { id: 'dark',   name: 'Dark',   icon: '🌙' },
     { id: 'amoled', name: 'AMOLED', icon: '⚫' },
-    { id: 'sepia',  name: 'Sepia',  icon: '📜' }
   ];
 
   return (

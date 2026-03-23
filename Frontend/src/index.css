@@ -126,68 +126,68 @@
    All variables scoped under .intro-page — never bleeds to chatbot
    ============================================================ */
 
-/* Default (light) intro-page token values */
+/* Default (system dark) intro-page token values — matches dark theme */
 .intro-page {
-  --ip-bg-primary: #ffffff;
-  --ip-bg-secondary: #f8fafc;
-  --ip-bg-tertiary: #f1f5f9;
-  --ip-surface-primary: #ffffff;
-  --ip-surface-secondary: #f8fafc;
-  --ip-surface-tertiary: #e2e8f0;
-  --ip-text-primary: #1e293b;
-  --ip-text-secondary: #475569;
+  --ip-bg-primary: #06070d;
+  --ip-bg-secondary: #0d0f1a;
+  --ip-bg-tertiary: #141728;
+  --ip-surface-primary: #10132a;
+  --ip-surface-secondary: #161a35;
+  --ip-surface-tertiary: #1e2240;
+  --ip-text-primary: #f1f5f9;
+  --ip-text-secondary: #94a3b8;
   --ip-text-tertiary: #64748b;
-  --ip-border: #e2e8f0;
-  --ip-accent: #8b5cf6;
-  --ip-accent-secondary: #a855f7;
+  --ip-border: #2a2f5c;
+  --ip-accent: #818cf8;
+  --ip-accent-secondary: #a78bfa;
 }
 
 /* Intro page — explicit light theme */
 .intro-page.light {
-  --ip-bg-primary: #ffffff;
-  --ip-bg-secondary: #f8fafc;
-  --ip-bg-tertiary: #f1f5f9;
+  --ip-bg-primary: #f8faff;
+  --ip-bg-secondary: #eef2ff;
+  --ip-bg-tertiary: #e0e7ff;
   --ip-surface-primary: #ffffff;
-  --ip-surface-secondary: #f8fafc;
-  --ip-surface-tertiary: #e2e8f0;
+  --ip-surface-secondary: #f0f4ff;
+  --ip-surface-tertiary: #dde5ff;
   --ip-text-primary: #0f172a;
-  --ip-text-secondary: #334155;
+  --ip-text-secondary: #3b4a6b;
   --ip-text-tertiary: #64748b;
-  --ip-border: #e2e8f0;
-  --ip-accent: #7c3aed;
+  --ip-border: #c7d2fe;
+  --ip-accent: #6366f1;
   --ip-accent-secondary: #8b5cf6;
 }
 
 /* Intro page — dark theme */
 .intro-page.dark {
-  --ip-bg-primary: #000000;
-  --ip-bg-secondary: #111827;
-  --ip-bg-tertiary: #1f2937;
-  --ip-surface-primary: #111827;
-  --ip-surface-secondary: #1f2937;
-  --ip-surface-tertiary: #374151;
-  --ip-text-primary: #ffffff;
-  --ip-text-secondary: #d1d5db;
-  --ip-text-tertiary: #9ca3af;
-  --ip-border: #374151;
-  --ip-accent: #8b5cf6;
-  --ip-accent-secondary: #a855f7;
+  --ip-bg-primary: #06070d;
+  --ip-bg-secondary: #0d0f1a;
+  --ip-bg-tertiary: #141728;
+  --ip-surface-primary: #10132a;
+  --ip-surface-secondary: #161a35;
+  --ip-surface-tertiary: #1e2240;
+  --ip-text-primary: #f1f5f9;
+  --ip-text-secondary: #94a3b8;
+  --ip-text-tertiary: #64748b;
+  --ip-border: #2a2f5c;
+  --ip-accent: #818cf8;
+  --ip-accent-secondary: #a78bfa;
 }
 
 /* Intro page — AMOLED theme */
 .intro-page.amoled {
   --ip-bg-primary: #000000;
-  --ip-bg-secondary: #000000;
+  --ip-bg-secondary: #050505;
   --ip-bg-tertiary: #0a0a0a;
-  --ip-surface-primary: #000000;
-  --ip-surface-secondary: #0a0a0a;
+  --ip-surface-primary: #0d0d0d;
+  --ip-surface-secondary: #111111;
   --ip-surface-tertiary: #1a1a1a;
-  --ip-text-primary: #00ff88;
-  --ip-text-secondary: #d1d5db;
-  --ip-text-tertiary: #9ca3af;
-  --ip-border: #1a1a1a;
-  --ip-accent: #00ff88;
-  --ip-accent-secondary: #00cc6a;
+  --ip-text-primary: #f0f0f0;
+  --ip-text-secondary: #a0a0a0;
+  --ip-text-tertiary: #666666;
+  --ip-border: #1f1f1f;
+  --ip-accent: #00e87a;
+  --ip-accent-secondary: #00b85f;
 }
 
 /* Intro page — Sepia theme */
