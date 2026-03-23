@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Zap } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import ThemeSelector from './ThemeSelector';
 import { Link, NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import logo from '../../assets/Logo/logo 1.png';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,33 +19,33 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       style={{
-        background: scrolled
-          ? 'rgba(var(--ip-surface-primary-rgb, 16,19,42), 0.92)'
-          : 'transparent',
         backdropFilter: scrolled ? 'blur(16px)' : 'none',
         borderBottom: scrolled ? '1px solid var(--ip-border)' : '1px solid transparent',
         backgroundColor: scrolled ? 'var(--ip-surface-primary)' : 'transparent',
-        opacity: 0.98,
       }}>
-      <div className="container mx-auto px-6 py-4">
+      <div className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
 
           {/* Logo */}
-          <div className="flex items-center gap-2.5 group cursor-pointer">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"
-              style={{ background: 'linear-gradient(135deg, var(--ip-accent), var(--ip-accent-secondary))' }}>
-              <Zap className="w-5 h-5 text-white" />
+          <Link to="/" className="flex items-center gap-3 group">
+            {/* White rounded container so the gray logo bg looks clean in all themes */}
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white p-0.5 shadow-md group-hover:scale-105 group-hover:shadow-lg transition-all duration-300 flex-shrink-0">
+              <img
+                src={logo}
+                alt="NyayaSathi Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <span className="text-xl font-bold" style={{ color: 'var(--ip-text-primary)' }}>
-              Nyayasathi
+            <span className="text-xl font-bold tracking-tight" style={{ color: 'var(--ip-text-primary)' }}>
+              Nyaya<span style={{ color: 'var(--ip-accent)' }}>Sathi</span>
             </span>
-          </div>
+          </Link>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8">
             {['Home', 'Features', 'About', 'Contact'].map((item) => (
               <a key={item} href={`#${item.toLowerCase()}`}
-                className="text-sm font-medium transition-colors duration-200 hover:opacity-80"
+                className="text-sm font-medium transition-colors duration-200"
                 style={{ color: 'var(--ip-text-secondary)' }}
                 onMouseEnter={e => e.target.style.color = 'var(--ip-accent)'}
                 onMouseLeave={e => e.target.style.color = 'var(--ip-text-secondary)'}>
@@ -87,7 +88,7 @@ const Header = () => {
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div className="md:hidden mt-4 py-4 rounded-2xl"
+          <div className="md:hidden mt-4 rounded-2xl"
             style={{
               background: 'var(--ip-surface-secondary)',
               border: '1px solid var(--ip-border)',
@@ -96,7 +97,7 @@ const Header = () => {
             <nav className="flex flex-col gap-4 mb-4">
               {['Home', 'Features', 'About', 'Contact'].map((item) => (
                 <a key={item} href={`#${item.toLowerCase()}`}
-                  className="text-sm font-medium transition-colors duration-200"
+                  className="text-sm font-medium"
                   style={{ color: 'var(--ip-text-secondary)' }}
                   onClick={() => setIsMenuOpen(false)}>
                   {item}

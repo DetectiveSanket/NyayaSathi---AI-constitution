@@ -1,8 +1,9 @@
 import React from 'react';
-import { ArrowRight, Play, Sparkles, Shield, Globe, Zap } from 'lucide-react';
+import { ArrowRight, Play, Sparkles } from 'lucide-react';
 import AINetwork3D from './AINetwork3D';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import logo from '../../assets/Logo/logo 1.png';
 
 const Hero = () => {
   const { token } = useSelector((state) => state.auth);
@@ -30,6 +31,14 @@ const Hero = () => {
 
       <div className="container mx-auto px-6 py-32 relative z-10">
         <div className="text-center max-w-5xl mx-auto">
+
+          {/* Logo mark — white container isolates the gray logo bg from any theme */}
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white shadow-xl p-1 hover:scale-105 transition-all duration-300"
+              style={{ boxShadow: '0 0 32px rgba(129,140,248,0.25)' }}>
+              <img src={logo} alt="NyayaSathi" className="w-full h-full object-contain" />
+            </div>
+          </div>
 
           {/* Badge */}
           <div className="inline-flex items-center gap-2 mb-8 px-5 py-2.5 rounded-full text-sm font-medium"

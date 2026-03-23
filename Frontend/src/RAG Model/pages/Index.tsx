@@ -16,6 +16,7 @@ const ChatSidebar = lazy(() => import("../components/ChatSidebar"));
 const MessageBubble = lazy(() => import("../components/MessageBubble"));
 const ChatComposer = lazy(() => import("../components/ChatComposer"));
 const MobileChatLayout = lazy(() => import("../components/MobileChatLayout"));
+const WelcomeSuggestions = lazy(() => import("../components/WelcomeSuggestions"));
 
 import { Badge } from "../components/ui/badge";
 import { ScrollArea } from "../components/ui/scroll-area";
@@ -406,14 +407,8 @@ const Index = () => {
       dispatch(setMode(null));
       dispatch(setSummary(null));
       
-      // STEP 5: Add welcome message for new chat
-      const welcomeMessage: Message = {
-        id: `welcome-${Date.now()}`,
-        type: "system",
-        content: "Welcome to NyayaSathi! I'm your AI legal assistant. How can I help you today?",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      dispatch(setMessages([welcomeMessage]));
+      // STEP 5: Ensure messages are empty so WelcomeSuggestions shows
+      dispatch(setMessages([]));
 
       // STEP 6: Refresh conversation list
       await loadConversations();
@@ -676,26 +671,35 @@ const Index = () => {
                         </div>
                     )}
                     {filteredMessages.length === 0 && (searchQuery.trim() || searchFromSidebar.trim()) ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
                         <Search className="w-12 h-12 text-muted-foreground/50 mb-3" />
                         <p className="text-muted-foreground">No messages found matching "{searchQuery || searchFromSidebar}"</p>
                         <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={clearSearch}
-                            className="mt-3"
+                          variant="outline"
+                          size="sm"
+                          onClick={clearSearch}
+                          className="mt-3"
                         >
-                            Clear Search
+                          Clear Search
                         </Button>
-                        </div>
+                      </div>
                     ) : (
-                        filteredMessages.map((message) => (
-                            <div key={message.id} className="group">
-                                <Suspense fallback={"Loading message..."}>
-                                    <MessageBubble message={message} />
-                                </Suspense>
-                            </div>
-                        ))
+                      <>
+                        {messages.length === 0 && !searchQuery.trim() && !searchFromSidebar.trim() && (
+                          <div className="flex-1 flex flex-col justify-center items-center py-12">
+                            <Suspense fallback={<div className="h-64 flex items-center justify-center">Loading suggestions...</div>}>
+                              <WelcomeSuggestions onSelect={(text) => handleSendMessage(text)} />
+                            </Suspense>
+                          </div>
+                        )}
+                        {filteredMessages.map((message) => (
+                          <div key={message.id} className="group">
+                            <Suspense fallback={"Loading message..."}>
+                              <MessageBubble message={message} />
+                            </Suspense>
+                          </div>
+                        ))}
+                      </>
                     )}
                     {(isLoading || queryLoading) && (
                         <div className="flex justify-start">
