@@ -12,7 +12,7 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('theme');
+    const saved = localStorage.getItem('intro-theme');
     return saved || 'system';
   });
 
@@ -31,28 +31,24 @@ export const ThemeProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('theme', theme);
-    
-    const root = document.documentElement;
-    const effectiveTheme = theme === 'system' ? systemTheme : theme;
-    
-    // Remove all theme classes
-    root.classList.remove('light', 'dark', 'amoled', 'sepia');
-    
-    // Add current theme class
-    root.classList.add(effectiveTheme);
+    localStorage.setItem('intro-theme', theme);
+    // NOTE: We no longer touch document.documentElement here.
+    // The theme is applied directly to the WebIntro wrapper <div>
+    // via effectiveTheme exposed from this context.
   }, [theme, systemTheme]);
+
+  const effectiveTheme = theme === 'system' ? systemTheme : theme;
 
   const themes = [
     { id: 'system', name: 'System', icon: '🖥️' },
-    { id: 'light', name: 'Light', icon: '☀️' },
-    { id: 'dark', name: 'Dark', icon: '🌙' },
+    { id: 'light',  name: 'Light',  icon: '☀️' },
+    { id: 'dark',   name: 'Dark',   icon: '🌙' },
     { id: 'amoled', name: 'AMOLED', icon: '⚫' },
-    { id: 'sepia', name: 'Sepia', icon: '📜' }
+    { id: 'sepia',  name: 'Sepia',  icon: '📜' }
   ];
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, themes, systemTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, themes, systemTheme, effectiveTheme }}>
       {children}
     </ThemeContext.Provider>
   );

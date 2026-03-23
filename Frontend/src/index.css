@@ -1,133 +1,521 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+/* ============================================================
+   Single Tailwind entry point (only declared once)
+   ============================================================ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom animation delays for loading dots */
-.animate-bounce-delay-0 {
-  animation-delay: 0ms;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-.animate-bounce-delay-150 {
-  animation-delay: 150ms;
-}
-
-.animate-bounce-delay-300 {
-  animation-delay: 300ms;
-}
-
-/* NyayaSathi Chat UI Design System - Dark-first, Purple Gradient Theme */
+/* ============================================================
+   CHATBOT / APP-WIDE DESIGN SYSTEM
+   (shadcn/ui-compatible HSL variables in :root)
+   ============================================================ */
 
 @layer base {
   :root {
     /* Dark theme (default) - Modern professional look */
-    --background: 222 84% 5%; /* Deep dark blue */
-    --foreground: 210 40% 98%; /* Clean white */
-    
-    --surface: 220 40% 8%; /* Darker surface */
+    --background: 222 84% 5%;       /* Deep dark blue */
+    --foreground: 210 40% 98%;      /* Clean white */
+
+    --surface: 220 40% 8%;          /* Darker surface */
     --surface-elevated: 218 35% 11%; /* Elevated surface */
-    --surface-chat: 216 30% 14%; /* Chat area */
-    
-    --primary: 217 91% 60%; /* Modern blue */
-    --primary-end: 224 76% 48%; /* Gradient end */
+    --surface-chat: 216 30% 14%;    /* Chat area */
+
+    --primary: 217 91% 60%;         /* Modern blue */
+    --primary-end: 224 76% 48%;     /* Gradient end */
     --primary-foreground: 0 0% 100%;
-    
-    --accent: 142 76% 36%; /* Green accent */
+
+    --accent: 142 76% 36%;          /* Green accent */
     --accent-foreground: 0 0% 100%;
-    
-    --secondary: 215 20% 65%; /* Muted text */
+
+    --secondary: 215 20% 65%;       /* Muted text */
     --secondary-muted: 215 14% 34%; /* Very muted */
     --secondary-foreground: 222 84% 5%;
-    
-    --border: 217 19% 18%; /* Subtle borders */
-    --input: 218 35% 11%; /* Input background */
-    --ring: 217 91% 60%; /* Focus ring */
-    
+
+    --border: 217 19% 18%;          /* Subtle borders */
+    --input: 218 35% 11%;           /* Input background */
+    --ring: 217 91% 60%;            /* Focus ring */
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    
+
     --muted: 217 19% 18%;
     --muted-foreground: 215 14% 34%;
-    
+
     --card: 218 35% 11%;
     --card-foreground: 210 40% 98%;
-    
+
     --popover: 218 35% 11%;
     --popover-foreground: 210 40% 98%;
-    
-    --radius-sm: 0.75rem; /* 12px */
-    --radius-lg: 1.25rem; /* 20px */
-    
+
+    --radius-sm: 0.75rem;  /* 12px */
+    --radius-lg: 1.25rem;  /* 20px */
+
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-end)));
     --gradient-glass: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(99, 102, 241, 0.02));
     --gradient-surface: linear-gradient(180deg, hsl(var(--surface-elevated)), hsl(var(--surface)));
-    
+
     /* Shadows */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12);
-    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --shadow-md: 0 3px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.12);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
     --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
-    
+
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  
+
+  /* Chatbot light theme — scoped to .chatbot-scope so it never bleeds */
+  .chatbot-scope.light,
   .light {
-    --background: 0 0% 100%; /* Pure white background */
-    --foreground: 220 13% 13%; /* Dark text for readability */
-    
-    --surface: 0 0% 98%; /* Very light gray */
-    --surface-elevated: 0 0% 100%; /* White elevated surfaces */
-    --surface-chat: 240 5% 96%; /* Light chat background */
-    
-    --primary: 217 91% 60%; /* Blue primary */
-    --primary-end: 224 76% 48%; /* Gradient end */
+    --background: 0 0% 100%;
+    --foreground: 220 13% 13%;
+
+    --surface: 0 0% 98%;
+    --surface-elevated: 0 0% 100%;
+    --surface-chat: 240 5% 96%;
+
+    --primary: 217 91% 60%;
+    --primary-end: 224 76% 48%;
     --primary-foreground: 0 0% 100%;
-    
-    --accent: 142 76% 36%; /* Green accent */
+
+    --accent: 142 76% 36%;
     --accent-foreground: 0 0% 100%;
-    
-    --secondary: 220 9% 46%; /* Medium gray for secondary text */
-    --secondary-muted: 220 9% 60%; /* Lighter muted */
+
+    --secondary: 220 9% 46%;
+    --secondary-muted: 220 9% 60%;
     --secondary-foreground: 0 0% 100%;
-    
-    --border: 220 13% 91%; /* Light borders */
-    --input: 0 0% 96%; /* Light input background */
-    --ring: 217 91% 60%; /* Focus ring */
-    
+
+    --border: 220 13% 91%;
+    --input: 0 0% 96%;
+    --ring: 217 91% 60%;
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    
-    --muted: 220 13% 95%; /* Light muted background */
-    --muted-foreground: 220 9% 46%; /* Muted text */
-    
-    --card: 0 0% 100%; /* White cards */
+
+    --muted: 220 13% 95%;
+    --muted-foreground: 220 9% 46%;
+
+    --card: 0 0% 100%;
     --card-foreground: 220 13% 13%;
-    
-    --popover: 0 0% 100%; /* White popover */
+
+    --popover: 0 0% 100%;
     --popover-foreground: 220 13% 13%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     font-feature-settings: "cv11", "ss01";
   }
-  
+
   html {
     scroll-behavior: smooth;
   }
 }
+
+/* ============================================================
+   INTRO PAGE DESIGN SYSTEM
+   All variables scoped under .intro-page — never bleeds to chatbot
+   ============================================================ */
+
+/* Default (light) intro-page token values */
+.intro-page {
+  --ip-bg-primary: #ffffff;
+  --ip-bg-secondary: #f8fafc;
+  --ip-bg-tertiary: #f1f5f9;
+  --ip-surface-primary: #ffffff;
+  --ip-surface-secondary: #f8fafc;
+  --ip-surface-tertiary: #e2e8f0;
+  --ip-text-primary: #1e293b;
+  --ip-text-secondary: #475569;
+  --ip-text-tertiary: #64748b;
+  --ip-border: #e2e8f0;
+  --ip-accent: #8b5cf6;
+  --ip-accent-secondary: #a855f7;
+}
+
+/* Intro page — explicit light theme */
+.intro-page.light {
+  --ip-bg-primary: #ffffff;
+  --ip-bg-secondary: #f8fafc;
+  --ip-bg-tertiary: #f1f5f9;
+  --ip-surface-primary: #ffffff;
+  --ip-surface-secondary: #f8fafc;
+  --ip-surface-tertiary: #e2e8f0;
+  --ip-text-primary: #0f172a;
+  --ip-text-secondary: #334155;
+  --ip-text-tertiary: #64748b;
+  --ip-border: #e2e8f0;
+  --ip-accent: #7c3aed;
+  --ip-accent-secondary: #8b5cf6;
+}
+
+/* Intro page — dark theme */
+.intro-page.dark {
+  --ip-bg-primary: #000000;
+  --ip-bg-secondary: #111827;
+  --ip-bg-tertiary: #1f2937;
+  --ip-surface-primary: #111827;
+  --ip-surface-secondary: #1f2937;
+  --ip-surface-tertiary: #374151;
+  --ip-text-primary: #ffffff;
+  --ip-text-secondary: #d1d5db;
+  --ip-text-tertiary: #9ca3af;
+  --ip-border: #374151;
+  --ip-accent: #8b5cf6;
+  --ip-accent-secondary: #a855f7;
+}
+
+/* Intro page — AMOLED theme */
+.intro-page.amoled {
+  --ip-bg-primary: #000000;
+  --ip-bg-secondary: #000000;
+  --ip-bg-tertiary: #0a0a0a;
+  --ip-surface-primary: #000000;
+  --ip-surface-secondary: #0a0a0a;
+  --ip-surface-tertiary: #1a1a1a;
+  --ip-text-primary: #00ff88;
+  --ip-text-secondary: #d1d5db;
+  --ip-text-tertiary: #9ca3af;
+  --ip-border: #1a1a1a;
+  --ip-accent: #00ff88;
+  --ip-accent-secondary: #00cc6a;
+}
+
+/* Intro page — Sepia theme */
+.intro-page.sepia {
+  --ip-bg-primary: #faf7f0;
+  --ip-bg-secondary: #f4f0e6;
+  --ip-bg-tertiary: #ede7d3;
+  --ip-surface-primary: #faf7f0;
+  --ip-surface-secondary: #f4f0e6;
+  --ip-surface-tertiary: #ede7d3;
+  --ip-text-primary: #3c2e1f;
+  --ip-text-secondary: #5d4e37;
+  --ip-text-tertiary: #8b7355;
+  --ip-border: #d4c4a8;
+  --ip-accent: #b8860b;
+  --ip-accent-secondary: #cd853f;
+}
+
+/* ============================================================
+   INTRO PAGE UTILITY CLASSES (ip- prefixed)
+   Only meaningful inside .intro-page
+   ============================================================ */
+.ip-bg-primary         { background-color: var(--ip-bg-primary); }
+.ip-bg-secondary       { background-color: var(--ip-bg-secondary); }
+.ip-bg-tertiary        { background-color: var(--ip-bg-tertiary); }
+.ip-bg-surface-primary   { background-color: var(--ip-surface-primary); }
+.ip-bg-surface-secondary { background-color: var(--ip-surface-secondary); }
+.ip-bg-surface-tertiary  { background-color: var(--ip-surface-tertiary); }
+.ip-text-primary       { color: var(--ip-text-primary); }
+.ip-text-secondary     { color: var(--ip-text-secondary); }
+.ip-text-tertiary      { color: var(--ip-text-tertiary); }
+.ip-border             { border-color: var(--ip-border); }
+.ip-text-accent        { color: var(--ip-accent); }
+.ip-text-accent-secondary { color: var(--ip-accent-secondary); }
+.ip-bg-accent          { background-color: var(--ip-accent); }
+.ip-bg-accent-secondary  { background-color: var(--ip-accent-secondary); }
+.ip-text-surface-primary  { color: var(--ip-surface-primary); }
+
+/* ThemeSelector helper classes (hover states for ip-* classes) */
+.ip-theme-btn {
+  border: 1px solid var(--ip-border);
+}
+.ip-theme-btn:hover {
+  background-color: var(--ip-surface-tertiary);
+}
+.ip-border-full {
+  border: 1px solid var(--ip-border);
+}
+.ip-theme-option:hover {
+  background-color: var(--ip-surface-secondary);
+}
+
+/* ============================================================
+   GLOBAL CUSTOM UTILITIES (shared, no variable conflicts)
+   ============================================================ */
+
+/* Custom backgrounds */
+.app-bg {
+  background-image: url('/bg-image.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.register-bg {
+  background: radial-gradient(circle at 50% 0%, rgba(15,23,42,1) 0%, rgba(15,23,42,1) 45%, rgba(45,24,100,1) 70%, rgba(76,34,150,1) 85%, #4b2bbd 100%);
+  background-color: #0f172a;
+}
+
+/* Custom scrollbar (global) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #8b5cf6, #a855f7);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #7c3aed, #9333ea);
+}
+
+/* 3D Transform Utilities */
+.transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+/* ============================================================
+   SHARED GLOBAL KEYFRAMES & ANIMATIONS
+   (no variable references — safe for both pages)
+   ============================================================ */
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-20px) rotate(5deg); }
+}
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-15px) rotate(-3deg); }
+}
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-10px) rotate(8deg); }
+}
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-8px) scale(1.05); }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
+  50%       { box-shadow: 0 0 40px rgba(168, 85, 247, 0.6); }
+}
+@keyframes rotate-3d {
+  0%   { transform: rotateX(0deg) rotateY(0deg); }
+  25%  { transform: rotateX(5deg) rotateY(5deg); }
+  50%  { transform: rotateX(0deg) rotateY(10deg); }
+  75%  { transform: rotateX(-5deg) rotateY(5deg); }
+  100% { transform: rotateX(0deg) rotateY(0deg); }
+}
+@keyframes neural-pulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+}
+@keyframes grid-move {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+@keyframes loading-bar {
+  0%   { width: 0%;   transform: translateX(0); }
+  50%  { width: 70%;  transform: translateX(20%); }
+  100% { width: 100%; transform: translateX(100%); }
+}
+@keyframes border-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes border-glow {
+  0%, 100% { background: conic-gradient(from 0deg,   #8b5cf6, #a855f7, #7c3aed, #8b5cf6); }
+  25%       { background: conic-gradient(from 90deg,  #8b5cf6, #a855f7, #7c3aed, #8b5cf6); }
+  50%       { background: conic-gradient(from 180deg, #8b5cf6, #a855f7, #7c3aed, #8b5cf6); }
+  75%       { background: conic-gradient(from 270deg, #8b5cf6, #a855f7, #7c3aed, #8b5cf6); }
+}
+@keyframes border-run {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+/* Animation Classes */
+.animate-float-slow    { animation: float-slow    6s  ease-in-out infinite; }
+.animate-float-medium  { animation: float-medium  4s  ease-in-out infinite; }
+.animate-float-fast    { animation: float-fast    3s  ease-in-out infinite; }
+.animate-bounce-slow   { animation: bounce-slow   4s  ease-in-out infinite; }
+.animate-glow-pulse    { animation: glow-pulse    3s  ease-in-out infinite; }
+.animate-rotate-3d     { animation: rotate-3d     10s ease-in-out infinite; }
+.animate-neural-pulse  { animation: neural-pulse  4s  ease-in-out infinite; }
+.animate-loading-bar   { animation: loading-bar   1.5s ease-in-out infinite; }
+
+/* Custom animation delays for loading dots */
+.animate-bounce-delay-0   { animation-delay: 0ms; }
+.animate-bounce-delay-150 { animation-delay: 150ms; }
+.animate-bounce-delay-300 { animation-delay: 300ms; }
+
+/* ============================================================
+   ANIMATED BORDER EFFECTS (global, no variable refs)
+   ============================================================ */
+
+.animated-border {
+  position: relative;
+  overflow: hidden;
+}
+.animated-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  background: conic-gradient(from 0deg, #8b5cf6, #a855f7, #7c3aed, #8b5cf6);
+  border-radius: inherit;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  animation: border-spin 3s linear infinite;
+  z-index: -1;
+}
+
+.animated-border-slow {
+  position: relative;
+  overflow: hidden;
+}
+.animated-border-slow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  background: conic-gradient(from 0deg, #8b5cf6, #a855f7, #7c3aed, #c084fc, #8b5cf6);
+  border-radius: inherit;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  animation: border-spin 6s linear infinite;
+  z-index: -1;
+}
+
+.animated-border-glow {
+  position: relative;
+  overflow: hidden;
+}
+.animated-border-glow::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  padding: 3px;
+  background: conic-gradient(from 0deg, #8b5cf6, #a855f7, #7c3aed, #c084fc, #8b5cf6);
+  border-radius: inherit;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  animation: border-spin 4s linear infinite;
+  z-index: -1;
+  filter: blur(1px);
+}
+.animated-border-glow::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  background: conic-gradient(from 0deg, transparent, #8b5cf6, transparent, #a855f7, transparent);
+  border-radius: inherit;
+  animation: border-spin 8s linear infinite reverse;
+  z-index: -2;
+  filter: blur(8px);
+  opacity: 0.6;
+}
+
+.animated-running-border {
+  position: relative;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(139, 92, 246, 0.6) 50%,
+    rgba(168, 85, 247, 0.8) 55%,
+    rgba(139, 92, 246, 0.6) 60%,
+    transparent 70%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: border-run 4s linear infinite;
+  padding: 2px;
+  border-radius: inherit;
+}
+.animated-running-border::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: linear-gradient(to bottom right, rgba(17,24,39,0.95), rgba(0,0,0,0.95));
+  border-radius: inherit;
+  z-index: 1;
+}
+.animated-running-border > * {
+  position: relative;
+  z-index: 2;
+}
+
+.subtle-glow-border {
+  position: relative;
+  overflow: hidden;
+}
+.subtle-glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    transparent 30%,
+    rgba(139, 92, 246, 0.4) 45%,
+    rgba(168, 85, 247, 0.6) 50%,
+    rgba(139, 92, 246, 0.4) 55%,
+    transparent 70%,
+    transparent 100%
+  );
+  background-size: 300% 100%;
+  border-radius: inherit;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  animation: border-run 5s linear infinite;
+  z-index: -1;
+}
+.subtle-glow-border::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(139, 92, 246, 0.2) 45%,
+    rgba(168, 85, 247, 0.3) 50%,
+    rgba(139, 92, 246, 0.2) 55%,
+    transparent 65%,
+    transparent 100%
+  );
+  background-size: 300% 100%;
+  border-radius: inherit;
+  animation: border-run 5s linear infinite;
+  filter: blur(4px);
+  z-index: -2;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   CHATBOT @layer COMPONENTS & UTILITIES
+   ============================================================ */
 
 @layer components {
   /* Glass morphism effect */
@@ -136,33 +524,32 @@
     backdrop-filter: blur(12px);
     border: 1px solid hsl(var(--border));
   }
-  
-  /* Message bubbles - Updated for ChatGPT-like styling */
+
+  /* Message bubbles */
   .message-assistant {
     @apply bg-surface-elevated border border-border text-foreground;
     box-shadow: var(--shadow-sm);
   }
-  
+
   .message-user {
     @apply bg-gradient-primary text-primary-foreground;
     box-shadow: var(--shadow-sm);
   }
-  
+
   /* Hover animations */
   .hover-lift {
     @apply transition-all duration-300 hover:translate-y-[-6px];
     box-shadow: var(--shadow-sm);
   }
-  
   .hover-lift:hover {
     box-shadow: var(--shadow-lg);
   }
-  
+
   /* Focus styles */
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
   }
-  
+
   /* Sidebar glow effect */
   .sidebar-item-glow:hover {
     box-shadow: inset 4px 0 0 hsl(var(--primary)), var(--shadow-sm);
@@ -171,36 +558,22 @@
 }
 
 @layer utilities {
-  /* Custom scrollbar */
+  /* Custom scrollbar for chatbot */
   .scrollbar-custom {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted)) transparent;
   }
-  
   .scrollbar-custom::-webkit-scrollbar {
     width: 6px;
   }
-  
   .scrollbar-custom::-webkit-scrollbar-track {
     background: transparent;
   }
-  
   .scrollbar-custom::-webkit-scrollbar-thumb {
     background: hsl(var(--muted));
     border-radius: 3px;
   }
-  
   .scrollbar-custom::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground));
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
   }
 }

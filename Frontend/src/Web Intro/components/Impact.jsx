@@ -6,38 +6,38 @@ import ShinyCard from '../../../components/nurui/shiny-card';
 const Impact = () => {
   const impactGroups = [
     {
-      icon: <Users className="w-8 h-8 text-accent transition-transform duration-300 group-hover:scale-125 group-hover:text-accent" />,
+      icon: <Users className="w-8 h-8 ip-text-accent transition-transform duration-300 group-hover:scale-125" />,
       title: 'Citizens',
       description: 'Empowering everyday people with legal knowledge',
     },
     {
-      icon: <GraduationCap className="w-8 h-8 text-accent-secondary transition-transform duration-300 group-hover:scale-125 group-hover:text-accent" />,
+      icon: <GraduationCap className="w-8 h-8 ip-text-accent-secondary transition-transform duration-300 group-hover:scale-125" />,
       title: 'Students',
       description: 'Making legal education accessible and understandable',
     },
     {
-      icon: <Scale className="w-8 h-8 text-accent transition-transform duration-300 group-hover:scale-125 group-hover:text-accent" />,
+      icon: <Scale className="w-8 h-8 ip-text-accent transition-transform duration-300 group-hover:scale-125" />,
       title: 'Lawyers',
       description: 'Streamlining legal research and client communication',
     },
     {
-      icon: <Heart className="w-8 h-8 text-accent-secondary transition-transform duration-300 group-hover:scale-125 group-hover:text-accent" />,
+      icon: <Heart className="w-8 h-8 ip-text-accent-secondary transition-transform duration-300 group-hover:scale-125" />,
       title: 'NGOs',
       description: 'Supporting social justice initiatives with legal clarity',
     }
   ];
 
   return (
-    <section id="impact" className="py-20 bg-gradient-to-b from-bg-primary to-bg-secondary relative overflow-hidden">
+    <section id="impact" className="py-20 bg-gradient-to-b from-[var(--ip-bg-primary)] to-[var(--ip-bg-secondary)] relative overflow-hidden">
       {/* AI 3D Elements */}
       <AI3DElements variant="quantum" />
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold ip-text-primary mb-6">
             Helping citizens, students, lawyers, NGOs access justice —{' '}
-            <span className="bg-gradient-to-r from-accent to-accent-secondary bg-clip-text text-transparent font-extrabold">
-              <span className="text-text-primary">simple, fast, and inclusive</span>
+            <span className="bg-gradient-to-r from-[var(--ip-accent)] to-[var(--ip-accent-secondary)] bg-clip-text text-transparent font-extrabold">
+              <span className="ip-text-primary">simple, fast, and inclusive</span>
             </span>
           </h2>
         </div>

@@ -12,7 +12,7 @@ const ThemeSelector = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-surface-secondary border border-border rounded-lg text-text-primary hover:bg-surface-tertiary transition-all duration-300 transform hover:scale-105"
+        className="ip-theme-btn flex items-center gap-2 px-4 py-2 ip-bg-surface-secondary ip-border-full rounded-lg ip-text-primary transition-all duration-300 transform hover:scale-105"
       >
         <Palette className="w-4 h-4" />
         <span className="hidden sm:inline">{currentTheme?.name}</span>
@@ -20,7 +20,7 @@ const ThemeSelector = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 bg-surface-primary border border-border rounded-lg shadow-xl z-50 min-w-[160px] overflow-hidden">
+        <div className="absolute top-full right-0 mt-2 ip-bg-surface-primary ip-border-full rounded-lg shadow-xl z-50 min-w-[160px] overflow-hidden">
           {themes.map((themeOption) => (
             <button
               key={themeOption.id}
@@ -28,8 +28,8 @@ const ThemeSelector = () => {
                 setTheme(themeOption.id);
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface-secondary transition-colors duration-200 ${
-                theme === themeOption.id ? 'bg-surface-secondary text-accent' : 'text-text-primary'
+              className={`ip-theme-option w-full flex items-center gap-3 px-4 py-3 text-left transition-colors duration-200 ${
+                theme === themeOption.id ? 'ip-bg-surface-secondary ip-text-accent' : 'ip-text-primary'
               }`}
             >
               <span className="text-lg">{themeOption.icon}</span>
