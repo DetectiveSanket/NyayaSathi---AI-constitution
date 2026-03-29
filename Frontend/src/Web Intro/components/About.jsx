@@ -1,9 +1,5 @@
-import { lazy, Suspense } from 'react';
 import React from 'react';
 import { Award, Users, Zap, Github, Twitter, Linkedin } from 'lucide-react';
-import Loading from '../../shared/Loading';
-
-const AI3DElements = lazy(() => import('./AI3DElements'));
 
 const teamMembers = [
   { name: 'Sanket Talekar', role: 'Full-Stack Dev', avatar: 'ST' },

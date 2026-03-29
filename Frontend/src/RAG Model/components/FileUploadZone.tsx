@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useFileManager } from "../contexts/FileManagerContext";
 import { Upload, File, X } from "lucide-react";
 import { Progress } from "../components/ui/progress";
@@ -20,17 +20,19 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose, onDocumentUploa
   const { uploadFiles, uploadProgress } = useFileManager();
   const dispatch = useDispatch();
   const { toast } = useToast();
-  
-  const { uploadAndProcess, loading: processing, progress: uploadProgressValue } = useDocumentUpload({
-    onSuccess: (result) => {
+  // Track the current file name being uploaded so we can save it to Redux on success
+  const currentFileNameRef = useRef<string>("Uploaded Document");
+
+  const { uploadAndProcess, loading: processing, progress: uploadProgressValue } = (useDocumentUpload as any)({
+    onSuccess: (result: any) => {
       toast({
         title: "Document processed",
         description: `Document uploaded and processed successfully (${result.chunksCount} chunks)`,
       });
-      // Add to documents list
+      // Add to documents list — store real file name captured before upload
       dispatch(addDocument({
         _id: result.documentId,
-        filename: "Uploaded Document",
+        filename: currentFileNameRef.current,
         processed: true,
       }));
       // Notify parent component about document upload
@@ -39,7 +41,7 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose, onDocumentUploa
       }
       if (onClose) onClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Upload failed",
         description: error.message || "Failed to upload and process document",
@@ -78,11 +80,12 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose, onDocumentUploa
     if (documentFiles.length > 0) {
       // Use RAG document upload for PDF/DOCX
       for (const file of documentFiles) {
+        currentFileNameRef.current = file.name;
         await uploadAndProcess(file);
       }
     } else {
       // Use regular file manager for other files
-    await uploadFiles(files);
+      await uploadFiles(files);
     }
   }, [uploadFiles, maxFiles, uploadAndProcess]);
 
@@ -101,11 +104,12 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose, onDocumentUploa
       if (documentFiles.length > 0) {
         // Use RAG document upload for PDF/DOCX
         for (const file of documentFiles) {
+          currentFileNameRef.current = file.name;
           await uploadAndProcess(file);
         }
       } else {
         // Use regular file manager for other files
-      await uploadFiles(files);
+        await uploadFiles(files);
       }
     }
   }, [uploadFiles, uploadAndProcess]);

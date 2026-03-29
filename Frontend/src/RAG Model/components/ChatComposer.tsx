@@ -374,8 +374,18 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
                 <div className="flex items-center gap-2 flex-wrap justify-between">
                 <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="secondary" className="bg-surface-chat/60 backdrop-blur-sm border-border/30 text-xs font-medium px-2 py-0.5">
-                    <FileText className="w-3 h-3 mr-1.5 text-primary" />
-                    <span className="text-foreground/90">Document: IndianPenalCode_Sections.pdf</span>
+                      <FileText className   ={`w-3 h-3 mr-1.5 ${selectedDocumentId ? 'text-primary' : 'text-muted-foreground'}`} />
+                        {
+                            (() => {
+                                if (!selectedDocumentId) {
+                                    return <span className="text-muted-foreground italic">No file uploaded yet</span>;
+                                }
+
+                                const doc = ragState.documents?.find((d: any) => d._id === selectedDocumentId);
+                                const name = doc?.filename || doc?.name || selectedDocumentId;
+                                return <span className="text-foreground/90">Document: {name}</span>;
+                            })()
+                        }
                     </Badge>
                 </div>
                 

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Users, GraduationCap, Scale, Heart } from 'lucide-react';
-import ShinyCard from '../../../components/nurui/shiny-card';
 
 const impactGroups = [
   {

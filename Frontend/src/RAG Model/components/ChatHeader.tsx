@@ -27,6 +27,7 @@ import {
 import { useSummarize } from "../../hooks/useSummarize.js";
 import { useSelector } from "react-redux";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Link } from "react-router-dom";
 
 interface ChatHeaderProps {
   onExportChat?: (format: 'txt' | 'pdf') => void;
@@ -90,7 +91,7 @@ const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId }: ChatHeaderPr
         <div className="flex items-center space-x-3">
           <Button variant="ghost" className="text-sm font-medium hover:bg-surface-elevated">
             <Home className="w-4 h-4 mr-2" />
-            NyayaSathi
+            <Link to="/" className="text-sm font-medium hover:bg-surface-elevated">NyayaSathi</Link>
           </Button>
         </div>
 
