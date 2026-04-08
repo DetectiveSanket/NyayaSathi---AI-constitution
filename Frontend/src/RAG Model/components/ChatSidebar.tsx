@@ -59,6 +59,8 @@ import {
   setCurrentConversationId,
   removeConversation,
   setUserName,
+  setConversations,
+  setMessages,
 } from "../../store/ragSlice.js";
 import { logoutUser } from "../../features/auth/authThunks.js";
 import { localLogout } from "../../store/authSlice.js";
@@ -588,10 +590,14 @@ const ChatSidebar = ({
                 className="w-full justify-start hover:bg-surface-chat text-destructive"
                 onClick={async () => {
                   setIsProfileOpen(false);
+                  // Clear RAG state immediately so the next user doesn't see stale data
+                  dispatch(setConversations([]));
+                  dispatch(setMessages([]));
+                  dispatch(setCurrentConversationId(null));
                   try {
                     await dispatch(logoutUser() as any).unwrap();
                     dispatch(localLogout());
-                    // Clear RAG token as well
+                    // Clear browser-local tokens
                     localStorage.removeItem("rag_public_session_token");
                     localStorage.removeItem("rag_current_conversation_id");
                     toast({

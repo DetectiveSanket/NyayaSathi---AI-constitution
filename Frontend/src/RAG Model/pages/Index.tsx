@@ -189,49 +189,45 @@ const Index = () => {
     }
   };
 
-  // Initialize RAG session and load conversations on mount
+  // Initialize RAG session on mount (once)
   useEffect(() => {
     const initialize = async () => {
-      // Ensure messagesByConversation is initialized (for migration from old persisted state)
+      // Ensure messagesByConversation is initialized (migration guard)
       dispatch(initializeMessagesByConversation());
-      
       await initRagSession();
-      
-      // Set user name from auth state if available
-      if (authState?.user?.name) {
-        dispatch(setUserName(authState.user.name));
-      } else if (authState?.user?.email) {
-        dispatch(setUserName(authState.user.email.split("@")[0]));
-      } else {
-        dispatch(setUserName("Guest"));
-      }
-
-      // Load conversations
-      await loadConversations();
-
-      // Try to restore conversation from localStorage or URL
-      // Only restore if we have a saved conversationId AND it matches the current one
-      // AND we're not in the middle of creating a new chat
-      if (!isCreatingNewChat) {
-        const savedConversationId = localStorage.getItem("rag_current_conversation_id");
-        const currentConvId = ragState.currentConversationId || conversationId;
-        
-        if (savedConversationId && currentConvId && savedConversationId === currentConvId) {
-          // Only restore if the conversationId matches what's in state
-          await restoreConversation(savedConversationId);
-        } else if (!savedConversationId || !currentConvId) {
-          // If no saved conversation or no current conversation, start with empty messages
-          dispatch(setMessages([]));
-          dispatch(clearMessages());
-        }
-      }
     };
-    
-    // Call async function
     initialize().catch((error) => {
-      console.error("Failed to initialize:", error);
+      console.error("Failed to initialize RAG session:", error);
     });
   }, []); // Only run on mount
+
+  // Reload conversations whenever the authenticated user changes.
+  // This covers: first login, logout+login as same or different user,
+  // opening in a new browser tab where the JWT is already in redux-persist.
+  useEffect(() => {
+    if (!authState?.isAuthenticated || !authState?.user) {
+      // Not logged in — clear conversation state so we don’t show stale data
+      dispatch(setConversations([]));
+      dispatch(setMessages([]));
+      dispatch(setCurrentConversationId(null));
+      setConversationId(null);
+      return;
+    }
+
+    // Set user name from auth state
+    if (authState?.user?.name) {
+      dispatch(setUserName(authState.user.name));
+    } else if (authState?.user?.email) {
+      dispatch(setUserName(authState.user.email.split("@")[0]));
+    }
+
+    // Load this user’s conversations from the backend.
+    // We purposely do NOT auto-restore the last conversation from localStorage
+    // because localStorage is per-browser and breaks the cross-browser / incognito
+    // requirement.  The user can click any conversation in the sidebar to resume it.
+    loadConversations();
+  }, [authState?.isAuthenticated, authState?.user?._id]); // Runs on login / user switch
+
 
   // Update user name when auth state changes
   useEffect(() => {

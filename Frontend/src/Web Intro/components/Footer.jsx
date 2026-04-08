@@ -108,7 +108,7 @@ const Footer = () => {
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4"
           style={{ borderTop: '1px solid var(--ip-border)' }}>
           <p className="text-sm" style={{ color: 'var(--ip-text-tertiary)' }}>
-            © 2025 NyayaSathi. All rights reserved.
+             &copy; {new Date().getFullYear()} NyayaSathi. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             {['Privacy Policy', 'Terms of Service', 'Support'].map((label) => (

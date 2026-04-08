@@ -2,6 +2,24 @@
 import api, { getRagToken, createRagRequest } from "./api.js";
 
 /**
+ * Returns the user's real Authorization JWT if present (preferred),
+ * otherwise falls back to the public RAG session token.
+ *
+ * For conversation endpoints the REAL JWT must be used so conversations
+ * are scoped to the logged-in user across browsers and sessions.
+ */
+function getEffectiveToken() {
+  // Real JWT is stored in axios defaults after login (see setAuthHeader in api.js)
+  const authHeader = api.defaults.headers.common["Authorization"];
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    return authHeader.replace("Bearer ", "");
+  }
+  // Fallback: public RAG session token (for anonymous visitors)
+  return getRagToken();
+}
+
+
+/**
  * Query RAG endpoint - supports auto and contextual modes
  * @param {string} query - User question
  * @param {Object} options - { topK, documentId, language, conversationId }
@@ -10,7 +28,7 @@ import api, { getRagToken, createRagRequest } from "./api.js";
 export async function queryRag(query, options = {}) {
   try {
     const { topK = 4, documentId, language = "english", conversationId } = options;
-    const ragToken = getRagToken();
+    const ragToken = getEffectiveToken(); // use real JWT if logged in
     
     const response = await api.post(
       "/rag/query",
@@ -244,13 +262,13 @@ export async function listDocuments() {
  */
 export async function createNewConversation(title = null) {
   try {
-    const ragToken = getRagToken();
+    const token = getEffectiveToken();
     const response = await api.post(
       "/rag/conversations",
       { title },
       {
         headers: {
-          Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
+          Authorization: token ? `Bearer ${token}` : undefined,
         },
       }
     );
@@ -262,15 +280,16 @@ export async function createNewConversation(title = null) {
 }
 
 /**
- * List user's conversations
+ * List user's conversations — ALWAYS uses the real JWT so the list is
+ * scoped to the authenticated user, not an anonymous session.
  * @returns {Promise<Array<Conversation>>}
  */
 export async function listConversations() {
   try {
-    const ragToken = getRagToken();
+    const token = getEffectiveToken();
     const response = await api.get("/rag/conversations", {
       headers: {
-        Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
+        Authorization: token ? `Bearer ${token}` : undefined,
       },
     });
     return response.data.conversations || [];
@@ -287,10 +306,10 @@ export async function listConversations() {
  */
 export async function getConversation(conversationId) {
   try {
-    const ragToken = getRagToken();
+    const token = getEffectiveToken();
     const response = await api.get(`/rag/conversations/${conversationId}`, {
       headers: {
-        Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
+        Authorization: token ? `Bearer ${token}` : undefined,
       },
     });
     return response.data;
@@ -307,10 +326,10 @@ export async function getConversation(conversationId) {
  */
 export async function getConversationMessages(conversationId) {
   try {
-    const ragToken = getRagToken();
+    const token = getEffectiveToken();
     const response = await api.get(`/rag/conversations/${conversationId}/messages`, {
       headers: {
-        Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
+        Authorization: token ? `Bearer ${token}` : undefined,
       },
     });
     return response.data.messages || [];
@@ -328,13 +347,13 @@ export async function getConversationMessages(conversationId) {
  */
 export async function updateConversation(conversationId, title) {
   try {
-    const ragToken = getRagToken();
+    const token = getEffectiveToken();
     const response = await api.put(
       `/rag/conversations/${conversationId}`,
       { title },
       {
         headers: {
-          Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
+          Authorization: token ? `Bearer ${token}` : undefined,
         },
       }
     );
@@ -352,10 +371,10 @@ export async function updateConversation(conversationId, title) {
  */
 export async function deleteConversation(conversationId) {
   try {
-    const ragToken = getRagToken();
+    const token = getEffectiveToken();
     await api.delete(`/rag/conversations/${conversationId}`, {
       headers: {
-        Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
+        Authorization: token ? `Bearer ${token}` : undefined,
       },
     });
   } catch (error) {
