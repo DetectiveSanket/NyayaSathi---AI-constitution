@@ -57,18 +57,18 @@ export async function queryRag(query, options = {}) {
  * @param {string} documentId - Document ID
  * @param {string} length - "short" | "medium" | "detailed"
  * @param {string} language - "english" | "hindi" | "marathi"
+ * @param {string} [conversationId] - Ongoing conversation ID
  * @returns {Promise<{summary, summaryType, chunksUsed, language}>}
  */
-export async function summarizeDocument(documentId, length = "short", language = "english") {
+export async function summarizeDocument(documentId, length = "short", language = "english", conversationId = null) {
   try {
     const ragToken = getRagToken();
+    const payload = { documentId, length, language };
+    if (conversationId) payload.conversationId = conversationId;
+    
     const response = await api.post(
       "/rag/summarize",
-      {
-        documentId,
-        length,
-        language,
-      },
+      payload,
       {
         headers: {
           Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
@@ -138,13 +138,17 @@ export async function processDocument(documentId) {
  * Get presigned URL for document upload
  * @param {string} filename - File name
  * @param {string} contentType - MIME type
+ * @param {string} [conversationId] - Ongoing conversation ID.
  * @returns {Promise<{presignedUrl, s3Key, documentId}>}
  */
-export async function getPresignedUrl(filename, contentType) {
+export async function getPresignedUrl(filename, contentType, conversationId) {
   try {
     const ragToken = getRagToken();
+    const params = { filename, contentType };
+    if (conversationId) params.conversationId = conversationId;
+    
     const response = await api.get("/docs/presign", {
-      params: { filename, contentType },
+      params,
       headers: {
         Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
       },
@@ -244,8 +248,13 @@ export async function getDocument(documentId) {
  */
 export async function listDocuments() {
   try {
-    const response = await api.get("/docs");
-    return response.data;
+    const token = getEffectiveToken();
+    const response = await api.get("/docs/list", {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : undefined,
+      },
+    });
+    return response.data.documents || response.data || [];
   } catch (error) {
     // If endpoint doesn't exist, return empty array
     if (error.response?.status === 404) {
@@ -383,3 +392,27 @@ export async function deleteConversation(conversationId) {
   }
 }
 
+/**
+ * List all documents uploaded by the authenticated user.
+ * Used by the document-selector pill UI in ChatComposer.
+ * @param {string} [conversationId] - Filter by conversation context.
+ * @returns {Promise<Array<{ _id, filename, contentType, size, processed, createdAt }>>}
+ */
+export async function listUserDocuments(conversationId) {
+  try {
+    const token = getEffectiveToken();
+    const params = {};
+    if (conversationId) params.conversationId = conversationId;
+    
+    const response = await api.get("/docs/list", {
+      params,
+      headers: {
+        Authorization: token ? `Bearer ${token}` : undefined,
+      },
+    });
+    return response.data.documents || [];
+  } catch (error) {
+    const message = error.response?.data?.message || error.message || "Failed to list documents";
+    throw new Error(message);
+  }
+}

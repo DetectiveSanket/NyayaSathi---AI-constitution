@@ -13,7 +13,7 @@ export function useSummarize(options = {}) {
   const abortControllerRef = useRef(null);
 
   const summarize = useCallback(
-    async (documentId, length = "short", language = "english") => {
+    async (documentId, length = "short", language = "english", conversationId = null) => {
       // Cancel previous request if exists
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -24,7 +24,7 @@ export function useSummarize(options = {}) {
       setError(null);
 
       try {
-        const result = await summarizeDocument(documentId, length, language);
+        const result = await summarizeDocument(documentId, length, language, conversationId);
         if (options.onSuccess) {
           options.onSuccess(result);
         }

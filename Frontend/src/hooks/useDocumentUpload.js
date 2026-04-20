@@ -1,6 +1,6 @@
-// src/hooks/useDocumentUpload.js - Hook for document upload and processing
 import { useState, useCallback, useRef } from "react";
 import { getPresignedUrl, uploadToS3, processDocument } from "../services/ragService.js";
+import { useSelector } from "react-redux";
 
 /**
  * Hook for uploading and processing documents
@@ -12,6 +12,7 @@ export function useDocumentUpload(options = {}) {
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(0);
   const abortControllerRef = useRef(null);
+  const currentConversationId = useSelector((state) => state.rag.currentConversationId);
 
   const uploadAndProcess = useCallback(
     async (file) => {
@@ -32,7 +33,7 @@ export function useDocumentUpload(options = {}) {
         let presignedUrl;
         
         try {
-          const presignResult = await getPresignedUrl(file.name, file.type);
+          const presignResult = await getPresignedUrl(file.name, file.type, currentConversationId);
           presignedUrl = presignResult.presignedUrl;
           documentId = presignResult.documentId;
         } catch (presignError) {
@@ -83,7 +84,7 @@ export function useDocumentUpload(options = {}) {
         abortControllerRef.current = null;
       }
     },
-    [options]
+    [options, currentConversationId]
   );
 
   const cancel = useCallback(() => {

@@ -1,19 +1,24 @@
 // src/services/api.js
 import axios from "axios";
 
-// ✅ Define dev & prod URLs (auto-switch)
-const DEV_API_URL = "http://localhost:5000/api/v1/";
-const PROD_API_URL = "https://your-production-domain.com/api/v1/";
-
-// Choose correct base URL
+/**
+ * Base API URL — resolved in priority order:
+ *  1. VITE_API_BASE_URL (set in .env for both dev and prod)
+ *  2. localhost fallback for local development
+ *
+ * For Render/Netlify/Vercel: set VITE_API_BASE_URL=https://your-backend.onrender.com/api/v1/
+ */
 const BASE_URL =
-  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? DEV_API_URL : PROD_API_URL);
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV
+    ? "http://localhost:5000/api/v1/"
+    : "/api/v1/"); // Relative fallback (same-origin proxy)
 
 // ✅ Create reusable axios instance
-
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // needed if you use cookies for refresh tokens
+  withCredentials: true, // Needed for cookies (refresh token HttpOnly cookie)
+  timeout: 30000, // 30 second timeout for large LLM responses
 });
 
 // ✅ Dynamically attach/remove Authorization header

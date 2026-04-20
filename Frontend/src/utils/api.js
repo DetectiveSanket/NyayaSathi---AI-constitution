@@ -1,20 +1,10 @@
 
-//* Default API URL
-// export const API_URL = 'http://localhost:5000/api/v1/';
-
-// Choose base URL dynamically
-const DEV_API_URL = "http://localhost:5000/api/v1/"; // second way if no env variable is set
-const PROD_API_URL = "https://your-production-domain.com/api/v1/"; // replace with your production URL
-
+//* API Base URL — reads from env var VITE_API_BASE_URL (set in .env)
+// Local: http://localhost:5000/api/v1/
+// Production: https://your-backend.onrender.com/api/v1/
 export const API_URL =
-  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? DEV_API_URL : PROD_API_URL);
-
-// export const User_Registeratoin_URL = import.meta.env.VITE_REGISTER_URL; // example of custom env variable usage
-
-/* 
-   🧠 ⁡⁢⁣⁣𝟮. 𝗔𝗽𝗶 𝗘𝗻𝗱𝗽𝗼𝗶𝗻𝘁𝘀 ⁡  
-      export const REGISTER_URL = `${API_URL}${User_Registeratoin_URL}`;
-*/
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? "http://localhost:5000/api/v1/" : "/api/v1/");
 
 //^ User related endpoints
 export const REGISTER_URL = `${API_URL}user/register`;

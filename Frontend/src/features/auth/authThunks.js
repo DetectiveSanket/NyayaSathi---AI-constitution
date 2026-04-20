@@ -162,16 +162,15 @@ export const fetchProfile = createAsyncThunk(
   }
 );
 
-// Update profile (optionally with avatar FormData)
+// Update profile (name, avatar URL, etc.)
 export const updateProfile = createAsyncThunk(
     "auth/updateProfile",
     async (formData, { rejectWithValue }) => {
         try {
-            // formData can be FormData(), with avatar file appended if used
-            const { data } = await api.put("/api/users/update-profile", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-        });
-            return data;
+            // PUT /user/me — accepts JSON { name, avatar }
+            const { data } = await api.put(UPDATE_USER_PROFILE_URL, formData);
+            // Backend returns { message, user } — return user object for authSlice
+            return data.user || data;
         } catch (err) {
             return rejectWithValue(err.response?.data?.message || err.message);
         }

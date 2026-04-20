@@ -1,6 +1,10 @@
 // Backend/services/conversationService.js - Conversation management service
 import Conversation from "../models/conversation.js";
 import ConversationMessage from "../models/conversationMessage.js";
+import Document from "../models/document.js";
+import DocumentChunk from "../models/documentChunk.js";
+import { deleteObjectFromS3 } from "./s3Client.js";
+import { deleteDocumentChunksFromPinecone } from "./embeddingService.js";
 import { getRedisClient } from "./redisClient.js";
 import crypto from "crypto";
 
@@ -156,10 +160,23 @@ export async function updateConversation(conversationId, userId, updates) {
  * Delete conversation
  */
 export async function deleteConversation(conversationId, userId) {
-  // Delete messages first
+  // 1. Fetch related documents
+  const docs = await Document.find({ conversationId }).lean();
+  
+  // 2. Erase each document entirely (S3, Pinecone, Chunks)
+  for (const doc of docs) {
+    if (doc.s3Key) await deleteObjectFromS3(doc.s3Key);
+    await deleteDocumentChunksFromPinecone(doc._id);
+    await DocumentChunk.deleteMany({ documentId: doc._id });
+  }
+
+  // 3. Delete Document references
+  await Document.deleteMany({ conversationId });
+
+  // 4. Delete messages first
   await ConversationMessage.deleteMany({ conversationId, userId });
 
-  // Delete conversation
+  // 5. Delete conversation metadata
   const result = await Conversation.deleteOne({ conversationId, userId });
 
   // Invalidate Redis cache

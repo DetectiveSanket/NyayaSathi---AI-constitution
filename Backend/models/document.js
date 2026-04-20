@@ -9,6 +9,11 @@ const DocumentSchema = new mongoose.Schema({
         required: false 
     }, // optional: owner
 
+    conversationId: {
+        type: String,
+        required: false
+    }, // Context bound
+
     filename: { 
         type: String, 
         required: true 

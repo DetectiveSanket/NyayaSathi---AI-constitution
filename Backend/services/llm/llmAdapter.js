@@ -56,41 +56,41 @@ export async function googleGenerate(
             return result?.response?.text() ?? "";
 
         } catch (err) {
-        // Check for quota exceeded error (429)
-        if (err.status === 429 || err.message?.includes("quota") || err.message?.includes("429")) {
-            console.warn(`⚠️ LLM Adapter: Model [${model}] hit quota limit (429). Trying next fallback...`);
-            lastError = err;
-            continue; // Proceed to the next model in the chain
-        }
-        
-        // console.error(`❌ Gemini generation error with model [${model}]:`, err);
-        
-        // // Check for network/connection errors
-        // if (err.message?.includes("fetch") || err.message?.includes("network")) {
-        //   const error = new Error("Unable to connect to AI service. Please check your internet connection.");
-        //   error.code = "NETWORK_ERROR";
-        //   error.status = 503;
-        //   throw error;
-        // }  
+            // Check for quota exceeded (429) or high demand/service unavailable (503/500)
+            const isQuotaOrOverload = 
+                err.status === 429 || 
+                err.status === 503 || 
+                err.status === 500 ||
+                err.message?.includes("quota") || 
+                err.message?.includes("429") ||
+                err.message?.includes("503") ||
+                err.message?.includes("high demand") ||
+                err.message?.includes("Service Unavailable") ||
+                err.message?.includes("overloaded");
 
-        // ✅ FIXED - 404 goes to next fallback, only true network errors throw
-        console.error(`❌ Gemini generation error with model [${model}]:`, err);
+            if (isQuotaOrOverload) {
+                console.warn(`⚠️ LLM Adapter: Model [${model}] overloaded or quota hit (${err.status || 'high demand'}). Trying next fallback...`);
+                lastError = err;
+                continue; // Proceed to the next model in the chain
+            }
 
-        // 404 = model not found, try next fallback instead of crashing
-        if (err.status === 404) {
-            console.warn(`⚠️ LLM Adapter: Model [${model}] not found (404). Trying next fallback...`);
-            lastError = err;
-            continue;
-        }
+            console.error(`❌ Gemini generation error with model [${model}]:`, err);
 
-        // Only true network errors (no status code at all)
-        if (!err.status && (err.message?.includes("network") || err.message?.includes("ECONNREFUSED"))) {
-            const error = new Error("Unable to connect to AI service. Please check your internet connection.");
-            error.code = "NETWORK_ERROR";
-            error.status = 503;
-            throw error;
-        }
-        
+            // 404 = model not found, try next fallback instead of crashing
+            if (err.status === 404) {
+                console.warn(`⚠️ LLM Adapter: Model [${model}] not found (404). Trying next fallback...`);
+                lastError = err;
+                continue;
+            }
+
+            // Only true network errors (no status code at all)
+            if (!err.status && (err.message?.includes("network") || err.message?.includes("ECONNREFUSED") || err.message?.includes("fetch"))) {
+                const error = new Error("Unable to connect to AI service. Please check your internet connection.");
+                error.code = "NETWORK_ERROR";
+                error.status = 503;
+                throw error;
+            }
+            
             // Generic error
             const error = new Error("AI model failed to generate response. Please try again.");
             error.code = "GENERATION_ERROR";

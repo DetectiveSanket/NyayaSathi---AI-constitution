@@ -102,3 +102,21 @@ export async function fetchDocumentChunksFromPinecone({ documentId, maxChunks = 
 
   return response.matches || [];
 }
+
+export async function deleteDocumentChunksFromPinecone(documentId) {
+  if (!documentId) return false;
+  try {
+    console.log(`📌 Deleting Pinecone vectors for document: ${documentId}`);
+    const matches = await fetchDocumentChunksFromPinecone({ documentId, maxChunks: 10000 });
+    const idsToDelete = matches.map(m => m.id).filter(id => !!id);
+    
+    if (idsToDelete.length > 0) {
+      await index.deleteMany(idsToDelete);
+      console.log(`✅ Deleted ${idsToDelete.length} vectors from Pinecone for document: ${documentId}`);
+    }
+    return true;
+  } catch (err) {
+    console.error(`❌ Failed to delete Pinecone vectors for document ${documentId}:`, err);
+    return false;
+  }
+}

@@ -1,0 +1,140 @@
+## NyayaSathi - Render Deployment Configuration
+## Backend: Node.js Web Service  |  Frontend: Static Site
+##
+## HOW TO DEPLOY:
+##  1. Push this repo to GitHub
+##  2. Go to https://dashboard.render.com → New → Blueprint
+##  3. Point to this repo — Render reads render.yaml automatically
+##  4. Set all environment variables in the Render dashboard for each service
+##     (the ones marked [REQUIRED] below)
+##
+## IMPORTANT: Set VITE_API_BASE_URL in the Frontend service env vars to point
+##            to your Backend service URL, e.g.:
+##            https://nyayasathi-backend.onrender.com/api/v1/
+
+services:
+  # ────────────────────────────────────────────────────────────────
+  # BACKEND - Node.js Web Service
+  # ────────────────────────────────────────────────────────────────
+  - type: web
+    name: nyayasathi-backend
+    runtime: node
+    rootDir: Backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free          # Change to 'starter' or higher for production
+    autoDeploy: true    # Auto-deploy on git push to main branch
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      # CORS: comma-separated list of allowed frontend origins
+      # [REQUIRED] Set this to your Render frontend URL after deploying frontend
+      - key: FRONTEND_URL
+        value: https://nyayasathi-frontend.onrender.com,http://localhost:5173
+      # [REQUIRED] MongoDB Atlas connection string
+      - key: MONGO_URI
+        sync: false
+      # [REQUIRED] JWT Secrets - use strong random strings in production
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      # [REQUIRED] Google AI API Key
+      - key: GOOGLE_API_KEY
+        sync: false
+      # AI Model Configuration
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: RAG_MODEL
+        value: gemini-2.5-flash
+      - key: EMBEDDING_MODEL
+        value: gemini-embedding-001
+      - key: TOP_K
+        value: "5"
+      - key: LLM_PROVIDER
+        value: google
+      # [REQUIRED] AWS S3 Configuration
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_BUCKET
+        value: nyayasathi
+      - key: S3_REGION
+        value: ap-south-1
+      # [REQUIRED] Pinecone Configuration
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: PINECONE_ENV
+        value: aped-4627-b74a
+      - key: PINECONE_INDEX
+        value: nyayasathi-docs
+      # [REQUIRED] Redis Configuration (use Render Redis or external like Upstash)
+      - key: REDIS_URL
+        sync: false
+      - key: REDIS_MEMORY_LIMIT
+        value: "30"
+      # [REQUIRED] SMTP / Email Configuration
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_SERVICE
+        value: gmail
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_MAIL
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: CONTACT_TO_EMAIL
+        sync: false
+      - key: CONTACT_FROM_NAME
+        value: NyayaSathi
+      - key: CONTACT_AUTOREPLY
+        value: "true"
+      # Rate limiting
+      - key: RATE_LIMIT_MAX
+        value: "100"
+
+  # ────────────────────────────────────────────────────────────────
+  # FRONTEND - Static Site (Vite build)
+  # ────────────────────────────────────────────────────────────────
+  - type: web
+    name: nyayasathi-frontend
+    runtime: static
+    rootDir: Frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    routes:
+      # SPA catch-all: redirect all 404s to index.html so React Router works
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # [REQUIRED] Point to your deployed backend URL
+      - key: VITE_API_BASE_URL
+        value: https://nyayasathi-backend.onrender.com/api/v1/
+      # Individual endpoint paths (relative to VITE_API_BASE_URL)
+      - key: VITE_REGISTER_URL
+        value: user/register
+      - key: VITE_LOGIN_URL
+        value: user/login
+      - key: VITE_LOGOUT_URL
+        value: user/logout
+      - key: VITE_REFRESH_TOKEN_URL
+        value: user/refresh-token
+      - key: VITE_FORGOT_PASSWORD_URL
+        value: user/forgot-password
+      - key: VITE_RESET_PASSWORD_URL
+        value: user/reset-password
+      - key: VITE_VERIFY_EMAIL_URL
+        value: user/verify-email
+      - key: VITE_RESEND_OTP_URL
+        value: user/resend-otp
+      - key: VITE_GET_USER_PROFILE_URL
+        value: user/me
+      - key: VITE_UPDATE_USER_PROFILE_URL
+        value: user/me

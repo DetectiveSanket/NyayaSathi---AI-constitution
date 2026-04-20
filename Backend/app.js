@@ -25,29 +25,50 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(cookieParser());
 
-const frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
+// Support multiple allowed origins (comma-separated in FRONTEND_URL env var)
+// e.g. FRONTEND_URL=https://nyayasathi.netlify.app,http://localhost:5173
+const rawOrigins = process.env.FRONTEND_URL || 'http://localhost:5173';
+const allowedOrigins = rawOrigins.split(',').map((o) => o.trim()).filter(Boolean);
+
 const corsOptions = {
-    origin: frontendURL,
+    origin: (origin, callback) => {
+        // Allow requests with no origin (curl, mobile apps, Postman)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        console.warn(`⚠️  CORS blocked origin: ${origin}`);
+        return callback(new Error(`CORS policy: origin '${origin}' not allowed`));
+    },
     credentials: true,
+    optionsSuccessStatus: 200, // For legacy browser compatibility
 };
-app.use(cors(corsOptions)); // Enable CORS with options
+app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes   
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP',
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX || '100'), // configurable
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 app.use(limiter);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
-// Debug middleware
-app.use((req, res, next) => {
-    console.log('Request Body:', req.body);
-    console.log('Content-Type:', req.headers['content-type']);
-    next();
+// Health check endpoint (for Render / uptime monitors)
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Debug request logging (development only)
+if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+        console.log(`[${req.method}] ${req.path}`);
+        next();
+    });
+}
 
 //* Routes
 app.use('/api/v1/user', userRoutes);

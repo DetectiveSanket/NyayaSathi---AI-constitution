@@ -1,5 +1,5 @@
 // src/services/s3Client.js
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -27,3 +27,19 @@ const s3Client = new S3Client({
 });
 
 export default s3Client;
+
+export async function deleteObjectFromS3(s3Key) {
+  if (!s3Key) return false;
+  try {
+    const command = new DeleteObjectCommand({
+      Bucket: process.env.S3_BUCKET,
+      Key: s3Key,
+    });
+    await s3Client.send(command);
+    console.log(`✅ Deleted S3 object: ${s3Key}`);
+    return true;
+  } catch (err) {
+    console.error(`❌ Failed to delete S3 object ${s3Key}:`, err);
+    return false;
+  }
+}

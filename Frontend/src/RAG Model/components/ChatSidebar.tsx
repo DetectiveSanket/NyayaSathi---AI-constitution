@@ -519,15 +519,17 @@ const ChatSidebar = ({
               <Avatar className="w-8 h-8 mr-3">
                 <AvatarImage src={authState?.user?.avatar || ""} alt="User" />
                 <AvatarFallback className="bg-blue-500 text-primary-foreground">
-                  {(authState?.user?.name || ragState?.userName || "Guest").charAt(0).toUpperCase()}
+                  {(authState?.user?.name || ragState?.userName || "G").charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 text-left">
-                <div className="text-sm font-medium">
+              <div className="flex-1 text-left min-w-0">
+                <div className="text-sm font-medium truncate">
                   {authState?.user?.name || ragState?.userName || "Guest"}
                 </div>
-                <div className="text-xs text-zinc-600">
-                  {authState?.isAuthenticated ? "Active session" : "Anonymous session"}
+                <div className="text-xs text-zinc-500 truncate">
+                  {authState?.isAuthenticated
+                    ? (authState?.user?.email || "Logged in")
+                    : "Anonymous session"}
                 </div>
               </div>
             </Button>
@@ -537,6 +539,17 @@ const ChatSidebar = ({
             side="top"
             align="start"
           >
+            {/* User info header */}
+            {authState?.isAuthenticated && (
+              <div className="px-4 py-3 border-b border-border/50">
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {authState?.user?.name || ragState?.userName || "User"}
+                </p>
+                <p className="text-xs text-zinc-500 truncate">
+                  {authState?.user?.email || ""}
+                </p>
+              </div>
+            )}
             <div className="p-2">
               <Button 
                 variant="ghost" 

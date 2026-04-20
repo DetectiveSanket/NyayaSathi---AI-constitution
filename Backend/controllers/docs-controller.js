@@ -16,9 +16,9 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 
 // 1) Presign endpoint - recommended (frontend uploads directly)
 export async function presignUpload(req, res, next) {
   try {
-    const { filename, contentType } = req.query;
+    const { filename, contentType, conversationId } = req.query;
     
-    console.log("📄 Presign request:", { filename, contentType, user: req.user?.userId || "anonymous" });
+    console.log("📄 Presign request:", { filename, contentType, conversationId, user: req.user?.userId || "anonymous" });
     
     if (!filename || !contentType) {
       return res.status(400).json({ message: "filename & contentType required" });
@@ -55,6 +55,7 @@ export async function presignUpload(req, res, next) {
       s3Key: key,
       contentType,
       processed: false,
+      conversationId: conversationId || null,
     };
 
     // Only set user if authenticated (not anonymous)
@@ -98,6 +99,7 @@ export async function serverUpload(req, res, next) {
     if (!req.file) return res.status(400).json({ message: "No file provided" });
 
     const file = req.file;
+    const conversationId = req.body.conversationId;
     const ext = (file.originalname || "file").split(".").pop();
     const key = `documents/${Date.now()}-${randomUUID()}.${ext}`;
 
@@ -118,6 +120,7 @@ export async function serverUpload(req, res, next) {
       contentType: file.mimetype,
       size: file.size,
       processed: false,
+      conversationId: conversationId || null,
     });
 
     return res.status(201).json({ message: "Uploaded", documentId: doc._id, s3Key: key });
@@ -132,6 +135,47 @@ export async function getDocument(req, res, next) {
     const doc = await Document.findById(req.params.id);
     if (!doc) return res.status(404).json({ message: "Not found" });
     res.json(doc);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// 4) List documents for the authenticated user
+export async function listDocuments(req, res, next) {
+  try {
+    const userId = req.user?.userId?.toString() || req.user?._id?.toString();
+    const isPublic = req.user?.isPublic;
+    const { conversationId } = req.query;
+
+    let docs = [];
+    
+    // We strictly filter by conversationId if provided
+    const query = {};
+    if (conversationId) {
+      query.conversationId = conversationId;
+    }
+
+    if (!userId || isPublic) {
+      // Anonymous / public session
+      if (!conversationId) {
+        return res.json({ documents: [] });
+      }
+      docs = await Document.find(query)
+        .sort({ createdAt: -1 })
+        .select("_id filename contentType size processed createdAt")
+        .lean();
+      return res.json({ documents: docs });
+    }
+
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      query.user = userId;
+      docs = await Document.find(query)
+        .sort({ createdAt: -1 })
+        .select("_id filename contentType size processed createdAt")
+        .lean();
+    }
+
+    return res.json({ documents: docs });
   } catch (err) {
     next(err);
   }

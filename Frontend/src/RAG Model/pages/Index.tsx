@@ -44,6 +44,7 @@ import {
   setConversations,
   setConversationsLoading,
   setUserName,
+  updateConversationInList,
 } from "../../store/ragSlice.js";
 import { setSelectedDocument as setSelectedDocumentAction } from "../../store/ragSlice.js";
 import {
@@ -248,8 +249,11 @@ const Index = () => {
         dispatch(setCurrentConversationId(result.conversationId));
         localStorage.setItem("rag_current_conversation_id", result.conversationId);
         
-        // If new conversation, refresh conversation list
         if (result.isNewConversation) {
+          // Immediately refresh list to pick up auto-generated title from backend
+          loadConversations();
+        } else {
+          // Subsequent messages: refresh list to update lastMessageAt ordering
           loadConversations();
         }
       }
