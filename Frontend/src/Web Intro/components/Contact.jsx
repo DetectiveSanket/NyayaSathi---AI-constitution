@@ -19,7 +19,8 @@ const Contact = () => {
     setStatus({ loading: true, success: '', error: '' });
 
     try {
-      const response = await fetch('http://localhost:5000/api/v1/contact', {
+      const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:5000/api/v1/' : '/api/v1/');
+      const response = await fetch(`${API_BASE}contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
