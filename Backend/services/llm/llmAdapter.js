@@ -41,7 +41,7 @@ export async function googleGenerate(
     let lastError = null;
 
     for (const model of modelsToTry) {
-        console.log(`🤖 LLM Adapter: Trying model [${model}]...`);
+        // console.log(`🤖 LLM Adapter: Trying model [${model}]...`);
         try {
             const gemini = genAI.getGenerativeModel({ model });
             const result = await gemini.generateContent({
@@ -52,7 +52,7 @@ export async function googleGenerate(
                 },
             });
 
-            console.log(`✅ LLM Adapter: Successfully generated response using [${model}]`);
+            // console.log(`✅ LLM Adapter: Successfully generated response using [${model}]`);
             return result?.response?.text() ?? "";
 
         } catch (err) {

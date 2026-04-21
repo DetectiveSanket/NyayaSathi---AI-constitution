@@ -29,7 +29,7 @@ export const pineconeIndex = index;
  */
 export async function embedDocumentChunks(chunks = []) {
   try {
-    console.log("📌 Embedding started. Chunk count:", chunks.length);
+    // console.log("📌 Embedding started. Chunk count:", chunks.length);
 
     const vectors = await Promise.all(
       chunks.map(async (chunk) => {
@@ -48,10 +48,10 @@ export async function embedDocumentChunks(chunks = []) {
       })
     );
 
-    console.log("📌 Upserting into Pinecone...");
+    // console.log("📌 Upserting into Pinecone...");
     await index.upsert(vectors);
 
-    console.log("✅ Embedding + Upsert Completed!");
+    // console.log("✅ Embedding + Upsert Completed!");
     return { success: true, chunkCount: chunks.length };
 
   } catch (err) {
@@ -106,13 +106,13 @@ export async function fetchDocumentChunksFromPinecone({ documentId, maxChunks = 
 export async function deleteDocumentChunksFromPinecone(documentId) {
   if (!documentId) return false;
   try {
-    console.log(`📌 Deleting Pinecone vectors for document: ${documentId}`);
+    // console.log(`📌 Deleting Pinecone vectors for document: ${documentId}`);
     const matches = await fetchDocumentChunksFromPinecone({ documentId, maxChunks: 10000 });
     const idsToDelete = matches.map(m => m.id).filter(id => !!id);
     
     if (idsToDelete.length > 0) {
       await index.deleteMany(idsToDelete);
-      console.log(`✅ Deleted ${idsToDelete.length} vectors from Pinecone for document: ${documentId}`);
+      // console.log(`✅ Deleted ${idsToDelete.length} vectors from Pinecone for document: ${documentId}`);
     }
     return true;
   } catch (err) {

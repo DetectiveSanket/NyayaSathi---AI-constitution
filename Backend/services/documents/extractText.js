@@ -48,8 +48,8 @@ export async function downloadFromS3(s3Key) {
    2. PDF TEXT EXTRACTION
 ------------------------------ */
 async function extractPdf(buffer) {
-  console.log("📄 Extracting PDF text...");
-  console.log("Buffer size:", buffer.length, "bytes");
+  // console.log("📄 Extracting PDF text...");
+  // console.log("Buffer size:", buffer.length, "bytes");
 
   try {
     // Convert Buffer to Uint8Array for pdfjs-dist
@@ -63,7 +63,7 @@ async function extractPdf(buffer) {
     });
     
     const doc = await loadingTask.promise;
-    console.log("📖 PDF loaded. Total pages:", doc.numPages);
+    // console.log("📖 PDF loaded. Total pages:", doc.numPages);
     
     let fullText = "";
     
@@ -72,25 +72,25 @@ async function extractPdf(buffer) {
       const page = await doc.getPage(i);
       const textContent = await page.getTextContent();
       
-      console.log(`Page ${i}: Found ${textContent.items.length} text items`);
+      // console.log(`Page ${i}: Found ${textContent.items.length} text items`);
       
       // Extract text items and join them
       const pageText = textContent.items.map(item => item.str).join(" ");
-      console.log(`Page ${i} text preview:`, pageText.substring(0, 200));
+      // console.log(`Page ${i} text preview:`, pageText.substring(0, 200));
       
       fullText += pageText + "\n";
     }
     
-    console.log("Total extracted text length:", fullText.length);
-    console.log("First 500 chars:", fullText.substring(0, 500));
+    // console.log("Total extracted text length:", fullText.length);
+    // console.log("First 500 chars:", fullText.substring(0, 500));
     
     if (fullText && fullText.trim().length > 0) {
-      console.log("✅ PDF text extracted successfully");
+      // console.log("✅ PDF text extracted successfully");
       return fullText;
     }
     
     // If no text extracted, return a fallback message
-    console.log("⚠️ No text found in PDF");
+    // console.log("⚠️ No text found in PDF");
     return "No readable text found in this PDF document.";
     
   } catch (err) {

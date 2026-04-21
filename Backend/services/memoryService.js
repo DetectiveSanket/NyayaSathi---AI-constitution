@@ -80,7 +80,7 @@ export async function saveMessage(userId, role, content) {
     // Set expiration
     await client.expire(key, MEMORY_TTL);
 
-    console.log(`✅ Saved ${role} message to memory for user ${userId}`);
+    // console.log(`✅ Saved ${role} message to memory for user ${userId}`);
   } catch (error) {
     console.error("❌ Error saving message to memory:", error.message);
     // Don't throw - memory is optional
@@ -117,7 +117,7 @@ export async function getMemory(userId) {
       })
       .filter((msg) => msg !== null);
 
-    console.log(`📖 Retrieved ${messages.length} messages from memory for user ${userId}`);
+    // console.log(`📖 Retrieved ${messages.length} messages from memory for user ${userId}`);
     return messages;
   } catch (error) {
     console.error("❌ Error retrieving memory:", error.message);
@@ -141,7 +141,7 @@ export async function clearMemory(userId) {
 
     const key = getMemoryKey(userId);
     await client.del(key);
-    console.log(`🗑️ Cleared memory for user ${userId}`);
+    // console.log(`🗑️ Cleared memory for user ${userId}`);
   } catch (error) {
     console.error("❌ Error clearing memory:", error.message);
   }
