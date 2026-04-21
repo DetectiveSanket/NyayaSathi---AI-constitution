@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { verifyOtp, resendOtp } from "../features/auth/authThunks";
 import { clearMessage, clearError } from "../store/authSlice";
 import useAutoDismiss from "../hooks/useAutoDismiss";
+import AuthLoadingOverlay from "../shared/AuthLoadingOverlay";
 
 function OTPVerification() {
   const dispatch = useDispatch();
@@ -194,6 +195,12 @@ function OTPVerification() {
 
   return (
     <>
+      <AuthLoadingOverlay
+        isLoading={loading}
+        message="Verifying your OTP..."
+        timeoutMs={25000}
+        onTimeout={() => {}}
+      />
       <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col">
         <div
           className="pointer-events-none absolute inset-0"

@@ -6,6 +6,7 @@ import { clearMessage, clearError } from '../store/authSlice';
 import useAutoDismiss from '../hooks/useAutoDismiss';
 import Navbar from '../shared/Navbar';
 import Footer from '../shared/Footer';
+import AuthLoadingOverlay from '../shared/AuthLoadingOverlay';
 
 import OTP from '../assets/Icon/otp.png';
 import Password from '../assets/Icon/pass.png';
@@ -131,6 +132,12 @@ function ResetPasswordOTP() {
 
     return (
         <>
+            <AuthLoadingOverlay
+                isLoading={loading}
+                message="Resetting your password..."
+                timeoutMs={25000}
+                onTimeout={() => {}}
+            />
             <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col">
                 {/* Cyan Spotlight Background overlay */}
                 <div

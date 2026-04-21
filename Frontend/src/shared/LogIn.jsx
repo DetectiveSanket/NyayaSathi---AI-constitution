@@ -12,6 +12,7 @@ import { clearMessage, clearError } from '../store/authSlice';
 import useAutoDismiss from '../hooks/useAutoDismiss';
 import AutoDismissNotification from '../ProtectionRoutes/AutoDismissNotification';
 import { toast } from 'sonner';
+import AuthLoadingOverlay from '../shared/AuthLoadingOverlay';
 
 const LogIn = () => {
 
@@ -115,10 +116,20 @@ const LogIn = () => {
         }
     };
 
+    const handleLoginTimeout = () => {
+        toast.error('Request timed out. The server may be starting up — please try again in a moment.');
+    };
+
      
 
     return (
         <>
+            <AuthLoadingOverlay
+                isLoading={loading}
+                message="Logging you in securely..."
+                timeoutMs={25000}
+                onTimeout={handleLoginTimeout}
+            />
             <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col margin-top: 4rem;">
             {/* Cyan Spotlight Background overlay shared by navbar and content */}
             <div

@@ -8,6 +8,7 @@ import {forgotPassword} from '../features/auth/authThunks';
 import { clearMessage, clearError } from '../store/authSlice';
 import useAutoDismiss from '../hooks/useAutoDismiss';
 import AutoDismissNotification from '../ProtectionRoutes/AutoDismissNotification';
+import AuthLoadingOverlay from '../shared/AuthLoadingOverlay';
 
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -61,6 +62,12 @@ function ForgetPassword() {
 
     return (
         <>
+            <AuthLoadingOverlay
+                isLoading={loading}
+                message="Sending reset OTP to your email..."
+                timeoutMs={25000}
+                onTimeout={() => {}}
+            />
             <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col">
                 {/* Cyan Spotlight Background overlay shared by navbar and content */}
                 <div
