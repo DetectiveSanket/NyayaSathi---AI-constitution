@@ -13,7 +13,14 @@ import chatRoutes from "./routes/chat-route.js";
 import docsRoutes from "./routes/docs-routes.js";
 import ragRoutes from "./routes/rag-routes.js";
 
+import helmet from 'helmet';
+import compression from 'compression';
+
 const app = express();
+
+// Security and Performance Middleware
+app.use(helmet()); // Set security headers
+app.use(compression()); // Compress responses
 
 connectDB(); // Connect to the database
 
@@ -26,7 +33,6 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(cookieParser());
 
 // Support multiple allowed origins (comma-separated in FRONTEND_URL env var)
-// e.g. FRONTEND_URL=https://nyayasathi.netlify.app,http://localhost:5173
 const rawOrigins = process.env.FRONTEND_URL || 'http://localhost:5173';
 const allowedOrigins = rawOrigins.split(',').map((o) => o.trim()).filter(Boolean);
 
@@ -34,14 +40,23 @@ const corsOptions = {
     origin: (origin, callback) => {
         // Allow requests with no origin (curl, mobile apps, Postman)
         if (!origin) return callback(null, true);
+
+        // 1. Check if it's in the allowedOrigins list
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
+
+        // 2. Dynamically allow Vercel domains for this project (Production & Previews)
+        const isVercelDomain = /^https:\/\/nyaya-sathi-ai-constitution.*\.vercel\.app$/.test(origin);
+        if (isVercelDomain) {
+            return callback(null, true);
+        }
+
         console.warn(`⚠️  CORS blocked origin: ${origin}`);
         return callback(new Error(`CORS policy: origin '${origin}' not allowed`));
     },
     credentials: true,
-    optionsSuccessStatus: 200, // For legacy browser compatibility
+    optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 
@@ -87,8 +102,11 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`✅ Default GEMINI_MODEL loaded as: ${process.env.GEMINI_MODEL || "NOT SET"}`);
     console.log(`✅ Default RAG_MODEL loaded as: ${process.env.RAG_MODEL || "NOT SET"}`);
 });
+
+// Set server timeout to 180 seconds (3 minutes) to account for free-tier cold starts
+server.timeout = 180000;

@@ -18,7 +18,7 @@ const BASE_URL =
 const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true, // Needed for cookies (refresh token HttpOnly cookie)
-  timeout: 30000, // 30 second timeout for large LLM responses
+  timeout: 120000, // 120 second timeout to handle "cold starts" and slow AI responses
 });
 
 // ✅ Dynamically attach/remove Authorization header
