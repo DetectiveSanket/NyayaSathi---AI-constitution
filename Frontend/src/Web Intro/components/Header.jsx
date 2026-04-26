@@ -103,6 +103,13 @@ const Header = () => {
                   {item}
                 </a>
               ))}
+              <NavLink
+                to="/doc"
+                className="text-sm font-medium"
+                style={{ color: 'var(--ip-text-secondary)' }}
+                onClick={() => setIsMenuOpen(false)}>
+                Docs
+              </NavLink>
             </nav>
             {token ? (
               <Link to="/chatbot" onClick={() => setIsMenuOpen(false)}

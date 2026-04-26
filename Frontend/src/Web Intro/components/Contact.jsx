@@ -34,12 +34,12 @@ const Contact = () => {
         throw new Error(data.message || 'Failed to send message');
       }
 
-      setStatus({ 
-        loading: false, 
-        success: data.message || 'Message sent successfully! We\'ll get back to you within 24 hours.', 
-        error: '' 
+      setStatus({
+        loading: false,
+        success: data.message || "Message sent successfully! We'll get back to you within 24 hours.",
+        error: ''
       });
-      
+
       // Clear form
       setFormData({ name: '', email: '', message: '' });
 
@@ -49,11 +49,10 @@ const Contact = () => {
       }, 5000);
 
     } catch (error) {
-      // console.error('Contact form error:', error);
-      setStatus({ 
-        loading: false, 
-        success: '', 
-        error: error.message || 'Something went wrong. Please try again later.' 
+      setStatus({
+        loading: false,
+        success: '',
+        error: error.message || 'Something went wrong. Please try again later.'
       });
 
       // Auto-hide error message after 6 seconds
@@ -75,86 +74,97 @@ const Contact = () => {
   };
 
   return (
-        <section id="contact" className="py-20 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-blue-900/20"></div>
+    <section id="contact" className="py-20 relative overflow-x-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-blue-900/20"></div>
 
-            <div className="container mx-auto px-6 relative z-10">
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                        Get In Touch
-                    </h2>
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
 
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        Have questions about NyayaSathi? We'd love to hear from you.
+        {/* Section heading */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            Get In Touch
+          </h2>
+          <p className="text-base sm:text-xl text-gray-400 max-w-2xl mx-auto">
+            Have questions about NyayaSathi? We'd love to hear from you.
+          </p>
+        </div>
+
+        {/* Two-column grid — stacks on mobile */}
+        <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+
+          {/* ── Contact Info card ── */}
+          <div className="space-y-8">
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 sm:p-8 border border-white/10">
+              <h3 className="text-xl sm:text-2xl font-bold mb-6 text-white">Contact Information</h3>
+
+              <div className="space-y-6">
+
+                {/* Email */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 flex-shrink-0 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <Mail className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-400 text-sm">Email</p>
+                    <p className="text-white font-medium text-sm sm:text-base break-all">
+                      nyayasathi.team@gmail.com
                     </p>
+                  </div>
                 </div>
 
-                <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-             {/* Contact Info */}
-                <div className="space-y-8">
-                    <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-                    <h3 className="text-2xl font-bold mb-6 text-white">Contact Information</h3>
-                    
-                    <div className="space-y-6">
-                        <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                            <Mail className="w-6 h-6 text-purple-400" />
-                        </div>
-                        <div>
-                            <p className="text-gray-400 text-sm">Email</p>
-                            <p className="text-white font-medium">nyayasathi.team@gmail.com</p>
-                        </div>
-                        </div>
-
-                        <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <MapPin className="w-6 h-6 text-blue-400" />
-                        </div>
-                        <div>
-                            <p className="text-gray-400 text-sm">Location</p>
-                            <p className="text-white font-medium">D.Y. Patil College Of Eng & Tech , Kolhapur </p>
-                        </div>
-                        </div>
-
-                        <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                            <Phone className="w-6 h-6 text-green-400" />
-                        </div>
-                        <div>
-                            <p className="text-gray-400 text-sm">Response Time</p>
-                            <p className="text-white font-medium">Within 24 hours</p>
-                        </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-8 pt-8 border-t border-white/10">
-                        <p className="text-gray-400 mb-4">Follow us on social media</p>
-                        <div className="flex space-x-4">
-                        <a href="#" className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
-                            <Github className="w-5 h-5 text-gray-400 hover:text-white" />
-                        </a>
-
-                        <a href="#" className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
-                            <Linkedin className="w-5 h-5 text-gray-400 hover:text-white" />
-                        </a>
-
-                        <a href="#" className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
-                            <Instagram className="w-5 h-5 text-gray-400 hover:text-white" />
-                        </a>
-
-                        <a href="#" className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
-                            <Twitter className="w-5 h-5 text-gray-400 hover:text-white" />
-                        </a>
-                        </div>
-                    </div>
-                    </div>
+                {/* Location */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 flex-shrink-0 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <MapPin className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-400 text-sm">Location</p>
+                    <p className="text-white font-medium text-sm sm:text-base">
+                      D.Y. Patil College Of Eng &amp; Tech, Kolhapur
+                    </p>
+                  </div>
                 </div>
 
-          {/* Contact Form */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-            <h3 className="text-2xl font-bold mb-6 text-white">Send us a Message</h3>
-            
+                {/* Response Time */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 flex-shrink-0 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <Phone className="w-6 h-6 text-green-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-gray-400 text-sm">Response Time</p>
+                    <p className="text-white font-medium text-sm sm:text-base">Within 24 hours</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social links */}
+              <div className="mt-8 pt-8 border-t border-white/10">
+                <p className="text-gray-400 mb-4 text-sm sm:text-base">Follow us on social media</p>
+                <div className="flex gap-3">
+                  <a href="#" className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
+                    <Github className="w-5 h-5 text-gray-400 hover:text-white" />
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
+                    <Linkedin className="w-5 h-5 text-gray-400 hover:text-white" />
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
+                    <Instagram className="w-5 h-5 text-gray-400 hover:text-white" />
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
+                    <Twitter className="w-5 h-5 text-gray-400 hover:text-white" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Contact Form card ── */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 sm:p-8 border border-white/10">
+            <h3 className="text-xl sm:text-2xl font-bold mb-6 text-white">Send us a Message</h3>
+
             <form onSubmit={handleSubmit} className="space-y-6">
+
+              {/* Name */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
                   Name
@@ -171,6 +181,7 @@ const Contact = () => {
                 />
               </div>
 
+              {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                   Email
@@ -187,6 +198,7 @@ const Contact = () => {
                 />
               </div>
 
+              {/* Message */}
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
                   Message
@@ -205,7 +217,7 @@ const Contact = () => {
 
               {/* Success Message */}
               {status.success && (
-                <div className="flex items-start space-x-3 p-4 bg-green-500/20 border border-green-500/30 rounded-lg animate-fadeIn">
+                <div className="flex items-start gap-3 p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
                   <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                   <p className="text-green-300 text-sm">{status.success}</p>
                 </div>
@@ -213,7 +225,7 @@ const Contact = () => {
 
               {/* Error Message */}
               {status.error && (
-                <div className="flex items-start space-x-3 p-4 bg-red-500/20 border border-red-500/30 rounded-lg animate-fadeIn">
+                <div className="flex items-start gap-3 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
                   <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                   <p className="text-red-300 text-sm">{status.error}</p>
                 </div>
@@ -222,7 +234,7 @@ const Contact = () => {
               <button
                 type="submit"
                 disabled={status.loading}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 group"
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
               >
                 {status.loading ? (
                   <>
@@ -238,10 +250,11 @@ const Contact = () => {
               </button>
             </form>
           </div>
-                </div>
-            </div>
-        </section>
-    );
+
+        </div>
+      </div>
+    </section>
+  );
 };
 
 export default Contact;
