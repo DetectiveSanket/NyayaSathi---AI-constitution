@@ -20,6 +20,7 @@ const initialState = {
     token: null,
     refreshToken: null,
     loading: false,
+    isInitializing: true,  // true only during app-startup token rehydration
     error: null,
     isAuthenticated: false,
     // helpers for flows
@@ -148,13 +149,15 @@ const authSlice = createSlice({
         setAuthHeader(null);
       });
 
-    // REFRESH
+    // REFRESH (app-startup token rehydration)
     builder
       .addCase(refreshAccessToken.pending, (state) => {
         state.loading = true;
+        state.isInitializing = true;
       })
       .addCase(refreshAccessToken.fulfilled, (state, action) => {
         state.loading = false;
+        state.isInitializing = false;
         state.token = action.payload.token;
         state.user = action.payload.user;
         state.isAuthenticated = true;
@@ -162,6 +165,7 @@ const authSlice = createSlice({
       })
       .addCase(refreshAccessToken.rejected, (state) => {
         state.loading = false;
+        state.isInitializing = false;
         state.user = null;
         state.token = null;
         state.refreshToken = null;
