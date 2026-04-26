@@ -46,34 +46,38 @@ const Stats = () => {
         {/* Additional visual elements */}
         <div className="mt-20 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-transparent to-violet-500/20 blur-3xl animate-pulse"></div>
-          <div className="relative bg-gradient-to-br from-gray-900/80 to-black/80 backdrop-blur-md rounded-3xl p-12 max-w-4xl mx-auto transform hover:scale-105 hover:-translate-y-2 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/25 subtle-glow-border">
+          <div className="relative bg-gradient-to-br from-gray-900/80 to-black/80 backdrop-blur-md rounded-3xl p-6 sm:p-12 max-w-4xl mx-auto transform hover:scale-105 hover:-translate-y-2 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/25 subtle-glow-border">
             <div className="text-center">
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-6">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4 sm:mb-6">
                 Join the revolution
               </h3>
-              <p className="text-gray-400 mb-8 text-lg">
+              <p className="text-gray-400 mb-6 sm:mb-8 text-base sm:text-lg">
                 Be part of the next generation of productivity tools
               </p>
-              <div className="flex items-center justify-center gap-8">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center mb-3 mx-auto transform hover:scale-125 hover:rotate-12 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center mb-3 mx-auto transform hover:scale-125 hover:rotate-12 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50">
                     <span className="text-white font-bold text-xl">1</span>
                   </div>
-                  <p className="text-gray-400">Upload / Ask</p>
+                  <p className="text-gray-400 text-sm sm:text-base">Upload / Ask</p>
                 </div>
-                <div className="w-8 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent animate-pulse"></div>
+                {/* Connector — horizontal on sm+, vertical dot on xs */}
+                <div className="hidden sm:block w-8 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent animate-pulse"></div>
+                <div className="block sm:hidden w-px h-4 bg-gradient-to-b from-transparent via-purple-500 to-transparent animate-pulse"></div>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center mb-3 mx-auto transform hover:scale-125 hover:rotate-12 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center mb-3 mx-auto transform hover:scale-125 hover:rotate-12 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50">
                     <span className="text-white font-bold text-xl">2</span>
                   </div>
-                  <p className="text-gray-400">AI Simplifies & Translates</p>
+                  <p className="text-gray-400 text-sm sm:text-base">AI Simplifies &amp; Translates</p>
                 </div>
-                <div className="w-8 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent animate-pulse"></div>
+                {/* Connector */}
+                <div className="hidden sm:block w-8 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent animate-pulse"></div>
+                <div className="block sm:hidden w-px h-4 bg-gradient-to-b from-transparent via-purple-500 to-transparent animate-pulse"></div>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center mb-3 mx-auto transform hover:scale-125 hover:rotate-12 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center mb-3 mx-auto transform hover:scale-125 hover:rotate-12 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50">
                     <span className="text-white font-bold text-xl">3</span>
                   </div>
-                  <p className="text-gray-400">Get Answers with References</p>
+                  <p className="text-gray-400 text-sm sm:text-base">Get Answers with References</p>
                 </div>
               </div>
             </div>

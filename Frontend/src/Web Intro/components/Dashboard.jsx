@@ -3,7 +3,7 @@ import { BarChart3, TrendingUp, Users, Zap, Layers, Activity } from 'lucide-reac
 
 const Dashboard = () => {
   return (
-    <section id="dashboard" className="py-20 bg-black/50">
+    <section id="dashboard" className="py-20 bg-black/50 overflow-x-hidden">
       {/* 3D Background Elements */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-10 right-20 w-32 h-32 bg-gradient-to-br from-purple-500/30 to-violet-600/30 rounded-2xl transform rotate-12 animate-float-slow"></div>
@@ -11,7 +11,7 @@ const Dashboard = () => {
         <div className="absolute top-1/2 right-10 w-16 h-16 bg-gradient-to-br from-purple-400/40 to-violet-500/40 transform rotate-45 animate-float-fast"></div>
       </div>
       
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             A new way to manage{' '}
@@ -26,7 +26,7 @@ const Dashboard = () => {
 
         {/* Dashboard mockup */}
         <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-gray-900/80 to-black/80 backdrop-blur-md rounded-2xl p-8 shadow-2xl transform hover:scale-[1.02] transition-all duration-500 hover:shadow-purple-500/20 hover:-translate-y-2 subtle-glow-border">
+          <div className="bg-gradient-to-br from-gray-900/80 to-black/80 backdrop-blur-md rounded-2xl p-4 sm:p-8 shadow-2xl transform hover:scale-[1.02] transition-all duration-500 hover:shadow-purple-500/20 hover:-translate-y-2 subtle-glow-border">
             {/* Dashboard header */}
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -89,9 +89,9 @@ const Dashboard = () => {
 
             {/* Chart area */}
             <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-700/50 transform hover:scale-[1.01] transition-all duration-300 hover:border-purple-500/30">
-              <div className="flex items-center justify-between mb-6">
-                <h4 className="text-lg font-semibold text-white">Performance Analytics</h4>
-                <select className="bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-600 hover:border-purple-500/50 transition-colors duration-300">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <h4 className="text-base sm:text-lg font-semibold text-white">Performance Analytics</h4>
+                <select className="bg-gray-800 text-white text-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-600 hover:border-purple-500/50 transition-colors duration-300 max-w-[140px] sm:max-w-none">
                   <option>Last 7 days</option>
                   <option>Last 30 days</option>
                   <option>Last 90 days</option>
@@ -99,7 +99,7 @@ const Dashboard = () => {
               </div>
               
               {/* Simulated chart */}
-              <div className="h-64 flex items-end justify-between gap-2">
+              <div className="h-40 sm:h-64 flex items-end justify-between gap-1 sm:gap-2">
                 {[...Array(12)].map((_, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-2">
                     <div 

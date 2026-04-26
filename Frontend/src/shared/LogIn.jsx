@@ -157,9 +157,9 @@ const LogIn = () => {
                     </div>
                     <form className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl" onSubmit={handleSubmit}>
 
-                        <button style={{width: '80%', margin: '10px auto' }} className="flex items-center justify-center w-full px-4 py-2 text-white bg-transparent border-2 border-gray-700 focus:border-teal-500 rounded-full hover:bg-[#1b4f4b81]">
-                            <img src={google} className="w-6 h-6 mr-5" alt="google" />
-                            Continue with Google 
+                        <button style={{width: '80%', margin: '10px auto' }} className="flex items-center justify-center gap-2 w-full px-4 py-2 text-white bg-transparent border-2 border-gray-700 focus:border-teal-500 rounded-full hover:bg-[#1b4f4b81] whitespace-nowrap">
+                            <img src={google} className="w-6 h-6 flex-shrink-0" alt="google" />
+                            <span>Continue with Google</span>
                         </button>
                         
                         {/* <button style={{width: '80%', margin: '0 auto'}} className="flex items-center justify-center w-full px-4 py-2 mt-3 text-white bg-transparent border-2 border-gray-700 focus:border-pink-600 rounded-full hover:bg-[#3A3C3F]">
