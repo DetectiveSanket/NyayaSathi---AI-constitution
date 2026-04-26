@@ -34,6 +34,11 @@ const authSlice = createSlice({
 
     initialState,
     reducers: {
+        // Mark app startup auth check as complete (called after PersistGate rehydration)
+        setInitialized: (state) => {
+            state.isInitializing = false;
+        },
+
         // local logout (clear client only)
         localLogout: (state) => {
             state.user = null;
@@ -237,5 +242,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { localLogout, clearError, clearMessage } = authSlice.actions;
+export const { localLogout, clearError, clearMessage, setInitialized } = authSlice.actions;
 export default authSlice.reducer;
