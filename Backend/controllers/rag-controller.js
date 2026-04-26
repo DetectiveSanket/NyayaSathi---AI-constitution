@@ -704,13 +704,18 @@ export const createRagSession = async (req, res) => {
     const jwt = await import('jsonwebtoken');
     const sessionId = `rag_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET environment variable is not set. Cannot create session token.");
+    }
+
     const token = jwt.default.sign(
       {
         sessionId,
         type: "rag_public",
         iat: Math.floor(Date.now() / 1000),
       },
-      process.env.JWT_SECRET || "fallback-secret",
+      jwtSecret,
       {
         expiresIn: "30d", // 30 days expiration
       }
