@@ -1,5 +1,5 @@
 // src/controllers/chatController.js
-import Conversation from "../models/Conversation.js";
+import Conversation from "../models/conversation.js";
 import Message from "../models/message.js";
 import { generateReply } from "../services/llm/llmAdapter.js";
 
