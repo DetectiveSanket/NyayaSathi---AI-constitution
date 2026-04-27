@@ -98,7 +98,7 @@ const TTSControls = ({ className = "" }: TTSControlsProps) => {
             </Button>
 
         </PopoverTrigger>
-        <PopoverContent className="w-96 bg-surface-elevated border-border/50 shadow-xl backdrop-blur-sm" side="top">
+        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 max-w-96 bg-surface-elevated border-border/50 shadow-xl backdrop-blur-sm" side="top">
             <div className="space-y-5 p-1">
             <div className="space-y-1 pb-2 border-b border-border/30">
                 <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">

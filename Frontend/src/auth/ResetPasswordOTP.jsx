@@ -135,7 +135,7 @@ function ResetPasswordOTP() {
             <AuthLoadingOverlay
                 isLoading={loading}
                 message="Resetting your password..."
-                timeoutMs={25000}
+                timeoutMs={90000}
                 onTimeout={() => {}}
             />
             <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col">

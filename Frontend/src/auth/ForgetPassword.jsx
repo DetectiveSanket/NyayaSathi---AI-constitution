@@ -65,7 +65,7 @@ function ForgetPassword() {
             <AuthLoadingOverlay
                 isLoading={loading}
                 message="Sending reset OTP to your email..."
-                timeoutMs={25000}
+                timeoutMs={90000}
                 onTimeout={() => {}}
             />
             <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col">

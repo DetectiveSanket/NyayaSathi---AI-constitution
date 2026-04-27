@@ -127,7 +127,7 @@ const LogIn = () => {
             <AuthLoadingOverlay
                 isLoading={loading}
                 message="Logging you in securely..."
-                timeoutMs={25000}
+                timeoutMs={90000}
                 onTimeout={handleLoginTimeout}
             />
             <div className="relative min-h-screen w-full bg-black overflow-hidden flex flex-col margin-top: 4rem;">

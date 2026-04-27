@@ -8,6 +8,7 @@ import MessageBubble from "./MessageBubble";
 import ChatComposer from "./ChatComposer";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Badge } from "../components/ui/badge";
+import WelcomeSuggestions from "./WelcomeSuggestions";
 
 interface Message {
   id: string;
@@ -33,7 +34,7 @@ const MobileChatLayout = ({ messages, isLoading, onSendMessage }: MobileChatLayo
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-inter flex flex-col">
+    <div className="h-[100dvh] overflow-hidden bg-background text-foreground font-inter flex flex-col">
       {/* Mobile Header */}
       <div className="h-14 bg-surface border-b border-border flex items-center px-4 justify-between">
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -61,10 +62,16 @@ const MobileChatLayout = ({ messages, isLoading, onSendMessage }: MobileChatLayo
 
       {/* Messages Area */}
       <ScrollArea className="flex-1 px-4">
-        <div className="py-4 space-y-4">
-          {messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
-          ))}
+        <div className="py-4 space-y-4 min-h-full flex flex-col justify-end">
+          {messages.length === 0 ? (
+            <div className="flex-1 flex flex-col justify-center items-center py-6">
+              <WelcomeSuggestions onSelect={(text) => onSendMessage(text)} />
+            </div>
+          ) : (
+            messages.map((message) => (
+              <MessageBubble key={message.id} message={message} />
+            ))
+          )}
           
           {/* Mobile Thinking Indicator */}
           {isLoading && (
@@ -90,7 +97,7 @@ const MobileChatLayout = ({ messages, isLoading, onSendMessage }: MobileChatLayo
       </ScrollArea>
 
       {/* Mobile Composer - Fixed at bottom */}
-      <div className="bg-surface border-t border-border">
+      <div className="bg-surface border-t border-border flex-shrink-0 w-full z-10 pb-safe">
         <ChatComposer onSendMessage={onSendMessage} isLoading={isLoading} />
       </div>
     </div>

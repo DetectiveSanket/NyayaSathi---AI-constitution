@@ -13,7 +13,7 @@ import React, { useEffect, useState } from 'react';
 function AuthLoadingOverlay({
   isLoading,
   message = 'Processing...',
-  timeoutMs = 25000,
+  timeoutMs = 90000,
   onTimeout,
 }) {
   const [timedOut, setTimedOut] = useState(false);
@@ -40,6 +40,11 @@ function AuthLoadingOverlay({
       setTimedOut(true);
       clearInterval(ticker);
       onTimeout?.();
+      
+      // Redirect to login page after showing the message
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 3000);
     }, timeoutMs);
 
     return () => {

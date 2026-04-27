@@ -372,11 +372,11 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
       <div className="bg-background border-t border-border/30">
 
         {/* ── Context bar: Document pills + Language + TTS + Summarize ─────── */}
-        <div className="px-4 py-2 border-b border-border/20">
-          <div className="flex items-center gap-3 flex-wrap justify-between min-h-[36px]">
+        <div className="px-3 sm:px-4 py-2 border-b border-border/20">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-between min-h-[36px]">
 
             {/* Left: Document pills */}
-            <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0 w-full sm:w-auto">
               {docsLoading ? (
                 <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -426,7 +426,7 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
             </div>
 
             {/* Right: TTS + Language + Summarize */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 w-full sm:w-auto mt-1 sm:mt-0 overflow-x-auto scrollbar-hide pb-1 sm:pb-0">
               <TTSControls />
 
               {/* Language selector */}
@@ -515,7 +515,7 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
         </div>
 
         {/* ── Main composer ─────────────────────────────────────────────────── */}
-        <div className="px-6 py-3">
+        <div className="px-3 sm:px-6 py-2 sm:py-3">
           <div className="max-w-5xl mx-auto">
             {/* Attached Files */}
             {attachedFiles.length > 0 && (
@@ -586,7 +586,7 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
                 value={message}
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about this document or type a question. Press Enter to send, Shift+Enter for new line."
+                placeholder="Ask a question or type a message..."
                 className="flex-1 min-h-[36px] max-h-[120px] resize-none bg-transparent border-0 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-2 text-foreground placeholder:text-muted-foreground/60 text-sm leading-tight scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent hover:scrollbar-thumb-border/60"
                 disabled={isLoading}
                 rows={1}

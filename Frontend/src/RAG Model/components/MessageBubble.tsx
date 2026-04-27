@@ -195,7 +195,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="opacity-0 group-hover:opacity-70 hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-surface-elevated rounded-md"
+                          className="opacity-70 sm:opacity-0 sm:group-hover:opacity-70 hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-surface-elevated rounded-md"
                           title="Translate"
                         >
                           <Languages className="w-3.5 h-3.5" />
@@ -234,7 +234,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
                       variant="ghost"
                       size="sm"
                       onClick={handleSpeak}
-                      className="opacity-0 group-hover:opacity-70 hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-surface-elevated rounded-md"
+                      className="opacity-70 sm:opacity-0 sm:group-hover:opacity-70 hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-surface-elevated rounded-md"
                       title={isThisMessageSpeaking ? (isPaused ? "Resume" : "Pause") : "Read aloud"}
                     >
                       {isThisMessageSpeaking && !isPaused ? (
@@ -248,7 +248,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={handleStop}
-                        className="opacity-0 group-hover:opacity-70 hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-surface-elevated rounded-md"
+                        className="opacity-70 sm:opacity-0 sm:group-hover:opacity-70 hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-surface-elevated rounded-md"
                         title="Stop"
                       >
                         <Square className="w-3.5 h-3.5" />
@@ -260,7 +260,7 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
                   variant="ghost"
                   size="sm"
                   onClick={handleCopy}
-                  className="opacity-0 group-hover:opacity-70 hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-surface-elevated rounded-md"
+                  className="opacity-70 sm:opacity-0 sm:group-hover:opacity-70 hover:opacity-100 transition-opacity h-7 w-7 p-0 hover:bg-surface-elevated rounded-md"
                   title="Copy message"
                 >
                   <Copy className="w-3.5 h-3.5" />
