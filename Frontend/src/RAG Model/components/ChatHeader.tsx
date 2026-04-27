@@ -33,9 +33,10 @@ interface ChatHeaderProps {
   onExportChat?: (format: 'txt' | 'pdf') => void;
   lastMode?: "auto" | "contextual" | null;
   selectedDocumentId?: string | null;
+  leftContent?: React.ReactNode;
 }
 
-const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId }: ChatHeaderProps = {}) => {
+const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId, leftContent }: ChatHeaderProps = {}) => {
   const [selectedModel, setSelectedModel] = useState("legal-ai-v1");
   const [isModelModalOpen, setIsModelModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -86,41 +87,43 @@ const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId }: ChatHeaderPr
 
   return (
     <TooltipProvider>
-      <header className="h-16 bg-surface border-b border-border flex items-center px-6 justify-between">
+      <header className="h-14 sm:h-16 bg-surface border-b border-border flex items-center px-2 sm:px-6 justify-between gap-1 sm:gap-3">
         {/* Left side - Home link with logo */}
-        <div className="flex items-center space-x-3">
-          <Button variant="ghost" className="text-sm font-medium hover:bg-surface-elevated">
+        <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0">
+          {leftContent}
+          <Button variant="ghost" className="text-sm font-medium hover:bg-surface-elevated hidden sm:flex">
             <Home className="w-4 h-4 mr-2" />
             <Link to="/" className="text-sm font-medium hover:bg-surface-elevated">NyayaSathi</Link>
           </Button>
         </div>
 
-      {/* Center-right - Model selector and Mode indicator */}
-      <div className="flex items-center flex-1 justify-center gap-3">
+      {/* Center - Model selector and Mode indicator */}
+      <div className="flex items-center flex-1 justify-center gap-1 sm:gap-3 min-w-0">
         {lastMode && (
           <Badge 
             variant={lastMode === "auto" ? "secondary" : "default"}
-            className="text-xs"
+            className="text-[10px] sm:text-xs hidden md:inline-flex"
           >
-            {lastMode === "auto" ? "⚡ Auto Mode" : "🔍 Contextual Mode"}
+            {lastMode === "auto" ? "⚡ Auto" : "🔍 Contextual"}
           </Badge>
         )}
         <Button
           onClick={() => setIsModelModalOpen(true)}
           variant="outline"
-          className="min-w-[280px] max-w-[320px] bg-surface-elevated border-border hover:bg-surface-chat transition-colors h-10 px-3"
+          className="min-w-0 max-w-[200px] sm:min-w-[280px] sm:max-w-[320px] bg-surface-elevated border-border hover:bg-surface-chat transition-colors h-8 sm:h-10 px-2 sm:px-3 overflow-hidden flex-shrink"
         >
-          <div className="flex items-center justify-between w-full gap-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-sm text-zinc-600 whitespace-nowrap">Model:</span>
-              <span className="text-sm font-medium text-foreground truncate">{getModelDisplayName(selectedModel)}</span>
+          <div className="flex items-center justify-between w-full gap-1 sm:gap-2 min-w-0">
+            <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1 overflow-hidden">
+              <span className="text-xs sm:text-sm text-zinc-600 whitespace-nowrap hidden sm:inline">Model:</span>
+              <span className="text-xs sm:text-sm font-medium text-foreground truncate">{getModelDisplayName(selectedModel)}</span>
               {selectedModel === "legal-ai-v1" && (
-                <Badge className="bg-accent text-accent-foreground border-0 text-xs px-2 py-0 whitespace-nowrap flex-shrink-0">
-                  Recommended
+                <Badge className="bg-accent text-accent-foreground border-0 text-[10px] sm:text-xs px-1 sm:px-2 py-0 whitespace-nowrap flex-shrink-0">
+                  <span className="hidden sm:inline">Recommended</span>
+                  <span className="sm:hidden">Rec</span>
                 </Badge>
               )}
             </div>
-            <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
           </div>
         </Button>
       </div>
@@ -133,7 +136,7 @@ const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId }: ChatHeaderPr
       />
 
       {/* Right side - Action buttons */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-0.5 sm:space-x-2 flex-shrink-0">
         <Dialog open={isSummarizeOpen} onOpenChange={setIsSummarizeOpen}>
           <DialogTrigger asChild>
             <Tooltip>
@@ -141,7 +144,7 @@ const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId }: ChatHeaderPr
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="hover:bg-surface-elevated focus-ring"
+                  className="hover:bg-surface-elevated focus-ring h-8 w-8 sm:h-9 sm:w-auto p-0 sm:px-3"
                   aria-label="Summarize document"
                   disabled={!selectedDocumentId}
                 >
@@ -200,7 +203,7 @@ const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId }: ChatHeaderPr
             <Button 
               variant="ghost" 
               size="sm" 
-              className="hover:bg-surface-elevated focus-ring"
+              className="hover:bg-surface-elevated focus-ring h-8 w-8 sm:h-9 sm:w-auto p-0 sm:px-3"
               aria-label="Share conversation"
             >
               <Share className="w-4 h-4" />
@@ -218,7 +221,7 @@ const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId }: ChatHeaderPr
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="hover:bg-surface-elevated focus-ring"
+                  className="hover:bg-surface-elevated focus-ring h-8 w-8 sm:h-9 sm:w-auto p-0 sm:px-3"
                   aria-label="Export conversation"
                 >
                   <Download className="w-4 h-4" />
@@ -266,7 +269,7 @@ const ChatHeader = ({ onExportChat, lastMode, selectedDocumentId }: ChatHeaderPr
             <Button 
               variant="ghost" 
               size="sm" 
-              className="hover:bg-surface-elevated focus-ring"
+              className="hover:bg-surface-elevated focus-ring h-8 w-8 sm:h-9 sm:w-auto p-0 sm:px-3"
               aria-label="Settings"
               onClick={() => setIsSettingsOpen(true)}
             >

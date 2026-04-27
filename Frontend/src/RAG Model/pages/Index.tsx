@@ -39,6 +39,7 @@ import {
   setMessages,
   initializeMessagesByConversation,
   setMessagesForConversation,
+  syncActiveMessagesToConversation,
   loadMessagesForConversation,
   setCurrentConversationId,
   setConversations,
@@ -99,14 +100,6 @@ const Index = () => {
   const currentConvId = conversationId || ragState.currentConversationId;
   let messages = (isCreatingNewChat ? [] : (ragState.messages || []));
   
-  // Safety check: If we have messages but no conversationId, clear them
-  // This prevents showing messages from a previous session
-  if (messages.length > 0 && !currentConvId && !isRestoringConversation) {
-    console.log("🧹 Clearing orphaned messages (no conversationId)");
-    messages = [];
-    // Dispatch to actually clear them
-    dispatch(setMessages([]));
-  }
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const inputMessageRef = useRef<{ setMessage?: (msg: string) => void }>({});
@@ -273,15 +266,8 @@ const Index = () => {
       
       // Update stored messages for this conversation (includes both user and assistant messages)
       if (result.conversationId) {
-        // Ensure messagesByConversation is initialized
-        dispatch(initializeMessagesByConversation());
-        
-        // Get current messages from Redux state (which now includes the assistant message)
-        const currentMessages = [...(ragState.messages || [])];
-        dispatch(setMessagesForConversation({
-          conversationId: result.conversationId,
-          messages: currentMessages
-        }));
+        // Use the reducer to sync directly from state to avoid stale closures
+        dispatch(syncActiveMessagesToConversation(result.conversationId));
       }
       
       setIsLoading(false);
@@ -307,13 +293,6 @@ const Index = () => {
       const storedMessages = ragState.messagesByConversation[currentConvId];
       // If stored messages exist but current messages don't match, it means we switched conversations
       // Don't auto-load here - let restoreConversation handle it explicitly
-    } else if (!currentConvId) {
-      // No conversation ID means new chat - ensure messages are empty
-      if (ragState.messages && ragState.messages.length > 0) {
-        console.log("🧹 No conversation ID, clearing messages");
-        dispatch(setMessages([]));
-        dispatch(clearMessages());
-      }
     }
   }, [conversationId, ragState.currentConversationId]);
 
@@ -573,7 +552,30 @@ const Index = () => {
     if (isMobile) {
         return (
             <Suspense fallback={"Loading mobile layout..."}>
-                <MobileChatLayout messages={messages} isLoading={isLoading} onSendMessage={handleSendMessage} />
+                <MobileChatLayout 
+                    messages={filteredMessages} 
+                    isLoading={isLoading} 
+                    onSendMessage={handleSendMessage} 
+                    onExportChat={handleExportChat}
+                    searchProps={{
+                        searchQuery: searchQuery || searchFromSidebar,
+                        setSearchQuery,
+                        isSearchVisible,
+                        setIsSearchVisible,
+                        clearSearch,
+                        resultCount: filteredMessages.length
+                    }}
+                    chatSidebarProps={{
+                        isCollapsed: sidebarCollapsed,
+                        onToggleCollapse: () => setSidebarCollapsed(!sidebarCollapsed),
+                        onSearch: handleSidebarSearch,
+                        retrievedChunks: ragState.retrievedChunks,
+                        selectedDocumentId: ragState.selectedDocumentId,
+                        onSelectDocument: (docId: string | null) => dispatch(setSelectedDocument(docId)),
+                        onNewChat: handleNewChat,
+                        onSelectConversation: restoreConversation
+                    }}
+                />
             </Suspense>
         )
     }

@@ -81,6 +81,15 @@ const ragSlice = createSlice({
         state.messagesByConversation[conversationId] = messages || [];
       }
     },
+    syncActiveMessagesToConversation: (state, action) => {
+      const conversationId = action.payload;
+      if (conversationId) {
+        if (!state.messagesByConversation) {
+          state.messagesByConversation = {};
+        }
+        state.messagesByConversation[conversationId] = [...state.messages];
+      }
+    },
     loadMessagesForConversation: (state, action) => {
       // Load messages for a conversation into active messages
       const conversationId = action.payload;
@@ -144,6 +153,7 @@ export const {
   setMessages,
   initializeMessagesByConversation,
   setMessagesForConversation,
+  syncActiveMessagesToConversation,
   loadMessagesForConversation,
   clearChunks,
   setCurrentConversationId,
