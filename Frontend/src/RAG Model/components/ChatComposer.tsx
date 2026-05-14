@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useToast } from "../hooks/use-toast";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
@@ -38,12 +38,13 @@ import {
 } from "../components/ui/popover";
 import TTSControls from "./TTSControls";
 import { FileUploadZone } from "./FileUploadZone";
-import { DocumentLibraryModal } from "./DocumentLibraryModal";
+import { DocumentLibraryModal, LIBRARY_DND_PREFIX } from "./DocumentLibraryModal";
 import { useFileManager } from "../contexts/FileManagerContext";
 import { useSelector, useDispatch } from "react-redux";
-import { addMessage, setMode, setSummary, setMessagesForConversation } from "../../store/ragSlice.js";
+import { addMessage, setMode, setSummary, setMessagesForConversation, addDocument } from "../../store/ragSlice.js";
 import { useSummarize } from "../../hooks/useSummarize.js";
-import { listUserDocuments } from "../../services/ragService.js";
+import { listUserDocuments, getPresignedUrl, uploadToS3, ackLibraryUpload } from "../../services/ragService.js";
+import { useDocumentUpload } from "../../hooks/useDocumentUpload.js";
 
 interface ChatComposerProps {
   onSendMessage: (message: string, language?: string, documentId?: string) => void;
@@ -57,6 +58,11 @@ interface DocEntry {
   _id: string;
   filename: string;
   processed?: boolean;
+}
+
+function isRagProcessableMime(file: File): boolean {
+  const t = file.type || "";
+  return t === "application/pdf" || t.includes("wordprocessingml") || t.includes("msword");
 }
 
 const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, onDocumentUploaded, inputMessageRef }: ChatComposerProps) => {
@@ -83,6 +89,8 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
   const dispatch = useDispatch();
   const ragState = useSelector((state: any) => state.rag);
   const authState = useSelector((state: any) => state.auth);
+  const isAuthenticated = !!authState?.isAuthenticated;
+  const quickUploadNameRef = useRef("");
 
   // ── Summarize hook ────────────────────────────────────────────────────────
   const { summarize, loading: summarizeLoading } = useSummarize({
@@ -178,6 +186,40 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
   // NOTE: selectedDocId intentionally excluded from deps — including it caused
   // the callback to re-run on every pill click and reset the selection.
   }, [authState?.isAuthenticated, selectedDocumentId, ragState?.documents]);
+
+  const quickDocUploadOptions = useMemo(
+    () => ({
+      onSuccess: (result: any) => {
+        window.dispatchEvent(new CustomEvent("library-changed"));
+        dispatch(
+          addDocument({
+            _id: result.documentId,
+            filename: quickUploadNameRef.current,
+            processed: true,
+          })
+        );
+        fetchDocuments();
+        setSelectedDocId(result.documentId);
+        onDocumentUploaded?.(result.documentId);
+        toast({
+          title: "Document processed",
+          description: `Uploaded and indexed (${result.chunksCount ?? 0} chunks)`,
+        });
+      },
+      onError: (err: any) => {
+        toast({
+          title: "Upload failed",
+          description: err?.message || "Failed to upload document",
+          variant: "destructive",
+        });
+      },
+    }),
+    [dispatch, fetchDocuments, onDocumentUploaded, toast]
+  );
+
+  const { uploadAndProcess: uploadAndProcessDocument } = useDocumentUpload(quickDocUploadOptions) as {
+    uploadAndProcess: (file: File) => Promise<unknown>;
+  };
 
   // Fetch on mount and when auth or selectedDocumentId change
   useEffect(() => {
@@ -346,7 +388,60 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) { setAttachedFiles(prev => [...prev, ...Array.from(files)]); await uploadFiles(files); }
+    if (!files || files.length === 0) {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    const arr = Array.from(files);
+    setAttachedFiles((prev) => [...prev, ...arr]);
+
+    const documentFiles = arr.filter(isRagProcessableMime);
+    const otherFiles = arr.filter((f) => !isRagProcessableMime(f));
+
+    try {
+      for (const file of documentFiles) {
+        quickUploadNameRef.current = file.name;
+        await uploadAndProcessDocument(file);
+      }
+
+      if (otherFiles.length > 0) {
+        if (isAuthenticated) {
+          const convId = ragState?.currentConversationId;
+          for (const file of otherFiles) {
+            const ct = file.type || "application/octet-stream";
+            const { presignedUrl, documentId } = await getPresignedUrl(file.name, ct, convId);
+            await uploadToS3(presignedUrl, file);
+            try {
+              await ackLibraryUpload(documentId, file.size, convId);
+            } catch (ackErr: any) {
+              console.warn("Library ack (non-fatal):", ackErr?.message || ackErr);
+            }
+            dispatch(
+              addDocument({
+                _id: documentId,
+                filename: file.name,
+                processed: false,
+              })
+            );
+            window.dispatchEvent(new CustomEvent("library-changed"));
+          }
+          await fetchDocuments();
+          toast({
+            title: "Uploaded",
+            description: `${otherFiles.length} file(s) saved to your library`,
+          });
+        } else {
+          await uploadFiles(files);
+        }
+      }
+    } catch (err: any) {
+      toast({
+        title: "Upload failed",
+        description: err?.message || "Could not upload",
+        variant: "destructive",
+      });
+    }
+
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -358,6 +453,43 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
 
   const truncateName = (name: string, max = 22): string =>
     name.length > max ? name.slice(0, max - 1) + "…" : name;
+
+  const applyLibraryEntryToComposer = useCallback(
+    (meta: { _id: string; originalName: string; s3Url?: string; documentId?: string | null }) => {
+      if (meta.documentId) {
+        setSelectedDocId(String(meta.documentId));
+      }
+      const refLine = meta.s3Url
+        ? `[Attached: ${meta.originalName}] ${meta.s3Url}`
+        : `[Attached: ${meta.originalName}] (library:${meta._id})`;
+      setMessage((prev) => (prev ? `${prev}\n${refLine}` : refLine));
+      toast({
+        description: `${meta.originalName} added to your message`,
+        duration: 2000,
+      });
+    },
+    [toast]
+  );
+
+  const onComposerDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  const onComposerDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const text = e.dataTransfer.getData("text/plain");
+      if (!text.startsWith(LIBRARY_DND_PREFIX)) return;
+      try {
+        const meta = JSON.parse(text.slice(LIBRARY_DND_PREFIX.length));
+        applyLibraryEntryToComposer(meta);
+      } catch {
+        /* ignore malformed */
+      }
+    },
+    [applyLibraryEntryToComposer]
+  );
 
   const languages = [
     { value: "english", label: "English" }, { value: "hindi", label: "Hindi" },
@@ -540,7 +672,11 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
             )}
 
             {/* Input row */}
-            <div className="flex items-center gap-2 bg-surface-elevated/70 backdrop-blur-sm border border-border/50 rounded-3xl px-2 py-1.5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300">
+            <div
+              className="flex items-center gap-2 bg-surface-elevated/70 backdrop-blur-sm border border-border/50 rounded-3xl px-2 py-1.5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300"
+              onDragOver={onComposerDragOver}
+              onDrop={onComposerDrop}
+            >
               {/* Upload dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -650,7 +786,20 @@ const ChatComposer = ({ onSendMessage, isLoading = false, selectedDocumentId, on
         )}
 
         {/* Document library modal */}
-        <DocumentLibraryModal isOpen={showLibrary} onClose={() => setShowLibrary(false)} />
+        <DocumentLibraryModal
+          isOpen={showLibrary}
+          onClose={() => setShowLibrary(false)}
+          isAuthenticated={isAuthenticated}
+          onInsertToChat={(f) => {
+            applyLibraryEntryToComposer({
+              _id: f._id,
+              originalName: f.originalName,
+              s3Url: f.s3Url,
+              documentId: f.documentId,
+            });
+            setShowLibrary(false);
+          }}
+        />
       </div>
     </TooltipProvider>
   );

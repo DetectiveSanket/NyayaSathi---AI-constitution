@@ -1,12 +1,22 @@
 // src/routes/docsRoutes.js
 import express from "express";
-import { presignUpload, serverUpload, uploadMiddleware, getDocument, listDocuments } from "../controllers/docs-controller.js";
+import {
+  presignUpload,
+  serverUpload,
+  uploadMiddleware,
+  getDocument,
+  listDocuments,
+  ackLibraryUpload,
+} from "../controllers/docs-controller.js";
 import { protect } from "../middleware/auth.js";
 import { ragAuth } from "../middleware/ragAuth.js"; // Allow RAG sessions too
 const router = express.Router();
 
 // Presign (frontend will call this to get URL) - allow both regular auth and RAG sessions
 router.get("/presign", ragAuth, presignUpload);
+
+// Client confirms S3 upload finished — registers per-user Library entry (JWT / RAG user only)
+router.post("/ack-library", ragAuth, ackLibraryUpload);
 
 // List documents for authenticated user
 router.get("/list", ragAuth, listDocuments);

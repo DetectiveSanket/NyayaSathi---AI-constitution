@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import mongoose from "mongoose";
 import { getPresignedPutUrl } from "../services/s3Presign.js";
 import Document from "../models/document.js";
+import { upsertLibraryFileFromDocument } from "../services/libraryFileService.js";
 import s3Client from "../services/s3Client.js";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import multer from "multer";
@@ -94,6 +95,44 @@ export async function presignUpload(req, res, next) {
 // 2) Server-side fallback - multipart/form-data
 export const uploadMiddleware = upload.single("file");
 
+/**
+ * After client finishes PUT to S3 (presigned flow), register/update central Library row.
+ */
+export async function ackLibraryUpload(req, res, next) {
+  try {
+    if (!req.user?._id || req.user.isPublic) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const { documentId, fileSize, conversationId } = req.body || {};
+    if (!documentId || !mongoose.Types.ObjectId.isValid(documentId)) {
+      return res.status(400).json({ message: "Valid documentId required" });
+    }
+
+    const doc = await Document.findById(documentId);
+    if (!doc) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    if (!doc.user || doc.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    await upsertLibraryFileFromDocument(doc, {
+      fileSize,
+      extraConversationId: conversationId || undefined,
+    });
+
+    if (fileSize != null && !Number.isNaN(Number(fileSize)) && (doc.size == null || doc.size === 0)) {
+      await Document.findByIdAndUpdate(doc._id, { size: Number(fileSize) });
+    }
+
+    return res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function serverUpload(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ message: "No file provided" });
@@ -115,6 +154,7 @@ export async function serverUpload(req, res, next) {
     await s3Client.send(cmd);
 
     const doc = await Document.create({
+      user: req.user._id,
       filename: file.originalname,
       s3Key: key,
       contentType: file.mimetype,
@@ -122,6 +162,12 @@ export async function serverUpload(req, res, next) {
       processed: false,
       conversationId: conversationId || null,
     });
+
+    try {
+      await upsertLibraryFileFromDocument(doc, { fileSize: file.size });
+    } catch (libErr) {
+      console.warn("Library sync after server upload (non-fatal):", libErr.message);
+    }
 
     return res.status(201).json({ message: "Uploaded", documentId: doc._id, s3Key: key });
   } catch (err) {

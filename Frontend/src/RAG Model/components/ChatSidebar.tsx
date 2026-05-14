@@ -53,6 +53,7 @@ const SettingsModal = lazy(() => import("./SettingsModal"));
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { listDocuments, deleteConversation } from "../../services/ragService.js";
+import { getLibraryStats } from "../../services/libraryService.js";
 import {
   setDocuments,
   addDocument,
@@ -108,6 +109,7 @@ const ChatSidebar = ({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showChunks, setShowChunks] = useState(false);
   const [documents, setDocumentsLocal] = useState([]);
+  const [libraryCount, setLibraryCount] = useState(0);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const ragState = useSelector((state: any) => state.rag) || {};
@@ -131,6 +133,25 @@ const ChatSidebar = ({
     };
     loadDocuments();
   }, []);
+
+  useEffect(() => {
+    const loadLibraryCount = async () => {
+      if (!authState?.isAuthenticated) {
+        setLibraryCount(0);
+        return;
+      }
+      try {
+        const s = await getLibraryStats();
+        setLibraryCount(s.total ?? 0);
+      } catch {
+        setLibraryCount(0);
+      }
+    };
+    loadLibraryCount();
+    const onLib = () => loadLibraryCount();
+    window.addEventListener("library-changed", onLib);
+    return () => window.removeEventListener("library-changed", onLib);
+  }, [authState?.isAuthenticated]);
 
   // Handle search with debounce effect
   const handleSearchChange = (value: string) => {
@@ -291,7 +312,7 @@ const ChatSidebar = ({
           <Library className="w-4 h-4 mr-3" />
           <span>Library</span>
           <Badge variant="secondary" className="ml-auto bg-accent text-accent-foreground">
-            {documents.length}
+            {libraryCount}
           </Badge>
         </Button>
         {retrievedChunks.length > 0 && (
@@ -641,7 +662,11 @@ const ChatSidebar = ({
 
       {/* Modals */}
       <Suspense fallback={"Loading library..."}>
-        <DocumentLibraryModal isOpen={isLibraryOpen} onClose={() => setIsLibraryOpen(false)} />
+        <DocumentLibraryModal
+          isOpen={isLibraryOpen}
+          onClose={() => setIsLibraryOpen(false)}
+          isAuthenticated={!!authState?.isAuthenticated}
+        />
       </Suspense>
 
       <Suspense fallback={"Loading profile editor..."}>

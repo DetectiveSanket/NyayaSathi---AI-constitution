@@ -3,6 +3,7 @@ import {
   extractTextFromBuffer,
   cleanText,
 } from "../services/documents/extractText.js";
+import { upsertLibraryFileFromDocument } from "../services/libraryFileService.js";
 import { TokenTextSplitter } from "@langchain/textsplitters";
 import Document from "../models/document.js";
 import DocumentChunk from "../models/documentChunk.js";
@@ -287,6 +288,13 @@ export const processDocument = async (req, res) => {
 
     // 2. Download file buffer from S3
     const buffer = await downloadFromS3(doc.s3Key);
+
+    try {
+      const inferredSize = buffer?.length ?? doc.size;
+      await upsertLibraryFileFromDocument(doc, { fileSize: inferredSize });
+    } catch (libErr) {
+      console.warn("Library sync (non-fatal):", libErr?.message || libErr);
+    }
 
     if (!buffer || buffer.length === 0) {
       return res.status(500).json({ message: "Downloaded file is empty" });

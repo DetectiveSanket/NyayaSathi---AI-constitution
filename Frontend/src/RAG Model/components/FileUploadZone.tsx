@@ -4,9 +4,19 @@ import { Upload, File, X } from "lucide-react";
 import { Progress } from "../components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useDocumentUpload } from "../../hooks/useDocumentUpload.js";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addDocument } from "../../store/ragSlice.js";
 import { useToast } from "../hooks/use-toast";
+import { getPresignedUrl, uploadToS3, ackLibraryUpload } from "../../services/ragService.js";
+
+function isRagProcessableMime(file: File): boolean {
+  const t = file.type || "";
+  return (
+    t === "application/pdf" ||
+    t.includes("wordprocessingml") ||
+    t.includes("msword")
+  );
+}
 
 interface FileUploadZoneProps {
   accept?: string;
@@ -20,6 +30,8 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose, onDocumentUploa
   const { uploadFiles, uploadProgress } = useFileManager();
   const dispatch = useDispatch();
   const { toast } = useToast();
+  const isAuthenticated = useSelector((state: any) => state.auth?.isAuthenticated);
+  const currentConversationId = useSelector((state: any) => state.rag?.currentConversationId);
   // Track the current file name being uploaded so we can save it to Redux on success
   const currentFileNameRef = useRef<string>("Uploaded Document");
 
@@ -29,6 +41,7 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose, onDocumentUploa
         title: "Document processed",
         description: `Document uploaded and processed successfully (${result.chunksCount} chunks)`,
       });
+      window.dispatchEvent(new CustomEvent("library-changed"));
       // Add to documents list — store real file name captured before upload
       dispatch(addDocument({
         _id: result.documentId,
@@ -70,49 +83,90 @@ export const FileUploadZone = ({ accept, maxFiles = 10, onClose, onDocumentUploa
       return;
     }
     
-    // For document files (PDF, DOCX), use RAG upload flow
-    const documentFiles = files.filter(f => 
-      f.type === "application/pdf" || 
-      f.type.includes("wordprocessingml") || 
-      f.type.includes("msword")
-    );
-    
+    const documentFiles = files.filter(isRagProcessableMime);
+    const otherFiles = files.filter((f) => !isRagProcessableMime(f));
+
     if (documentFiles.length > 0) {
-      // Use RAG document upload for PDF/DOCX
       for (const file of documentFiles) {
         currentFileNameRef.current = file.name;
         await uploadAndProcess(file);
       }
-    } else {
-      // Use regular file manager for other files
-      await uploadFiles(files);
     }
-  }, [uploadFiles, maxFiles, uploadAndProcess]);
+
+    if (otherFiles.length > 0) {
+      if (isAuthenticated) {
+        for (const file of otherFiles) {
+          const ct = file.type || "application/octet-stream";
+          const { presignedUrl, documentId } = await getPresignedUrl(file.name, ct, currentConversationId);
+          await uploadToS3(presignedUrl, file);
+          try {
+            await ackLibraryUpload(documentId, file.size, currentConversationId);
+          } catch (ackErr: any) {
+            console.warn("Library ack (non-fatal):", ackErr?.message || ackErr);
+          }
+          dispatch(
+            addDocument({
+              _id: documentId,
+              filename: file.name,
+              processed: false,
+            })
+          );
+          window.dispatchEvent(new CustomEvent("library-changed"));
+        }
+        toast({
+          title: "Uploaded",
+          description: `${otherFiles.length} file(s) saved to your library`,
+        });
+      } else {
+        await uploadFiles(otherFiles);
+      }
+    }
+  }, [uploadFiles, maxFiles, uploadAndProcess, isAuthenticated, currentConversationId, dispatch, toast]);
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const filesArray = Array.from(files);
-      
-      // For document files (PDF, DOCX), use RAG upload flow
-      const documentFiles = filesArray.filter(f => 
-        f.type === "application/pdf" || 
-        f.type.includes("wordprocessingml") || 
-        f.type.includes("msword")
-      );
-      
+      const documentFiles = filesArray.filter(isRagProcessableMime);
+      const otherFiles = filesArray.filter((f) => !isRagProcessableMime(f));
+
       if (documentFiles.length > 0) {
-        // Use RAG document upload for PDF/DOCX
         for (const file of documentFiles) {
           currentFileNameRef.current = file.name;
           await uploadAndProcess(file);
         }
-      } else {
-        // Use regular file manager for other files
-        await uploadFiles(files);
+      }
+
+      if (otherFiles.length > 0) {
+        if (isAuthenticated) {
+          for (const file of otherFiles) {
+            const ct = file.type || "application/octet-stream";
+            const { presignedUrl, documentId } = await getPresignedUrl(file.name, ct, currentConversationId);
+            await uploadToS3(presignedUrl, file);
+            try {
+              await ackLibraryUpload(documentId, file.size, currentConversationId);
+            } catch (ackErr: any) {
+              console.warn("Library ack (non-fatal):", ackErr?.message || ackErr);
+            }
+            dispatch(
+              addDocument({
+                _id: documentId,
+                filename: file.name,
+                processed: false,
+              })
+            );
+            window.dispatchEvent(new CustomEvent("library-changed"));
+          }
+          toast({
+            title: "Uploaded",
+            description: `${otherFiles.length} file(s) saved to your library`,
+          });
+        } else {
+          await uploadFiles(files);
+        }
       }
     }
-  }, [uploadFiles, uploadAndProcess]);
+  }, [uploadFiles, uploadAndProcess, isAuthenticated, currentConversationId, dispatch, toast]);
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">

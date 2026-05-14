@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { getPresignedUrl, uploadToS3, processDocument } from "../services/ragService.js";
+import { getPresignedUrl, uploadToS3, processDocument, ackLibraryUpload } from "../services/ragService.js";
 import { useSelector } from "react-redux";
 
 /**
@@ -56,6 +56,13 @@ export function useDocumentUpload(options = {}) {
             );
           }
           throw uploadError;
+        }
+
+        try {
+          await ackLibraryUpload(documentId, file.size, currentConversationId);
+        } catch (ackErr) {
+          // Non-fatal: anonymous / token edge cases; library sync also runs on processDocument
+          console.warn("Library ack (non-fatal):", ackErr?.message || ackErr);
         }
 
         // Step 3: Process document (extract, chunk, embed)

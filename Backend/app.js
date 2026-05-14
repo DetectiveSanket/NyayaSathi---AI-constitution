@@ -12,6 +12,7 @@ import contactRoutes from './routes/contact-route.js';
 import chatRoutes from "./routes/chat-route.js";
 import docsRoutes from "./routes/docs-routes.js";
 import ragRoutes from "./routes/rag-routes.js";
+import libraryRoutes from "./routes/library-routes.js";
 
 import helmet from 'helmet';
 import compression from 'compression';
@@ -91,6 +92,7 @@ app.use('/api/v1/contact', contactRoutes);
 app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/docs", docsRoutes);
 app.use("/api/v1/rag", ragRoutes);
+app.use("/api/v1/library", libraryRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -109,4 +111,4 @@ const server = app.listen(PORT, () => {
 });
 
 // Set server timeout to 180 seconds (3 minutes) to account for free-tier cold starts
-server.timeout = 180000;
+server.timeout = 180000;

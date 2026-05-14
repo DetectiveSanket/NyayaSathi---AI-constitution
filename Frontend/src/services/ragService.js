@@ -8,7 +8,7 @@ import api, { getRagToken, createRagRequest } from "./api.js";
  * For conversation endpoints the REAL JWT must be used so conversations
  * are scoped to the logged-in user across browsers and sessions.
  */
-function getEffectiveToken() {
+export function getEffectiveToken() {
   // Real JWT is stored in axios defaults after login (see setAuthHeader in api.js)
   const authHeader = api.defaults.headers.common["Authorization"];
   if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -117,13 +117,13 @@ export async function translateText(text, language = "english") {
  */
 export async function processDocument(documentId) {
   try {
-    const ragToken = getRagToken();
+    const token = getEffectiveToken();
     const response = await api.post(
       `/rag/process/${documentId}`,
       {},
       {
         headers: {
-          Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
+          Authorization: token ? `Bearer ${token}` : undefined,
         },
       }
     );
@@ -143,19 +143,41 @@ export async function processDocument(documentId) {
  */
 export async function getPresignedUrl(filename, contentType, conversationId) {
   try {
-    const ragToken = getRagToken();
+    const token = getEffectiveToken();
     const params = { filename, contentType };
     if (conversationId) params.conversationId = conversationId;
     
     const response = await api.get("/docs/presign", {
       params,
       headers: {
-        Authorization: ragToken ? `Bearer ${ragToken}` : undefined,
+        Authorization: token ? `Bearer ${token}` : undefined,
       },
     });
     return response.data;
   } catch (error) {
     const message = error.response?.data?.message || error.message || "Failed to get presigned URL";
+    throw new Error(message);
+  }
+}
+
+/**
+ * Register library entry after S3 upload (logged-in users only).
+ */
+export async function ackLibraryUpload(documentId, fileSize, conversationId) {
+  try {
+    const token = getEffectiveToken();
+    const response = await api.post(
+      "/docs/ack-library",
+      { documentId, fileSize, conversationId },
+      {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || error.message || "Failed to register library file";
     throw new Error(message);
   }
 }
