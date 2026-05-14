@@ -156,7 +156,22 @@ const LogIn = () => {
                             <span>💡 <strong>Pro Tip:</strong> Use a password manager to securely store and autofill your login credentials for faster and safer access.</span>
                         </div>
                     </div>
+
                     <div className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl">
+
+
+
+                    <GoogleAuth
+                        imgSrc={google}
+                        className="flex items-center justify-center gap-2 w-[80%] mx-auto px-4 py-2 text-white bg-transparent border-2 border-gray-700 focus:border-teal-500 rounded-full hover:bg-[#1b4f4b81] whitespace-nowrap disabled:opacity-50"
+                    />
+
+                    <div className="flex items-center justify-center my-4">
+                        <hr className="w-8 h-px bg-[#4A4C51]"/>
+                        <p className="px-4 text-sm text-[#4A4C51]">or</p>
+                        <hr className="w-8 h-px bg-[#4A4C51]"/>
+                    </div>
+
                     <form className="w-full space-y-6" onSubmit={handleSubmit}>
                         
                         <div className="space-y-2">
@@ -244,16 +259,7 @@ const LogIn = () => {
                         
                     </form>
 
-                    <div className="flex items-center justify-center my-4">
-                        <hr className="w-8 h-px bg-[#4A4C51]"/>
-                        <p className="px-4 text-sm text-[#4A4C51]">or</p>
-                        <hr className="w-8 h-px bg-[#4A4C51]"/>
-                    </div>
-
-                    <GoogleAuth
-                        imgSrc={google}
-                        className="flex items-center justify-center gap-2 w-[80%] mx-auto px-4 py-2 text-white bg-transparent border-2 border-gray-700 focus:border-teal-500 rounded-full hover:bg-[#1b4f4b81] whitespace-nowrap disabled:opacity-50"
-                    />
+                   
                     </div>
                 </section>
             </main>
