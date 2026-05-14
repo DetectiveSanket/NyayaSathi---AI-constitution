@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { useToast } from "../hooks/use-toast";
+import { useSelector, useDispatch } from "react-redux";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Separator } from "../components/ui/separator";
+import api from "../../services/api.js";
+import { SET_PASSWORD_URL } from "../../utils/api.js";
+import { fetchProfile } from "../../features/auth/authThunks.js";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -13,6 +18,8 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
+  const dispatch = useDispatch();
+  const authUser = useSelector((state: { auth?: { user?: { authProvider?: string } } }) => state.auth?.user);
   const [settings, setSettings] = useState({
     notifications: true,
     autoSave: true,
@@ -21,7 +28,19 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     voiceInput: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
   const { toast } = useToast();
+
+  const showSetPassword = authUser?.authProvider === "google";
+
+  useEffect(() => {
+    if (!isOpen) {
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  }, [isOpen]);
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -69,6 +88,33 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     }
   };
 
+  const handleSetPassword = async () => {
+    if (newPassword.length < 8) {
+      toast({ title: "Password too short", description: "Use at least 8 characters.", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Mismatch", description: "Passwords do not match.", variant: "destructive" });
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await api.post(SET_PASSWORD_URL, { password: newPassword });
+      await dispatch(fetchProfile() as any);
+      setNewPassword("");
+      setConfirmPassword("");
+      toast({ title: "Password saved", description: "You can now sign in with email and password as well." });
+    } catch (e: any) {
+      toast({
+        title: "Could not set password",
+        description: e.response?.data?.message || e.message || "Try again",
+        variant: "destructive",
+      });
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md bg-surface border-border">
@@ -110,6 +156,53 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           </div>
 
           <Separator className="bg-border" />
+
+          {showSetPassword && (
+            <>
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">Account</h3>
+                <p className="text-xs text-secondary-muted">
+                  Add a password so you can sign in without Google on any device.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="set-pw" className="text-sm text-secondary-muted">
+                    New password
+                  </Label>
+                  <Input
+                    id="set-pw"
+                    type="password"
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="bg-surface-elevated border-border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="set-pw2" className="text-sm text-secondary-muted">
+                    Confirm password
+                  </Label>
+                  <Input
+                    id="set-pw2"
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="bg-surface-elevated border-border"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  disabled={passwordSaving}
+                  onClick={handleSetPassword}
+                >
+                  {passwordSaving ? "Saving…" : "Set password"}
+                </Button>
+              </div>
+              <Separator className="bg-border" />
+            </>
+          )}
 
           {/* General */}
           <div className="space-y-4">

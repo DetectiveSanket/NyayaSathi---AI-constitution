@@ -13,6 +13,7 @@ import useAutoDismiss from '../hooks/useAutoDismiss';
 import AutoDismissNotification from '../ProtectionRoutes/AutoDismissNotification';
 import { toast } from 'sonner';
 import AuthLoadingOverlay from '../shared/AuthLoadingOverlay';
+import GoogleAuth from '../auth/GoogleAuth';
 
 const LogIn = () => {
 
@@ -142,7 +143,7 @@ const LogIn = () => {
             {/* Navbar sits on top of the same background */}
             <Navbar />
 
-            /* Page content fills available space */
+            {/* Page content fills available space */}
             <main className="relative mx-auto mt-16 max-w-6xl px-4 flex-1 w-full flex items-center justify-center">
                 <section className="w-full max-w-xl">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4 tracking-tight">Login to your account</h1>
@@ -155,23 +156,8 @@ const LogIn = () => {
                             <span>💡 <strong>Pro Tip:</strong> Use a password manager to securely store and autofill your login credentials for faster and safer access.</span>
                         </div>
                     </div>
-                    <form className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl" onSubmit={handleSubmit}>
-
-                        <button style={{width: '80%', margin: '10px auto' }} className="flex items-center justify-center gap-2 w-full px-4 py-2 text-white bg-transparent border-2 border-gray-700 focus:border-teal-500 rounded-full hover:bg-[#1b4f4b81] whitespace-nowrap">
-                            <img src={google} className="w-6 h-6 flex-shrink-0" alt="google" />
-                            <span>Continue with Google</span>
-                        </button>
-                        
-                        {/* <button style={{width: '80%', margin: '0 auto'}} className="flex items-center justify-center w-full px-4 py-2 mt-3 text-white bg-transparent border-2 border-gray-700 focus:border-pink-600 rounded-full hover:bg-[#3A3C3F]">
-                            <img src={instagram} className="w-6 h-6 mr-5" alt="google" />
-                            Continue with GitHub
-                        </button> */}
-                            
-                            <div className="flex items-center justify-center my-4">
-                                <hr className="w-8 h-px bg-[#4A4C51]"/>
-                                <p className="px-4 text-sm text-[#4A4C51]">Register/Login with Email</p>
-                                <hr className="w-8 h-px bg-[#4A4C51]"/>
-                            </div>                        
+                    <div className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl">
+                    <form className="w-full space-y-6" onSubmit={handleSubmit}>
                         
                         <div className="space-y-2">
                             <label className="text-white font-medium text-sm tracking-wide">Email</label>
@@ -257,6 +243,18 @@ const LogIn = () => {
                         <p className="my-2 text-xs text-center text-white">Do not have an account?  <Link to='/register' className="text-base text-blue-900 hover:underline">Register</Link> </p>
                         
                     </form>
+
+                    <div className="flex items-center justify-center my-4">
+                        <hr className="w-8 h-px bg-[#4A4C51]"/>
+                        <p className="px-4 text-sm text-[#4A4C51]">or</p>
+                        <hr className="w-8 h-px bg-[#4A4C51]"/>
+                    </div>
+
+                    <GoogleAuth
+                        imgSrc={google}
+                        className="flex items-center justify-center gap-2 w-[80%] mx-auto px-4 py-2 text-white bg-transparent border-2 border-gray-700 focus:border-teal-500 rounded-full hover:bg-[#1b4f4b81] whitespace-nowrap disabled:opacity-50"
+                    />
+                    </div>
                 </section>
             </main>
 

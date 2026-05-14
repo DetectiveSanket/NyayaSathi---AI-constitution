@@ -1,6 +1,7 @@
 // src/features/auth/authThunks.js
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api, { setAuthHeader } from "../../services/api.js";
+import { loginWithGoogle as exchangeGoogleCredentials } from "../../services/googleAuthService.js";
 
 import {
     REGISTER_URL,
@@ -74,10 +75,29 @@ export const loginUser = createAsyncThunk(
 
             // get profile
             const profileResp = await api.get("/user/me");
+            localStorage.setItem("token", accessToken);
             return {
                 user: profileResp.data,
                 token: accessToken,
                 refreshToken: data.refreshToken,
+            };
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || err.message);
+        }
+    }
+);
+
+export const loginWithGoogle = createAsyncThunk(
+    "auth/loginWithGoogle",
+    async (_, { rejectWithValue }) => {
+        try {
+            const { accessToken, refreshToken } = await exchangeGoogleCredentials();
+            setAuthHeader(accessToken);
+            const profileResp = await api.get("/user/me");
+            return {
+                user: profileResp.data,
+                token: accessToken,
+                refreshToken,
             };
         } catch (err) {
             return rejectWithValue(err.response?.data?.message || err.message);

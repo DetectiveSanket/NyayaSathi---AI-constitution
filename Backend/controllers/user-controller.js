@@ -1,7 +1,6 @@
 import User from "../models/user-module.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import bcrypt from "bcrypt";
 import sendEmail from "../utils/sendEmail.js"; // utility for nodemailer
 
 // =========================
@@ -169,6 +168,13 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    if (user.authProvider === "google" && (!user.password || user.password === "")) {
+      return res.status(400).json({
+        message: "This account uses Google sign-in. Please continue with Google or set a password in Settings.",
+        action: "google",
+      });
+    }
+
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(400).json({ 
@@ -198,7 +204,7 @@ export const loginUser = async (req, res) => {
 // =========================
 export const logoutUser = async (req, res) => {
   try {
-    const { userId } = req.user; // set by auth middleware
+    const userId = req.user.userId || req.user._id;
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 

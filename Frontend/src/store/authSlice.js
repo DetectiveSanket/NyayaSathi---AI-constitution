@@ -5,6 +5,7 @@ import {
   verifyOtp,
   resendOtp,
   loginUser,
+  loginWithGoogle,
   logoutUser,
   refreshAccessToken,
   forgotPassword,
@@ -47,7 +48,11 @@ const authSlice = createSlice({
             state.isAuthenticated = false;
             state.error = null;
             state.pendingEmail = null;
-            // also clear axios header
+            try {
+              localStorage.removeItem("token");
+            } catch {
+              /* ignore */
+            }
             setAuthHeader(null);
         },
 
@@ -123,10 +128,38 @@ const authSlice = createSlice({
         state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
         state.error = null;
-        // set axios default header for subsequent requests
+        try {
+          localStorage.setItem("token", action.payload.token);
+        } catch {
+          /* ignore */
+        }
         setAuthHeader(action.payload.token);
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
+      });
+
+    builder
+      .addCase(loginWithGoogle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginWithGoogle.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
+        state.isAuthenticated = true;
+        state.error = null;
+        try {
+          localStorage.setItem("token", action.payload.token);
+        } catch {
+          /* ignore */
+        }
+        setAuthHeader(action.payload.token);
+      })
+      .addCase(loginWithGoogle.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error.message;
       });
@@ -142,6 +175,11 @@ const authSlice = createSlice({
         state.token = null;
         state.refreshToken = null;
         state.isAuthenticated = false;
+        try {
+          localStorage.removeItem("token");
+        } catch {
+          /* ignore */
+        }
         setAuthHeader(null);
       })
       .addCase(logoutUser.rejected, (state) => {
@@ -151,6 +189,11 @@ const authSlice = createSlice({
         state.token = null;
         state.refreshToken = null;
         state.isAuthenticated = false;
+        try {
+          localStorage.removeItem("token");
+        } catch {
+          /* ignore */
+        }
         setAuthHeader(null);
       });
 
@@ -166,6 +209,11 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.user = action.payload.user;
         state.isAuthenticated = true;
+        try {
+          localStorage.setItem("token", action.payload.token);
+        } catch {
+          /* ignore */
+        }
         setAuthHeader(action.payload.token);
       })
       .addCase(refreshAccessToken.rejected, (state) => {
@@ -175,6 +223,11 @@ const authSlice = createSlice({
         state.token = null;
         state.refreshToken = null;
         state.isAuthenticated = false;
+        try {
+          localStorage.removeItem("token");
+        } catch {
+          /* ignore */
+        }
         setAuthHeader(null);
       });
 

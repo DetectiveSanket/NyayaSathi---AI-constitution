@@ -14,6 +14,10 @@ import {
   deleteUser,
 } from '../controllers/user-controller.js';
 import { protect, admin } from '../middleware/auth.js';
+import { googleAuth } from "../controllers/googleAuthController.js";
+import { setPassword } from "../controllers/setPasswordController.js";
+
+
 
 const router = express.Router();
 
@@ -34,5 +38,9 @@ router.put('/me', protect, updateUserProfile);
 // Admin routes
 router.get('/', protect, admin, getAllUsers);
 router.delete('/:id', protect, admin, deleteUser);
+
+// Google Auth routes
+router.post("/google-auth", googleAuth);
+router.post("/set-password", protect, setPassword);
 
 export default router;

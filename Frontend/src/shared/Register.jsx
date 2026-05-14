@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../features/auth/authThunks";
 import { clearMessage, clearError } from "../store/authSlice";
 import useAutoDismiss from "../hooks/useAutoDismiss";
+import GoogleAuth from '../auth/GoogleAuth';
 
 function Register() {
 
@@ -151,25 +152,9 @@ function Register() {
                             </div>
                         </div>
 
-                        {/* FORM */}
-                        <form className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl" onSubmit={handleSubmit} >
-
-                            <button
-                                style={{ width: "80%", margin: "10px auto" }}
-                                className="flex items-center justify-center w-full px-4 py-2 text-white bg-transparent border-2 border-gray-700 focus:border-teal-500  rounded-full hover:bg-[#1b4f4b81]"
-                                type="button"
-                            >
-                                <img src={google} className="w-6 h-6 mr-5" alt="google" />
-                                Continue with Google
-                            </button>
-
-                            <div className="flex items-center justify-center my-4">
-                                <hr className="w-8 h-px bg-[#4A4C51]" />
-                                <p className="px-4 text-sm text-[#4A4C51]">
-                                    Register/Login with Email
-                                </p>
-                                <hr className="w-8 h-px bg-[#4A4C51]" />
-                            </div>
+                        {/* FORM + Google */}
+                        <div className="w-full space-y-6 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-[#011f24] shadow-2xl">
+                        <form className="w-full space-y-6" onSubmit={handleSubmit} >
 
                             <div className="space-y-2">
                                 <label className="text-white font-medium text-sm tracking-wide">
@@ -280,7 +265,7 @@ function Register() {
                                     <div className="flex items-center justify-center space-x-2">
                                         <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 814 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
                                         <span>⏳ Processing...</span>
                                     </div>
@@ -308,6 +293,18 @@ function Register() {
                                 </Link>
                             </p>
                         </form>
+
+                        <div className="flex items-center justify-center my-4">
+                            <hr className="w-8 h-px bg-[#4A4C51]" />
+                            <p className="px-4 text-sm text-[#4A4C51]">or</p>
+                            <hr className="w-8 h-px bg-[#4A4C51]" />
+                        </div>
+
+                        <GoogleAuth
+                            imgSrc={google}
+                            className="flex items-center justify-center gap-2 w-[80%] mx-auto px-4 py-2 text-white bg-transparent border-2 border-gray-700 focus:border-teal-500 rounded-full hover:bg-[#1b4f4b81] whitespace-nowrap disabled:opacity-50"
+                        />
+                        </div>
                     </section>
                 </main>
 

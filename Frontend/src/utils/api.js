@@ -17,6 +17,8 @@ export const VERIFY_EMAIL_URL = `${API_URL}user/verify-email`;
 export const RESEND_OTP_URL = `${API_URL}user/resend-otp`;
 export const GET_USER_PROFILE_URL = `${API_URL}user/me`;
 export const UPDATE_USER_PROFILE_URL = `${API_URL}user/me`;
+export const GOOGLE_AUTH_URL = `${API_URL}user/google-auth`;
+export const SET_PASSWORD_URL = `${API_URL}user/set-password`;
 
 /* 
 ⁡⁢⁣⁣𝗘𝘅𝗮𝗺𝗽𝗹𝗲 𝘂𝘀𝗮𝗴𝗲 𝗶𝗻 𝗮 𝗥𝗲𝗮𝗰𝘁 𝗰𝗼𝗺𝗽𝗼𝗻𝗲𝗻𝘁:⁡
